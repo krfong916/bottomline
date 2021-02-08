@@ -1,6 +1,17 @@
 Typescript Heavy
 Design Patterns
 
+
+MVP
+two subdomains
+- community
+- reports
+- let auth0 handle users 
+- data viz.
+
+future
+- articles
+
 don't worry about language now, that can be probed for fit later
 use slack for suggestions
 
