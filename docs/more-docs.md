@@ -53,6 +53,13 @@ DELETE from "Users" where email='krfong@ucsc.edu';
     - `returning:true` returns the previous and changed data value after update
     - `plain:true` returns only the changed data value after update
     - `individualHooks:true` must specify in order to run an afterUpdate or bulk hook for a model instance
+    - https://gist.github.com/zcaceres/f9b44ae18579411e57f3131654e92ce3
+    - https://github.com/sequelize/sequelize/issues/6938
+
+## Either and Result class
+
+- Our return types use union and intersection typing in order to narrow down the response type for many of our function calls
+- see: https://www.typescriptlang.org/docs/handbook/unions-and-intersections.html and https://stackoverflow.com/questions/58974640/typescript-property-does-not-exist-on-union-type
 
 ## Express
 

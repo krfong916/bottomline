@@ -1,0 +1,39 @@
+{
+  entityMap: {},
+  blockMap: {
+    '4ab310_initial': {
+      key: '4ab310_initial',
+      type: 'unordered-list-item',
+      text: 'if you want a dog get a dog',
+      characterList: [
+        {i},{f},{},{y},{o},{u},{},{w},{a},{n},{t},{},{a},{},{d},{o},{g},{},{g},{e},{t},{},{a},{},{d},{o},{g}
+      ],
+      depth: 0,
+      data: {}
+    },
+    b1s83: {
+      key: 'b1s83',
+      type: 'unstyled',
+      text: 'k',
+      characterList: [{}],
+      depth: 0,
+      data: {}
+    }
+  },
+  selectionBefore: {
+    anchorKey: '4ab310_initial',
+    anchorOffset: 11,
+    focusKey: '4ab310_initial',
+    focusOffset: 7,
+    isBackward: true,
+    hasFocus: true
+  },
+  selectionAfter: {
+    anchorKey: '4ab310_initial',
+    anchorOffset: 11,
+    focusKey: '4ab310_initial',
+    focusOffset: 7,
+    isBackward: true,
+    hasFocus: true
+  }
+},

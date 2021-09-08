@@ -156,8 +156,8 @@ Abstractions should not depend on concretions, concretions should depend on abst
 
 Classes should depend on Interfaces, interfaces should not depend on classes.
 
-Stemmler explains why this is important"
-This gives us the ability to test code because we leave the implementer to pass the **mocked** dependency (if we don't want to make API class or rely on something we're not currently interested in testing"
+Advocate of DDD and author of SOLID: The Software Design & Architecture Handbook Khalil Stemmler explains why this is important
+"This gives us the ability to test code because we leave the implementer to pass the **mocked** dependency (if we don't want to make API class or rely on something we're not currently interested in testing"
 
 For example:
 
@@ -487,3 +487,19 @@ What is a service, and the difference between that and the repository?
 What does a service do that a use case doesn't?
 
 ### Decoupling Logic with Domain Events
+
+### Names of objects and modeling objects in DDD
+
+- Router
+- Controller
+- Use Case
+- Data Mapper
+- Repository (what is the base/shared behavior?)
+- Error
+- Value Objects
+- Domain Objects
+- Result
+- Data Access Object (DAO)
+- Data Transfer Object (DTO)
+- Entity
+- Aggregate Root
