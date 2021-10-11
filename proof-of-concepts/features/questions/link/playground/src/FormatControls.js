@@ -21,6 +21,7 @@ export const BlockStyleControls = (props) => {
           active={type.style === blockType}
           label={type.label}
           onToggle={props.onToggle}
+          onClick={props.onClick}
           style={type.style}
         />
       ))}
@@ -56,6 +57,7 @@ export const InlineStyleControls = (props) => {
           active={currentStyle.has(type.style)}
           label={type.label}
           onToggle={props.onToggle}
+          onClick={props.onClick}
           style={type.style}
         />
       ))}
@@ -69,12 +71,17 @@ export function StyleButton(props) {
     props.onToggle(props.style);
   };
 
+  const onClick = (e) => {
+    e.preventDefault();
+    props.onClick();
+  };
+
   let className = 'RichEditor-styleButton';
   if (props.active) {
     className += ' RichEditor-activeButton';
   }
   return (
-    <span className={className} onMouseDown={onToggle}>
+    <span className={className} onMouseDown={onToggle} onClick={onClick}>
       {props.label}
     </span>
   );
@@ -88,6 +95,10 @@ export const styleMap = {
     fontSize: 16,
     padding: 2
   },
+  LINK: {
+    color: '#189AEF',
+    textDecoration: 'underline'
+  },
   HIGHLIGHT_LINK: {
     backgroundColor: 'rgba(172,206,247, 0.8)'
   },
@@ -95,3 +106,16 @@ export const styleMap = {
     textDecoration: 'line-through'
   }
 };
+
+// add code tag to inline code
+// code {
+//     padding: .2em .4em;
+//     margin: 0;
+//     font-size: 85%;
+//     background-color: var(--color-neutral-muted);
+//     border-radius: 6px;
+// }
+
+// tt, code {
+//     font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+// }

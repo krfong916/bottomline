@@ -95,3 +95,7 @@
   -ms-user-select: none;
   user-select: none;
 }
+
+.draft-text-highlight {
+  background-color: rgba(172, 206, 247, 0.8);
+}

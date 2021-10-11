@@ -1,2 +1,6 @@
 .DS_Store
-
+proof-of-concepts/features/questions/editor
+proof-of-concepts/features/questions/link/draft-js-utils
+proof-of-concepts/features/questions/link/playground/node_modules
+proof-of-concepts/features/questions/link/playground/src/draft-js-utils
+proof-of-concepts/features/questions/link/playground/src/synthetic-dom
