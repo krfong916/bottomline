@@ -1,4 +1,5 @@
 import React from 'react';
+import { Popover, PopoverTrigger, PopoverContent } from '@chakra-ui/react';
 import { RichUtils } from 'draft-js';
 
 // we use the mousedown event to prevent the focus from moving the cursor
@@ -48,18 +49,27 @@ export function LinkDetails({
   control
 }) {
   if (!shouldShow) return null;
+  const position = {
+    top: linkState.coords.bottom + 16,
+    left: linkState.coords.left - 20,
+    position: 'absolute'
+  };
 
   return (
-    <div unselectable="on" className="unselectable">
-      <span>{linkState.url}</span>
+    <div unselectable="on" className="link-details" style={position}>
+      <span className="link-details__url">{linkState.url}</span>
+      <span className="link-details__spacer">-</span>
       <button
         unselectable="on"
-        className="unselectable"
+        className="link-details__button"
         onClick={(e) => onDetailsChange(e, control)}
       >
         Change
       </button>
-      <button onClick={(e) => removeLink(e)}>Remove</button>
+      <span className="link-details__spacer">|</span>
+      <button className="link-details__button" onClick={(e) => removeLink(e)}>
+        Remove
+      </button>
     </div>
   );
 }
@@ -72,12 +82,19 @@ function urlIsValid(url) {
 
 export function LinkEditor({ onBlur, editorRef, linkState, shouldShow, updateLink }) {
   if (!shouldShow) return null;
+
+  const position = {
+    top: linkState.coords.bottom + 16,
+    left: linkState.coords.left - 20,
+    position: 'absolute'
+  };
+
   // add validation for a correct url and show an error message
   // use chakra design here
   const { url, text } = linkState;
   const [state, setState] = React.useState({ url, text });
   const [error, setError] = React.useState(false);
-  const [focusFromDraftToEditor, setFocusFromDraftToEditor] = React.useState(false);
+  // const [focusFromDraftToEditor, setFocusFromDraftToEditor] = React.useState(true);
   const urlInputRef = React.useRef(null);
   React.useEffect(() => {
     if (error) {
@@ -107,33 +124,61 @@ export function LinkEditor({ onBlur, editorRef, linkState, shouldShow, updateLin
   const handleBlur = (e) => {
     // the behavior that we're trying to capture here is
     // the link editor should call the callback if the user leaves focus from the component
-    if (!focusFromDraftToEditor) {
-      setFocusFromDraftToEditor(true);
-    } else if (focusFromDraftToEditor && !e.currentTarget.contains(e.relatedTarget)) {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      console.log('handle blur');
       onBlur(e);
     }
   };
 
+  const editorInputButtonClassname = error
+    ? 'link-editor__button--disabled'
+    : 'link-editor__button';
+
   return (
-    <div onBlur={handleBlur}>
-      <input
-        ref={editorRef}
-        type="text"
-        value={state.text}
-        name="text"
-        onChange={handleOnChange}
-      />
-      <input
-        ref={urlInputRef}
-        type="text"
-        value={state.url}
-        name="url"
-        onChange={handleOnChange}
-      />
-      <button role="button" disabled={error} onClick={handleUpdate}>
-        Apply
-      </button>
-      {error ? <span>The url doesn't look right</span> : null}
+    <div onBlur={handleBlur} style={position} className="link-editor">
+      <div className="link-editor__field">
+        <label htmlFor="text" className="link-editor__label">
+          Text:
+        </label>
+        <input
+          className="link-editor__input"
+          ref={editorRef}
+          type="text"
+          value={state.text}
+          name="text"
+          onChange={handleOnChange}
+          placeholder="Title of link (optional)"
+          autoComplete="off"
+        />
+      </div>
+      <div className="link-editor__field">
+        <label htmlFor="url" className="link-editor__label">
+          Link:
+        </label>
+        <input
+          className="link-editor__input"
+          ref={urlInputRef}
+          type="text"
+          value={state.url}
+          name="url"
+          onChange={handleOnChange}
+          placeholder="Paste or type a link"
+          autoComplete="off"
+        />
+      </div>
+      <div className="link-editor__actions">
+        {error ? (
+          <span className="link-editor__error">The url doesn't look right</span>
+        ) : null}
+        <button
+          role="button"
+          disabled={error}
+          onClick={handleUpdate}
+          className={editorInputButtonClassname}
+        >
+          Apply
+        </button>
+      </div>
     </div>
   );
 }
