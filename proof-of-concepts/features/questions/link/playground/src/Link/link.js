@@ -4,15 +4,23 @@ import { RichUtils } from 'draft-js';
 
 // we use the mousedown event to prevent the focus from moving the cursor
 // from the selected text range to this format control
-export function LinkInlineControl({ active, editorState, onClick, control }) {
+export function LinkInlineControl({
+  active,
+  editorState,
+  onClick,
+  control,
+  disabled
+}) {
+  console.log('disabled:', disabled);
   return (
     <div
+      aria-disabled={disabled}
       className="RichEditor-controls"
       onMouseDown={(e) => {
-        e.preventDefault();
+        !disabled && e.preventDefault();
       }}
       onClick={(e) => {
-        e.preventDefault();
+        !disabled && e.preventDefault();
         onClick(e, control);
       }}
     >
