@@ -88,7 +88,13 @@ function urlIsValid(url) {
   return urlExp.test(url);
 }
 
-export function LinkEditor({ onBlur, editorRef, linkState, shouldShow, updateLink }) {
+export function LinkEditor({
+  onBlur,
+  linkEditorRef,
+  linkState,
+  shouldShow,
+  updateLink
+}) {
   if (!shouldShow) return null;
 
   const position = {
@@ -110,6 +116,8 @@ export function LinkEditor({ onBlur, editorRef, linkState, shouldShow, updateLin
     }
   }, [error, urlInputRef.current]);
 
+  const handleKeyDown = (e) => {};
+
   const handleOnChange = ({ target }) => {
     setState((state) => ({ ...state, [target.name]: target.value }));
 
@@ -121,7 +129,8 @@ export function LinkEditor({ onBlur, editorRef, linkState, shouldShow, updateLin
     }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = (e) => {
+    e.preventDefault();
     if (urlIsValid(state.url)) {
       updateLink(state);
     } else {
@@ -143,50 +152,51 @@ export function LinkEditor({ onBlur, editorRef, linkState, shouldShow, updateLin
     : 'link-editor__button';
 
   return (
-    <div onBlur={handleBlur} style={position} className="link-editor">
-      <div className="link-editor__field">
-        <label htmlFor="text" className="link-editor__label">
-          Text:
-        </label>
-        <input
-          className="link-editor__input"
-          ref={editorRef}
-          type="text"
-          value={state.text}
-          name="text"
-          onChange={handleOnChange}
-          placeholder="Title of link (optional)"
-          autoComplete="off"
-        />
-      </div>
-      <div className="link-editor__field">
-        <label htmlFor="url" className="link-editor__label">
-          Link:
-        </label>
-        <input
-          className="link-editor__input"
-          ref={urlInputRef}
-          type="text"
-          value={state.url}
-          name="url"
-          onChange={handleOnChange}
-          placeholder="Paste or type a link"
-          autoComplete="off"
-        />
-      </div>
-      <div className="link-editor__actions">
-        {error ? (
-          <span className="link-editor__error">The url doesn't look right</span>
-        ) : null}
-        <button
-          role="button"
-          disabled={error}
-          onClick={handleUpdate}
-          className={editorInputButtonClassname}
-        >
-          Apply
-        </button>
-      </div>
+    <div onBlur={handleBlur} style={position}>
+      <form onSubmit={handleUpdate} className="link-editor">
+        <div className="link-editor__field">
+          <label htmlFor="text" className="link-editor__label">
+            Text:
+          </label>
+          <input
+            className="link-editor__input"
+            ref={linkEditorRef}
+            type="text"
+            value={state.text}
+            name="text"
+            onChange={handleOnChange}
+            placeholder="Title of link (optional)"
+            autoComplete="off"
+          />
+        </div>
+        <div className="link-editor__field">
+          <label htmlFor="url" className="link-editor__label">
+            Link:
+          </label>
+          <input
+            className="link-editor__input"
+            ref={urlInputRef}
+            type="text"
+            value={state.url}
+            name="url"
+            onChange={handleOnChange}
+            placeholder="Paste or type a link"
+            autoComplete="off"
+          />
+        </div>
+        <div className="link-editor__actions">
+          {error ? (
+            <span className="link-editor__error">The url doesn't look right</span>
+          ) : null}
+          <button
+            disabled={error}
+            type="submit"
+            className={editorInputButtonClassname}
+          >
+            Apply
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

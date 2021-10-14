@@ -1,6 +1,6 @@
 // put in bottomline
-// two links highlighted
 // blank draft state
+// focus bug
 
 /**
  * Disable format control
@@ -74,6 +74,21 @@ const initialLinkState = {
   coords: null
 };
 
+function getTextDOMNodeParent() {
+  let selectionRect = window.getSelection && window.getSelection();
+  if (!selectionRect) {
+    const range = sel.getRangeAt(0);
+    selectionRect = range.startContainer.getBoundingClientRect();
+  }
+  return selectionRect.focusNode.parentNode;
+  // let selectionRect = getVisibleSelectionRect(window);
+  // if (!selectionRect) {
+  //   const sel = window.getSelection && window.getSelection();
+  //   const range = sel.getRangeAt(0);
+  //   selectionRect = (range.startContainer as Element).getBoundingClientRect();
+  // }
+}
+
 function linkStateReducer(state, action) {
   switch (action.type) {
     case 'UPDATE_LINK': {
@@ -142,12 +157,15 @@ function linkStateReducer(state, action) {
     }
     case 'OPEN_EDITOR_BY_EDITOR_CONTROL_FOR_TEXT': {
       const newLinkState = { ...state };
-      const { textRange, editorState } = action.props;
+      const { textRange, editorState, hasText } = action.props;
       const start = textRange[0];
       const end = textRange[1];
       const selectionState = editorState.getSelection(); // Get the text content range
       const selectionBlockID = editorState.getSelection().getStartKey();
-      const textDOMNode = getTextDOMNode(selectionBlockID);
+      let textDOMNode = hasText
+        ? getTextDOMNode(selectionBlockID)
+        : getTextDOMNodeParent(selectionBlockID);
+
       const textBlockDimensions = textDOMNode.getBoundingClientRect();
       addLinkCoordinates(newLinkState, textBlockDimensions);
 
@@ -204,10 +222,13 @@ export default function App() {
   const [state, setState] = React.useState(
     EditorState.createWithContent(stateFromMarkdown(sampleMarkdown), decorator)
   );
+  const editorRef = React.useRef(null);
   const [editorFocus, setEditorFocus] = React.useState(false);
   const onEditorFocus = () => {
     setEditorFocus(true);
+    editorRef.current.focus();
   };
+
   const onEditorBlur = () => {
     setEditorFocus(false);
   };
@@ -243,7 +264,6 @@ export default function App() {
   }, [state.getSelection().getStartOffset(), state.getSelection().getEndOffset()]);
 
   function openEditor(e, control) {
-    console.log(control);
     switch (control.type) {
       case 'LINK_DETAILS':
         const cursorStart = state.getSelection().getStartOffset();
@@ -270,7 +290,9 @@ export default function App() {
         );
         break;
       case 'EDITOR_CONTROL':
-        if (editorFocus == false) return;
+        if (editorFocus == false) {
+          onEditorFocus();
+        }
         const cursorIsOnLink = linkState.showDetails;
         if (cursorIsOnLink) {
           const selection = state.getSelection();
@@ -296,7 +318,6 @@ export default function App() {
             },
             state.getCurrentContent()
           );
-
           break;
         } else {
           // cursor is on text
@@ -306,7 +327,8 @@ export default function App() {
             type: 'OPEN_EDITOR_BY_EDITOR_CONTROL_FOR_TEXT',
             props: {
               editorState: state,
-              textRange: [cursorStart, cursorEnd]
+              textRange: [cursorStart, cursorEnd],
+              hasText: state.getCurrentContent().hasText()
             }
           });
         }
@@ -629,8 +651,10 @@ export default function App() {
         onClick={openEditor}
         control={{ type: 'EDITOR_CONTROL' }}
       />
-      <div className="RichEditor-editor" onFocus={onEditorFocus}>
+
+      <div className="RichEditor-editor">
         <Editor
+          ref={editorRef}
           onBlur={onEditorBlur}
           blockStyleFn={getBlockStyle}
           customStyleMap={styleMap}
@@ -648,7 +672,7 @@ export default function App() {
       />
       <LinkEditor
         onBlur={closeLinkEditor}
-        editorRef={linkEditorRef}
+        linkEditorRef={linkEditorRef}
         linkState={linkState}
         shouldShow={linkState.showEditor}
         updateLink={updateLink}
