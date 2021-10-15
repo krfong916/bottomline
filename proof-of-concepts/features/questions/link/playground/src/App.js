@@ -98,6 +98,7 @@ function linkStateReducer(state, action) {
       return initialLinkState;
     }
     case 'OPEN_EDITOR_BY_LINK_DETAILS': {
+      console.log('[LINK_STATE_REDUCER: OPEN_EDITOR_BY_LINK_DETAILS]');
       const newLinkState = { ...state };
       const { linkRange, editorState } = action.props;
       const start = linkRange[0];
@@ -245,11 +246,36 @@ export default function App() {
       case 'LINK_DETAILS':
         const { cursorStart, cursorEnd } = getSelectionIndices(state);
         const { selectionBlock } = getSelectionBlockProps(state);
-
+        const currentLinkSelection = state.getSelection();
         findLinkEntities(
           selectionBlock,
           (start, end) => {
             if (cursorMatchesSingleLinkRange(cursorStart, cursorEnd, start, end)) {
+              console.log('[APPLY_LINK_HIGHLIGHT EFFECT]');
+              let selectionState = SelectionState.createEmpty('foo');
+              let updatedSelection = selectionState.merge({
+                anchorKey: currentLinkSelection.getAnchorKey(),
+                anchorOffset: start,
+                focusKey: currentLinkSelection.focusKey,
+                focusOffset: end
+              });
+              const editorWithLinkSelection = EditorState.forceSelection(
+                state,
+                updatedSelection
+              );
+              const contentState = Modifier.applyInlineStyle(
+                editorWithLinkSelection.getCurrentContent(),
+                updatedSelection,
+                'HIGHLIGHT_LINK'
+              );
+
+              const newState = EditorState.push(
+                editorWithLinkSelection,
+                contentState,
+                'change-inline-style'
+              );
+
+              setState(newState);
               dispatch({
                 type: 'OPEN_EDITOR_BY_LINK_DETAILS',
                 props: {
@@ -483,40 +509,39 @@ export default function App() {
    * EFFECT: Highlight for link
    * Apply a highlight to the entire link entity range and focus the input box
    */
-  React.useEffect(() => {
-    if (linkState.linkSelection && linkState.showEditor) {
-      console.log('[REMOVE_LINK_HIGHLIGHT EFFECT]');
-      // console.log('Highlight Link');
-      let selectionState = SelectionState.createEmpty('foo');
-      let updatedSelection = selectionState.merge({
-        anchorKey: linkState.linkSelection.anchorKey,
-        anchorOffset: linkState.linkSelection.getAnchorOffset(),
-        focusKey: linkState.linkSelection.focusKey,
-        focusOffset: linkState.linkSelection.getFocusOffset()
-      });
-      const editorWithLinkSelection = EditorState.forceSelection(
-        state,
-        updatedSelection
-      );
-      const contentState = Modifier.applyInlineStyle(
-        editorWithLinkSelection.getCurrentContent(),
-        updatedSelection,
-        'HIGHLIGHT_LINK'
-      );
+  // React.useEffect(() => {
+  //   if (linkState.linkSelection && linkState.showEditor) {
+  //     console.log('[APPLY_LINK_HIGHLIGHT EFFECT]');
+  //     let selectionState = SelectionState.createEmpty('foo');
+  //     let updatedSelection = selectionState.merge({
+  //       anchorKey: linkState.linkSelection.anchorKey,
+  //       anchorOffset: linkState.linkSelection.getAnchorOffset(),
+  //       focusKey: linkState.linkSelection.focusKey,
+  //       focusOffset: linkState.linkSelection.getFocusOffset()
+  //     });
+  //     const editorWithLinkSelection = EditorState.forceSelection(
+  //       state,
+  //       updatedSelection
+  //     );
+  //     const contentState = Modifier.applyInlineStyle(
+  //       editorWithLinkSelection.getCurrentContent(),
+  //       updatedSelection,
+  //       'HIGHLIGHT_LINK'
+  //     );
 
-      const newState = EditorState.push(
-        editorWithLinkSelection,
-        contentState,
-        'change-inline-style'
-      );
+  //     const newState = EditorState.push(
+  //       editorWithLinkSelection,
+  //       contentState,
+  //       'change-inline-style'
+  //     );
 
-      const editorWithLinkHighlightAndPreviousSelection = EditorState.forceSelection(
-        newState,
-        updatedSelection
-      );
-      setState(editorWithLinkHighlightAndPreviousSelection);
-    }
-  }, [linkState.linkSelection, linkState.showEditor]);
+  //     const editorWithLinkHighlightAndPreviousSelection = EditorState.forceSelection(
+  //       newState,
+  //       updatedSelection
+  //     );
+  //     setState(editorWithLinkHighlightAndPreviousSelection);
+  //   }
+  // }, [linkState.linkSelection, linkState.showEditor]);
   /**
    * Explicitly remove the url from an existing link
    * without the url, the link becomes a piece of text
@@ -564,7 +589,6 @@ export default function App() {
    * Closes Detail Popup for links if the user is no longer selecting the link range
    */
   React.useEffect(() => {
-    console.log('yasdbaskjdb');
     if (linkState.showEditor === false) {
       console.log('[CLOSE_LINK_DETAILS EFFECT]');
       const { cursorStart, cursorEnd } = getSelectionIndices(state);
@@ -574,8 +598,6 @@ export default function App() {
         selectionBlockEndID
       } = getSelectionBlockProps(state);
       let cursorIsOnLink = false;
-      console.log(selectionBlockID);
-      console.log(selectionBlockEndID);
       if (cursorIsOnSingleBlock(selectionBlockID, selectionBlockEndID)) {
         findLinkEntities(
           selectionBlock,
@@ -607,9 +629,7 @@ export default function App() {
    * @return {[type]}   [description]
    */
   function closeLinkEditor(e) {
-    console.log('close editor');
-    console.log(linkState);
-    console.log(state.getSelection());
+    console.log('[CLOSE_EDITOR]');
     let contentState;
     if (linkState.linkSelection) {
       contentState = Modifier.removeInlineStyle(
@@ -628,8 +648,11 @@ export default function App() {
     setState(newState);
     dispatch({ type: 'CLOSE_EDITOR' });
   }
+
+  // We need this effect because when the editor is closed, we want to refocus the editor
   React.useEffect(() => {
     if (linkState.showEditor == false) {
+      console.log('[REFOCUS_EDITOR]');
       onEditorFocus();
     }
   }, [linkState.showEditor]);
@@ -642,9 +665,9 @@ export default function App() {
   const onEditorFocus = () => {
     console.log('[ON_EDITOR_FOCUS]: focus the editor');
     setEditorFocus(true);
-    editorRef.current.focus();
   };
   const onEditorBlur = () => {
+    if (linkState.showDetails) return;
     console.log('[ON_EDITOR_BLUR]');
     setEditorFocus(false);
   };
@@ -660,10 +683,10 @@ export default function App() {
   const linkEditorRef = React.useRef(null);
   React.useEffect(() => {
     console.log('[LINK_EDITOR_FOCUS_EFFECT]');
-    if (linkEditorRef.current) {
+    if (linkState.showEditor && linkEditorRef.current) {
       linkEditorRef.current.focus();
     }
-  }, [linkEditorRef.current]);
+  }, [linkState.showEditor]);
   ////////////////////////////////////
   ///       Update the Link        ///
   ////////////////////////////////////
