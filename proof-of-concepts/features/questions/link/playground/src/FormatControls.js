@@ -21,7 +21,6 @@ export const BlockStyleControls = (props) => {
           active={type.style === blockType}
           label={type.label}
           onToggle={props.onToggle}
-          onClick={props.onClick}
           style={type.style}
         />
       ))}
@@ -57,7 +56,6 @@ export const InlineStyleControls = (props) => {
           active={currentStyle.has(type.style)}
           label={type.label}
           onToggle={props.onToggle}
-          onClick={props.onClick}
           style={type.style}
         />
       ))}
@@ -71,17 +69,12 @@ export function StyleButton(props) {
     props.onToggle(props.style);
   };
 
-  const onClick = (e) => {
-    e.preventDefault();
-    props.onClick();
-  };
-
   let className = 'RichEditor-styleButton';
   if (props.active) {
     className += ' RichEditor-activeButton';
   }
   return (
-    <span className={className} onMouseDown={onToggle} onClick={onClick}>
+    <span className={className} onMouseDown={onToggle}>
       {props.label}
     </span>
   );

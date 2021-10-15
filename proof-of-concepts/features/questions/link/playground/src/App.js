@@ -1,6 +1,11 @@
-// put in bottomline
-// blank draft state
-// focus bug
+// link editor correct placement
+// - bug happens when clicking the link editor and no selection with text
+// - we should expect
+//   - if draft contains no text
+//   - place editor at beginning
+//   - if draft contains text
+//   - do nothing, because we don't know where you want the editor
+//
 
 /**
  * Disable format control
@@ -80,13 +85,8 @@ function getTextDOMNodeParent() {
     const range = sel.getRangeAt(0);
     selectionRect = range.startContainer.getBoundingClientRect();
   }
+  console.log();
   return selectionRect.focusNode.parentNode;
-  // let selectionRect = getVisibleSelectionRect(window);
-  // if (!selectionRect) {
-  //   const sel = window.getSelection && window.getSelection();
-  //   const range = sel.getRangeAt(0);
-  //   selectionRect = (range.startContainer as Element).getBoundingClientRect();
-  // }
 }
 
 function linkStateReducer(state, action) {
@@ -165,7 +165,7 @@ function linkStateReducer(state, action) {
       let textDOMNode = hasText
         ? getTextDOMNode(selectionBlockID)
         : getTextDOMNodeParent(selectionBlockID);
-
+      console.log(textDOMNode);
       const textBlockDimensions = textDOMNode.getBoundingClientRect();
       addLinkCoordinates(newLinkState, textBlockDimensions);
 
@@ -222,26 +222,6 @@ export default function App() {
   const [state, setState] = React.useState(
     EditorState.createWithContent(stateFromMarkdown(sampleMarkdown), decorator)
   );
-  const editorRef = React.useRef(null);
-  const [editorFocus, setEditorFocus] = React.useState(false);
-  const onEditorFocus = () => {
-    setEditorFocus(true);
-    editorRef.current.focus();
-  };
-
-  const onEditorBlur = () => {
-    setEditorFocus(false);
-  };
-
-  const formattingControlOnClick = () => {
-    if (editorFocus === false) {
-    }
-  };
-
-  const [linkState, dispatch] = React.useReducer(linkStateReducer, initialLinkState);
-  const linkEditorRef = React.useRef(null);
-  const [disableLinkControl, setDisableLinkControl] = React.useState(false);
-
   const onChange = (editorState) => setState(editorState);
   const toggleBlockType = (blockType) => {
     onChange(RichUtils.toggleBlockType(state, blockType));
@@ -252,26 +232,19 @@ export default function App() {
   const toggleLink = () => {
     onChange(RichUtils.toggleLink(state, state.getSelection()));
   };
+  const logMarkdown = () => {
+    const convertMd = stateToMarkdown(state.getCurrentContent());
+    console.log(convertMd);
+  };
 
-  React.useEffect(() => {
-    const selectionBlockID = state.getSelection().getStartKey();
-    const selectionBlockEndID = state.getSelection().getEndKey();
-    if (cursorIsOnSingleBlock(selectionBlockID, selectionBlockEndID) === false) {
-      setDisableLinkControl(true);
-    } else {
-      setDisableLinkControl(false);
-    }
-  }, [state.getSelection().getStartOffset(), state.getSelection().getEndOffset()]);
-
+  ////////////////////////////////////
+  ///    Open the Link editor      ///
+  ////////////////////////////////////
   function openEditor(e, control) {
     switch (control.type) {
       case 'LINK_DETAILS':
-        const cursorStart = state.getSelection().getStartOffset();
-        const cursorEnd = state.getSelection().getEndOffset();
-        const selectionBlockID = state.getSelection().getStartKey();
-        const selectionBlock = state
-          .getCurrentContent()
-          .getBlockForKey(selectionBlockID);
+        const { cursorStart, cursorEnd } = getSelectionIndices(state);
+        const { selectionBlock } = getSelectionBlockProps(state);
 
         findLinkEntities(
           selectionBlock,
@@ -290,18 +263,29 @@ export default function App() {
         );
         break;
       case 'EDITOR_CONTROL':
-        if (editorFocus == false) {
+        console.log('OPEN EDITOR');
+        console.log(linkState);
+        // if the link-editor is currently open
+        // and the user is continually clicking the link control button
+        // leave the link-editor open and keep the link-editor focused
+        if (linkState.showEditor) {
+          linkEditorRef.current.focus();
+          return;
+          // if the editor isnt focused and has content
+          // the link control button does nothing - move to be an effect
+        } else if (editorFocus == false && state.getCurrentContent().hasText()) {
+          console.log('editor control focus:', editorFocus);
+          return;
+        } else if (
+          editorFocus == false &&
+          state.getCurrentContent().hasText() == false
+        ) {
           onEditorFocus();
         }
         const cursorIsOnLink = linkState.showDetails;
         if (cursorIsOnLink) {
-          const selection = state.getSelection();
-          const cursorStart = state.getSelection().getStartOffset();
-          const cursorEnd = state.getSelection().getEndOffset();
-          const selectionBlockID = state.getSelection().getStartKey();
-          const selectionBlock = state
-            .getCurrentContent()
-            .getBlockForKey(selectionBlockID);
+          const { cursorStart, cursorEnd } = getSelectionIndices(state);
+          const { selectionBlock } = getSelectionBlockProps(state);
 
           findLinkEntities(
             selectionBlock,
@@ -321,8 +305,7 @@ export default function App() {
           break;
         } else {
           // cursor is on text
-          let cursorStart = state.getSelection().getStartOffset();
-          let cursorEnd = state.getSelection().getEndOffset();
+          const { cursorStart, cursorEnd } = getSelectionIndices(state);
           dispatch({
             type: 'OPEN_EDITOR_BY_EDITOR_CONTROL_FOR_TEXT',
             props: {
@@ -338,6 +321,33 @@ export default function App() {
     }
   }
 
+  //////////////////////////////////////////////////
+  ///     Link Control for Formatting Toolbar    ///
+  //////////////////////////////////////////////////
+  const [disableLinkControl, setDisableLinkControl] = React.useState(false);
+  /**
+   * Enables/disables the formatting bar link button based on user cursor position in editor
+   * Disabled: user's cursor range starts and ends on different lines ("blocks" in draft-js terms)
+   * @dependency state.getSelection().getStartOffset() - the anchor index of the user's cursor
+   * @dependency state.getSelection().getEndOffset()  - the focus index of the user's cursor
+   */
+  React.useEffect(() => {
+    const { selectionBlockID, selectionBlockEndID } = getSelectionBlockProps(state);
+    if (cursorIsOnSingleBlock(selectionBlockID, selectionBlockEndID) === false) {
+      setDisableLinkControl(true);
+    } else {
+      setDisableLinkControl(false);
+    }
+  }, [state.getSelection().getStartOffset(), state.getSelection().getEndOffset()]);
+
+  ////////////////////////
+  ///    Link State    ///
+  ////////////////////////
+  const [linkState, dispatch] = React.useReducer(linkStateReducer, initialLinkState);
+
+  /////////////////////////////////////////
+  ///    Transforming Text to a Link    ///
+  /////////////////////////////////////////
   /**
    * EFFECT: Highlight for Text
    * Apply a highlight to the Text DOM Node that the user wants to convert into a link
@@ -350,6 +360,7 @@ export default function App() {
       linkState.textSelection &&
       cursorIsSelectingOriginalText(linkState, textSelection, userSelection)
     ) {
+      console.log('Effect: Highlight for text');
       const editorStateWithTextSelection = EditorState.forceSelection(
         state,
         textSelection
@@ -371,15 +382,81 @@ export default function App() {
       );
       setState(editorStateWithTextHighlight);
     }
-  }, [linkState.textSelection, linkState.showEditor, linkEditorRef.current]);
+  }, [linkState.textSelection, linkState.showEditor]);
+  /**
+   * EFFECT: Closing Editor For TEXT
+   * Detects if the user's cursor is still on the ~Text~ DOM Node that they wanted to convert into a link
+   * Closes the editor if the text no longer has selection
+   */
+  React.useEffect(() => {
+    console.log('Effect: Close Editor for text');
+    const { textSelection } = linkState;
+    const userSelection = state.getSelection();
+    // check if the user's cursor has moved i.e. it is on a different piece of text
+    if (
+      linkState.showEditor &&
+      linkState.textSelection &&
+      !cursorIsSelectingOriginalText(linkState, textSelection, userSelection)
+    ) {
+      const contentState = Modifier.removeInlineStyle(
+        state.getCurrentContent(),
+        linkState.textSelection,
+        'HIGHLIGHT_LINK'
+      );
+      const stateWithoutTextHighlight = EditorState.push(
+        state,
+        contentState,
+        'change-inline-style'
+      );
+      const stateWithUserSelection = EditorState.forceSelection(
+        stateWithoutTextHighlight,
+        userSelection
+      );
+      setState(stateWithUserSelection);
+      dispatch({ type: 'CLOSE_EDITOR' });
+    }
+  }, [state.getSelection().getStartOffset(), state.getSelection().getEndOffset()]);
 
+  ////////////////////////////////////
+  ///     Edit an existing Link    ///
+  ////////////////////////////////////
+  /**
+   * Show Details for Link Entities
+   * Detects if the user's cursor is still on the ~Link~ Entity
+   */
+  React.useEffect(() => {
+    if (linkState.showEditor === false) {
+      const { cursorStart, cursorEnd } = getSelectionIndices(state);
+      const {
+        selectionBlock,
+        selectionBlockID,
+        selectionBlockEndID
+      } = getSelectionBlockProps(state);
+
+      if (cursorIsOnSingleBlock(selectionBlockID, selectionBlockEndID)) {
+        findLinkEntities(
+          selectionBlock,
+          (start, end) => {
+            if (cursorMatchesSingleLinkRange(cursorStart, cursorEnd, start, end)) {
+              dispatch({
+                type: 'OPEN_DETAILS',
+                props: { editorState: state, linkRange: [start, end] }
+              });
+            }
+          },
+          state.getCurrentContent()
+        );
+      }
+    }
+  }, [state.getSelection().getStartOffset(), state.getSelection().getEndOffset()]);
   /**
    * EFFECT: Highlight for link
    * Apply a highlight to the entire link entity range and focus the input box
    */
   React.useEffect(() => {
     if (linkState.linkSelection && linkState.showEditor) {
-      console.log('Highlight Link');
+      console.log('Effect: Highlight for link');
+      // console.log('Highlight Link');
       let selectionState = SelectionState.createEmpty('foo');
       let updatedSelection = selectionState.merge({
         anchorKey: linkState.linkSelection.anchorKey,
@@ -400,7 +477,7 @@ export default function App() {
       const newState = EditorState.push(
         editorWithLinkSelection,
         contentState,
-        'change-inline-styles'
+        'change-inline-style'
       );
 
       const editorWithLinkHighlightAndPreviousSelection = EditorState.forceSelection(
@@ -409,110 +486,16 @@ export default function App() {
       );
       setState(editorWithLinkHighlightAndPreviousSelection);
     }
-  }, [linkState.linkSelection, linkEditorRef.current, linkState.showEditor]);
+  }, [linkState.linkSelection, linkState.showEditor]);
   /**
-   * EFFECT: Focus the link editor
+   * Explicitly remove the url from an existing link
+   * without the url, the link becomes a piece of text
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
    */
-  React.useEffect(() => {
-    if (linkEditorRef.current) {
-      linkEditorRef.current.focus();
-    }
-  }, [linkEditorRef.current]);
-  /**
-   * Change: check to see if the cursor is on two selection blocks
-   * EFFECT: Closing Editor or Details for Link Entities
-   * Detects if the user's cursor is still on the ~Link~ Entity
-   * Closes the details || editor if the link no longer has selection
-   */
-  React.useEffect(() => {
-    // determine if a cursor is on a link element
-    // that tells us that we need to display the details popover - derived state
-    // if so, get coordinates of where to display the popover
-    // get information of what to display in the popover
-    // get the ID of the link that we're displaying the details for
-    console.log('runs');
-    if (linkState.showEditor === false) {
-      const cursorStart = state.getSelection().getStartOffset();
-      const cursorEnd = state.getSelection().getEndOffset();
-      const selectionBlockID = state.getSelection().getStartKey();
-      const selectionBlockEndID = state.getSelection().getEndKey();
-      const selectionBlock = state
-        .getCurrentContent()
-        .getBlockForKey(selectionBlockID);
-      let cursorIsOnLink = false;
-
-      if (cursorIsOnSingleBlock(selectionBlockID, selectionBlockEndID)) {
-        findLinkEntities(
-          selectionBlock,
-          (start, end) => {
-            if (cursorMatchesSingleLinkRange(cursorStart, cursorEnd, start, end)) {
-              cursorIsOnLink = true; // do we need to know if the cursor is on the link in order to know when to keep our popovers open or to close them?
-              dispatch({
-                type: 'OPEN_DETAILS',
-                props: { editorState: state, linkRange: [start, end] }
-              });
-            }
-          },
-          state.getCurrentContent()
-        );
-      }
-      // If the current cursor is no longer on a link
-      // and the link editor is open -> close the editor
-      // and remove the highlight link class from the link range that was selected
-      // in all other cases (the link details is open), close the link details
-      if (!cursorIsOnLink && linkState.showDetails)
-        dispatch({ type: 'CLOSE_DETAILS' });
-    }
-  }, [
-    state.getSelection().getStartOffset(),
-    state.getSelection().getEndOffset(),
-    linkState.linkSelection
-  ]);
-
-  /**
-   * Change: check to see if the cursor is on two selection blocks
-   * EFFECT: Closing Editor For TEXT
-   * Detects if the user's cursor is still on the ~Text~ DOM Node that they wanted to convert into a link
-   * Closes the editor if the text no longer has selection
-   */
-  React.useEffect(() => {
-    const { textSelection } = linkState;
-    const userSelection = state.getSelection();
-    // check if the user's cursor has moved i.e. it is on a different piece of text
-    if (
-      linkState.showEditor &&
-      linkState.textSelection &&
-      !cursorIsSelectingOriginalText(linkState, textSelection, userSelection)
-    ) {
-      const contentState = Modifier.removeInlineStyle(
-        state.getCurrentContent(),
-        linkState.textSelection,
-        'HIGHLIGHT_LINK'
-      );
-      const stateWithoutTextHighlight = EditorState.push(
-        state,
-        contentState,
-        'change-inline-styles'
-      );
-      const stateWithUserSelection = EditorState.forceSelection(
-        stateWithoutTextHighlight,
-        userSelection
-      );
-      setState(stateWithUserSelection);
-      dispatch({ type: 'CLOSE_EDITOR' });
-    }
-  }, [
-    linkState.textSelection,
-    linkState.showEditor,
-    state.getSelection().getStartOffset(),
-    state.getSelection().getEndOffset()
-  ]);
-
   function removeLink(e) {
-    const cursorStart = state.getSelection().getStartOffset();
-    const cursorEnd = state.getSelection().getEndOffset();
-    const selectionBlockID = state.getSelection().getStartKey();
-    const selectionBlock = state.getCurrentContent().getBlockForKey(selectionBlockID);
+    const { cursorStart, cursorEnd } = getSelectionIndices(state);
+    const { selectionBlock, selectionBlockID } = getSelectionBlockIDs(state);
     // capture the original selection state
     // after removing the link
     // place the selectionstate back on the link
@@ -547,9 +530,54 @@ export default function App() {
       state.getCurrentContent()
     );
   }
+  /**
+   * Closes Detail Popup for links if the user is no longer selecting the link range
+   */
+  React.useEffect(() => {
+    if (linkState.showEditor === false) {
+      console.log('Effect: close details or editor if cursor changes');
+      const { cursorStart, cursorEnd } = getSelectionIndices(state);
+      const {
+        selectionBlock,
+        selectionBlockID,
+        selectionBlockEndID
+      } = getSelectionBlockProps(state);
+      let cursorIsOnLink = false;
 
+      if (cursorIsOnSingleBlock(selectionBlockID, selectionBlockEndID)) {
+        findLinkEntities(
+          selectionBlock,
+          (start, end) => {
+            if (cursorMatchesSingleLinkRange(cursorStart, cursorEnd, start, end)) {
+              cursorIsOnLink = true;
+            }
+          },
+          state.getCurrentContent()
+        );
+      }
+      // If the current cursor is no longer on a link
+      // and the link details popup is open -> close the detail popup
+      if (!cursorIsOnLink && linkState.showDetails)
+        dispatch({ type: 'CLOSE_DETAILS' });
+    }
+  }, [
+    state.getSelection().getStartOffset(),
+    state.getSelection().getEndOffset(),
+    linkState.linkSelection
+  ]);
+
+  ////////////////////////////////////
+  ///     Close the Link Editor    ///
+  ////////////////////////////////////
+  /**
+   * [closeLinkEditor description]
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
+   */
   function closeLinkEditor(e) {
     console.log('close editor');
+    console.log(linkState);
+    console.log(state.getSelection());
     let contentState;
     if (linkState.linkSelection) {
       contentState = Modifier.removeInlineStyle(
@@ -568,7 +596,43 @@ export default function App() {
     setState(newState);
     dispatch({ type: 'CLOSE_EDITOR' });
   }
-
+  React.useEffect(() => {
+    if (linkState.showEditor == false) {
+      onEditorFocus();
+    }
+  }, [linkState.showEditor]);
+  ////////////////////////////////////
+  ///       Focus the editor       ///
+  ////////////////////////////////////
+  const editorRef = React.useRef(null);
+  const [editorFocus, setEditorFocus] = React.useState(false);
+  /* FIX: Need refactor? */
+  const onEditorFocus = () => {
+    setEditorFocus(true);
+    editorRef.current.focus();
+  };
+  const onEditorBlur = () => {
+    console.log('editor blur');
+    setEditorFocus(false);
+  };
+  React.useEffect(() => {
+    if (editorRef.current && editorFocus === true) {
+      editorRef.current.focus();
+    }
+  }, [setEditorFocus, editorFocus]);
+  ///////////////////////////////////
+  ///    Focus the link editor    ///
+  ///////////////////////////////////
+  const linkEditorRef = React.useRef(null);
+  React.useEffect(() => {
+    console.log(linkEditorRef);
+    if (linkEditorRef.current) {
+      linkEditorRef.current.focus();
+    }
+  }, [linkEditorRef.current]);
+  ////////////////////////////////////
+  ///       Update the Link        ///
+  ////////////////////////////////////
   /**
    * Update the existing link meaning:
    * change the link's URL or,
@@ -583,7 +647,6 @@ export default function App() {
     let selectionState = SelectionState.createEmpty('link-to-update');
     let updatedSelection;
     if (linkSelection) {
-      // console.log(linkSelection);
       updatedSelection = selectionState.merge({
         anchorKey: linkSelection.anchorKey,
         anchorOffset: linkSelection.anchorOffset,
@@ -617,33 +680,15 @@ export default function App() {
       .getCurrentContent()
       .getBlockForKey(updatedSelection.getStartKey())
       .getType();
-    // console.log(blockType);
 
     setState(EditorState.push(state, newContentState, 'insert-characters'));
     dispatch({ type: 'UPDATE_LINK' });
   }
 
-  const logMarkdown = () => {
-    const convertMd = stateToMarkdown(state.getCurrentContent());
-    console.log(convertMd);
-  };
-
-  const logContentObj = () => {
-    console.log(str);
-  };
-
   return (
     <div className="RichEditor-root">
-      <BlockStyleControls
-        editorState={state}
-        onToggle={toggleBlockType}
-        onClick={formattingControlOnClick}
-      />
-      <InlineStyleControls
-        editorState={state}
-        onToggle={toggleInlineStyle}
-        onClick={formattingControlOnClick}
-      />
+      <BlockStyleControls editorState={state} onToggle={toggleBlockType} />
+      <InlineStyleControls editorState={state} onToggle={toggleInlineStyle} />
       <LinkInlineControl
         disabled={disableLinkControl}
         active={linkState.showDetails || linkState.showEditor}
@@ -656,6 +701,7 @@ export default function App() {
         <Editor
           ref={editorRef}
           onBlur={onEditorBlur}
+          onFocus={onEditorFocus}
           blockStyleFn={getBlockStyle}
           customStyleMap={styleMap}
           editorState={state}
@@ -678,9 +724,24 @@ export default function App() {
         updateLink={updateLink}
       />
       <button onClick={logMarkdown}>Log Markdown</button>
-      <button onClick={logContentObj}>Log to Content Object</button>
     </div>
   );
+}
+
+function getSelectionIndices(editorState) {
+  return {
+    cursorStart: editorState.getSelection().getStartOffset(),
+    cursorEnd: editorState.getSelection().getEndOffset()
+  };
+}
+
+function getSelectionBlockProps(editorState) {
+  let selectionBlockID = editorState.getSelection().getStartKey();
+  return {
+    selectionBlockID,
+    selectionBlockEndID: editorState.getSelection().getEndKey(),
+    selectionBlock: editorState.getCurrentContent().getBlockForKey(selectionBlockID)
+  };
 }
 
 function hasHTTPS(url) {

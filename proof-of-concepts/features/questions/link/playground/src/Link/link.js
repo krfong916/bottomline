@@ -11,7 +11,7 @@ export function LinkInlineControl({
   control,
   disabled
 }) {
-  console.log('disabled:', disabled);
+  // console.log('disabled:', disabled);
   return (
     <div
       aria-disabled={disabled}
@@ -21,6 +21,7 @@ export function LinkInlineControl({
       }}
       onClick={(e) => {
         !disabled && e.preventDefault();
+        e.stopPropagation();
         onClick(e, control);
       }}
     >
@@ -114,7 +115,7 @@ export function LinkEditor({
     if (error) {
       urlInputRef.current.focus();
     }
-  }, [error, urlInputRef.current]);
+  }, [error]);
 
   const handleKeyDown = (e) => {};
 
