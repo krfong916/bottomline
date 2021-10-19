@@ -1,2 +1,0 @@
-- [ ] insert extra newline when a unicode space for bullet item
-- [ ] only show the tooltip if the selection is over one link, meaning if the selection range starts on a link and ends on a link, ensure that the ending is on the same link, otherwise, we aren't selecting a single link, therefore we shouldn't show link options
