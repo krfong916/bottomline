@@ -1,0 +1,79 @@
+@use '../styles/colors.scss';
+@use '../styles/fonts.scss';
+.tag-container {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  line-height: 22px;
+  padding: 2px 6px 2px 6px;
+}
+
+.tag-small {
+  font-size: fonts.$Size-0;
+}
+
+.tag-medium {
+  font-size: fonts.$Size-1;
+}
+
+.tag-large {
+  font-size: fonts.$Size-2;
+}
+
+.tag-label {
+  font-size: inherit;
+}
+
+.tag-outlined {
+  background-color: colors.$Blue-0;
+  border: 1px solid colors.$Blue-7;
+  color: colors.$Blue-7;
+}
+
+.tag-solid {
+  background-color: colors.$Blue-6;
+  color: white;
+}
+
+.tag-icon-left {
+  order: -1;
+  margin-right: 4px;
+}
+
+.tag-icon-right {
+  order: 0;
+  margin-left: 4px;
+}
+
+.tag-icon {
+  height: 20px;
+  padding: 1px; // for the fun of it
+}
+
+.tag-close-button {
+  display: inline-block;
+  border: none;
+  background-color: transparent;
+  color: inherit;
+  margin-left: 4px;
+  cursor: pointer;
+  height: 20px;
+  padding: 1px; // for the fun of it
+}
+
+.tag-close-button:hover,
+.tag-close-button:focus {
+  background-color: colors.$Blue-6;
+  color: colors.$Gray-0;
+  border-radius: 6px;
+}
+
+.tag-close-button:focus {
+  outline: 0;
+}
+
+.tag-close-icon {
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+}
