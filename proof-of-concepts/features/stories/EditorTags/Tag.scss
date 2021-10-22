@@ -20,13 +20,15 @@
   font-size: fonts.$Size-2;
 }
 
-.tag-label {
-  font-size: inherit;
-}
-
 .tag-outlined {
   background-color: colors.$Blue-0;
   border: 1px solid colors.$Blue-7;
+  color: colors.$Blue-7;
+}
+
+.tag-no-outline {
+  background-color: colors.$Blue-1;
+  opacity: 90%;
   color: colors.$Blue-7;
 }
 
@@ -74,6 +76,7 @@
 
 .tag-close-icon {
   display: inline-block;
-  height: 100%;
-  width: 100%;
+  pointer-events: none;
+  // height: 100%;
+  // width: 100%;
 }

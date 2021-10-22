@@ -10,13 +10,17 @@ import './Tag.scss';
  ********************/
 interface TagProps {
   size: 'small' | 'medium' | 'large';
-  type: 'solid' | 'outlined';
-  children: React.ReactChildren;
+  type: 'solid' | 'outlined' | 'no-outline';
+  text: string;
+  children?: React.ReactChildren;
+  onClick?: (e: React.MouseEvent<HTMLSpanElement>) => void;
 }
 
 export const Tag = ({
   size = 'small',
   type = 'outlined',
+  text = '',
+  onClick,
   children,
   ...props
 }: TagProps) => {
@@ -26,28 +30,13 @@ export const Tag = ({
     [`tag-${size}`]: true,
     [`tag-${type}`]: true
   });
-  return <span className={tagContainerClass}>{children}</span>;
+  return (
+    <span {...props} onClick={onClick} className={tagContainerClass}>
+      {text}
+      {children}
+    </span>
+  );
 };
-
-/*******************
- *                  *
- *    Tag Label     *
- *                  *
- ********************/
-interface TagLabel {
-  text: string;
-  onClick?: () => void;
-}
-
-export const TagLabel = React.forwardRef<HTMLSpanElement>(
-  ({ text, onClick, ...props }: TagLabel) => {
-    return (
-      <span className="tag-label" {...props} onClick={onClick}>
-        {text}
-      </span>
-    );
-  }
-);
 
 /********************
  *                  *
@@ -55,7 +44,7 @@ export const TagLabel = React.forwardRef<HTMLSpanElement>(
  *                  *
  ********************/
 interface TagIcon {
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLSpanElement>) => void;
   children: React.ReactNode;
   orientation: 'left' | 'right';
   ref?: React.MutableRefObject;
@@ -88,9 +77,8 @@ export const TagIcon = ({
  *                         *
  ***************************/
 interface TagCloseButtonProps {
-  onClose?: () => void;
+  onClose?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   ariaLabel?: string;
-  // closeIcon?: React.ReactChildren;
   ref?: React.MutableRefObject;
 }
 
