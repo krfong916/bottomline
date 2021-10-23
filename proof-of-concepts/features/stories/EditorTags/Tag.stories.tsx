@@ -327,20 +327,35 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
    * 
    */
   const createTag = (userInput: string) => {
-    // console.log('[CREATE_TAG]');
+    // strip text from characters not allowed
     let text = cleanText(userInput);
-    let tags = getTags(tagEditorState);
-    if (isDuplicate(text, tags)) {
+
+    // if the text contained bad characters, then return
+    if (text === '') return;
+
+    // check if we have a duplicate tag entry
+    if (isDuplicate(text, tagEditorState)) {
       setDuplicateTagAlert(getDuplicateTagAlert(text));
+
+      // create the tag
     } else {
+      // create a fresh piece of state to modify
       let newState = { ...tagEditorState };
-      let tagIndex = newState.inputState.index;
+
       let newTag = {
         name: text
       } as EditorTag;
-      newState.inputState.index = tagIndex + 1;
+
+      // move our input to the next index
+      newState.inputState.index++;
+
+      // insert the tag into our dictionary of tags
       newState.tags.set(text, newTag);
+
+      // update our left-hand side container
       newState.lhs.push(newTag);
+
+      // update state
       setTagEditorState(newState);
     }
   };
@@ -487,12 +502,30 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
   };
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // console.log('[HANDLE_ONCHANGE]: ', e.target.value);
+    console.log('[HANDLE_ONCHANGE]: ', e.target.value);
     // console.log('[HANDLE_ONCHANGE]: ', e.charCode);
 
-    if (isWhitespace(e.target.value) === false) {
-      setTagEditorInputValue(e.target.value);
-      if (duplicateTagAlert) setDuplicateTagAlert('');
+    const text = e.target.value;
+
+    if (isWhitespace(text) === false) {
+      // update the text value
+      setTagEditorInputValue(text);
+
+      // if the editor has a duplicate tag, we remove the duplicate flag in the onChange handler
+      // because the user is signaling that they've decided to correct the duplicate
+      if (duplicateTagAlert) {
+        setDuplicateTagAlert('');
+      }
+    }
+  };
+
+  const handleOnPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    console.log('[ON_PASTE]');
+    const text = event.clipboardData.getData('text');
+
+    if (text.length > 1) {
+      // create tags from the user's pasted text
+      text.split(' ').forEach((pieceOfText) => createTag(pieceOfText));
     }
   };
 
@@ -516,6 +549,7 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
           onKeyDown={handKeyDown}
           onKeyPress={handleKeyPress}
           onChange={handleOnChange}
+          onPaste={handleOnPaste}
           onBlur={handleBlur}
           onFocus={handleFocus}
           className="tag-editor-input"
@@ -696,13 +730,16 @@ function getTags(tagEditorState: TagEditor): string[] {
   return tagsList;
 }
 
-function cleanText(text: string): string {
+function cleanText(text) {
   let regex = /[a-z]|[A-Z]|[0-9]|[\-]/g;
   let cleaned = text.match(regex);
-  return cleaned.join('').toLowerCase();
+  if (!cleaned) return '';
+  const res = cleaned.join('').toLowerCase();
+  return res;
 }
 
-function isDuplicate(tagText: string, tags: string[]): boolean {
+function isDuplicate(tagText: string, tagEditorState: TagEditor): boolean {
+  let tags: string[] = getTags(tagEditorState);
   if (tags.length === 0) return false;
   return tags.includes(tagText);
 }
