@@ -193,6 +193,8 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
   const editTag = (e: React.MouseEvent<React.ReactNode>) => {
     console.log('[EDIT_TAG]');
     const { name, index, tagContainer } = getTagAttributes(e.target);
+    console.log(name, index, tagContainer);
+    console.log(tagEditorInputValue);
   };
 
   /**
@@ -207,116 +209,12 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
     // prevents other click handlers on the Tag component from firing
     e.stopPropagation();
     console.log('[REMOVE_TAG]');
-    const newState = { ...tagEditorState };
     const { name, index, tagContainer } = getTagAttributes(e.target);
-
-    switch (tagContainer) {
-      case 'lhs':
-        //
-        //  LHS Tag Removal
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  LHS Container:  0   1   2   3   4   5   6   7     k      RHS Container: k+1 k+2 ... k+n
-        //                 tag tag tag tag tag tag tag tag <input>                  tag tag ... tag
-        //                                  ^
-        //                                  |
-        //                                remove
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  - Get the total length of all tags, len(lhs) + len(rhs)
-        //  - Beginning from index + 1 of the removal tag
-        //        (i.e. don't include the tag to be removed) to the index of the input
-        //        Prepend tags to the RHS container
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  LHS Container:  0   1   2   3   RHS Container:  5   6   7     k    k+1 k+2 ... k+n
-        //                 tag tag tag tag                 tag tag tag <input> tag tag ... tag
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  - Index of the input tag = index of the tag removed
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  LHS Container:  0   1   2   3      4 (new k)    RHS Container:  5   6   7  k+1 k+2 ... k+n
-        //                 tag tag tag tag      <input>                    tag tag tag tag tag ... tag
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-
-        // delete the head
-        if (index === 0) {
-          let tagsToPrepend = newState.lhs.splice(index + 1);
-          newState.rhs = tagsToPrepend.concat(newState.rhs);
-          newState.lhs = [];
-          // delete the tail
-        } else if (index === newState.lhs.length - 1) {
-          newState.lhs.pop();
-        } else {
-          // otherwise, delete in-place
-          let numItems = newState.inputState.index - index + 1;
-          let tagsToPrepend = newState.lhs.splice(index + 1, numItems);
-          newState.rhs = tagsToPrepend.concat(newState.rhs);
-          newState.lhs.pop();
-        }
-        break;
-      case 'rhs':
-        //
-        //  RHS Tag Removal
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  LHS Container:  0   1   2   3   4   5   6   7     k      RHS Container: k+1 k+2 ... k+n
-        //                 tag tag tag tag tag tag tag tag <input>                  tag tag     tag
-        //                                                                               ^
-        //                                                                               |
-        //                                                                             remove
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  - Get the total length of all tags, lhs + rhs
-        //  - Beginning from the index of the input+1 to the index of the removal tag
-        //        Append tags to the LHS container
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  LHS Container:  0   1   2   3   4   5   6   7     k    k+1  RHS Container:  ... k+n
-        //                 tag tag tag tag tag tag tag tag <input> tag                  tag tag
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  - Index of the input tag = index of the tag removed
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-        //  LHS Container:  0   1   2   3   4   5   6   7   8     k       RHS Container: ... k+n
-        //                 tag tag tag tag tag tag tag tag tag <input>                   tag tag
-        //
-        //  -------------------------------------------------------------------------------------------
-        //
-
-        // delete the head
-        if (index === 0) {
-          newState.rhs.shift();
-          // delete the tail
-        } else if (index === newState.rhs.length - 1) {
-          newState.rhs.pop();
-          newState.lhs = newState.lhs.concat(newState.rhs);
-          newState.rhs = [];
-        } else {
-          // otherwise, delete in-place
-          // delete up to the index, splice is right-boundary non-inclusive
-          let appendRHS = newState.rhs.splice(0, index);
-          newState.lhs = newState.lhs.concat(appendRHS);
-          newState.rhs.shift();
-        }
-        break;
-      default:
-        throw new TypeError('Unhandled exception');
-    }
+    const newState = reconstructContainer(tagEditorState, {
+      name,
+      index,
+      tagContainer
+    });
     newState.inputState.index = index;
     newState.tags.delete(name);
     setTagEditorState(newState);
@@ -466,22 +364,60 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
   };
 
   const handKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowLeft') {
-      console.log(e.target.selectionStart);
-      console.log(e.target.selectionEnd);
-    }
-    console.log('[HANDLE_KEYDOWN]');
-    if (e.key === BACKSPACE) {
-      console.log(e.target.selectionStart);
-      console.log(e.target.selectionEnd);
+    // while we have more than one tag and we're not currently editing the first tag of the LHS container
+    if (
+      e.key === 'ArrowLeft' &&
+      e.target.selectionStart === 0 &&
+      tagEditorState.lhs.length > 0 &&
+      tagEditorState.inputState.index !== 0
+    ) {
+      // store value of the input's current value, used later to create a tag
+      let inputTextValue = tagEditorInputValue;
+
+      // store the index of the left-hand container's last tag, used later to be the input value
+      let index = tagEditorState.lhs.length - 1;
+
+      if (tagEditorState.lhs.length > 0) {
+        // store the last tag to operate on
+        let leftMostTag = tagEditorState.lhs[index];
+
+        // delete the left hand-side tag
+        let newState = reconstructContainer(tagEditorState, {
+          name: leftMostTag.name,
+          tagContainer: 'lhs',
+          index: tagEditorState.lhs.length - 1
+        });
+        newState.tags.delete(leftMostTag.name);
+
+        if (isEmpty(inputTextValue) === false) {
+          // create and prepend the tag to the RHS container
+          let newTag = { name: inputTextValue } as EditorTag;
+          newState.rhs.unshift(newTag);
+          newState.tags.set(name, newTag);
+        }
+        // update the current index of the input, relative to the items in the LH and RH containers
+        newState.inputState.index = index;
+
+        // update the editor state
+        setTagEditorState(newState);
+
+        // update the controlled component's input value
+        setTagEditorInputValue(leftMostTag.name);
+      }
+    } else if (
+      e.key === BACKSPACE &&
+      e.target.selectionStart === 0 &&
+      tagEditorState.lhs.length > 0 &&
+      tagEditorState.inputState.index !== 0
+    ) {
     }
   };
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('[HANDLE_ONCHANGE]: ', e.target.value);
     console.log('[HANDLE_ONCHANGE]: ', e.charCode);
-    const whitespaceTest = new RegExp(/\s/);
-    if (whitespaceTest.test(e.target.value) === false) {
+
+    if (isWhitespace(e.target.value) === false) {
       setTagEditorInputValue(e.target.value);
       if (duplicateTagAlert) setDuplicateTagAlert('');
     }
@@ -527,6 +463,119 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
   );
 };
 
+function reconstructContainer(tagEditorState, { name, index, tagContainer }) {
+  const newState = { ...tagEditorState };
+  switch (tagContainer) {
+    case 'lhs':
+      //
+      //  LHS Tag Removal
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  LHS Container:  0   1   2   3   4   5   6   7     k      RHS Container: k+1 k+2 ... k+n
+      //                 tag tag tag tag tag tag tag tag <input>                  tag tag ... tag
+      //                                  ^
+      //                                  |
+      //                                remove
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  - Get the total length of all tags, len(lhs) + len(rhs)
+      //  - Beginning from index + 1 of the removal tag
+      //        (i.e. don't include the tag to be removed) to the index of the input
+      //        Prepend tags to the RHS container
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  LHS Container:  0   1   2   3   RHS Container:  5   6   7     k    k+1 k+2 ... k+n
+      //                 tag tag tag tag                 tag tag tag <input> tag tag ... tag
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  - Index of the input tag = index of the tag removed
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  LHS Container:  0   1   2   3      4 (new k)    RHS Container:  5   6   7  k+1 k+2 ... k+n
+      //                 tag tag tag tag      <input>                    tag tag tag tag tag ... tag
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+
+      // delete the head
+      if (index === 0) {
+        let tagsToPrepend = newState.lhs.splice(index + 1);
+        newState.rhs = tagsToPrepend.concat(newState.rhs);
+        newState.lhs = [];
+        // delete the tail
+      } else if (index === newState.lhs.length - 1) {
+        newState.lhs.pop();
+      } else {
+        // otherwise, delete in-place
+        let numItems = newState.inputState.index - index + 1;
+        let tagsToPrepend = newState.lhs.splice(index + 1, numItems);
+        newState.rhs = tagsToPrepend.concat(newState.rhs);
+        newState.lhs.pop();
+      }
+      break;
+    case 'rhs':
+      //
+      //  RHS Tag Removal
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  LHS Container:  0   1   2   3   4   5   6   7     k      RHS Container: k+1 k+2 ... k+n
+      //                 tag tag tag tag tag tag tag tag <input>                  tag tag     tag
+      //                                                                               ^
+      //                                                                               |
+      //                                                                             remove
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  - Get the total length of all tags, lhs + rhs
+      //  - Beginning from the index of the input+1 to the index of the removal tag
+      //        Append tags to the LHS container
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  LHS Container:  0   1   2   3   4   5   6   7     k    k+1  RHS Container:  ... k+n
+      //                 tag tag tag tag tag tag tag tag <input> tag                  tag tag
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  - Index of the input tag = index of the tag removed
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+      //  LHS Container:  0   1   2   3   4   5   6   7   8     k       RHS Container: ... k+n
+      //                 tag tag tag tag tag tag tag tag tag <input>                   tag tag
+      //
+      //  -------------------------------------------------------------------------------------------
+      //
+
+      // delete the head
+      if (index === 0) {
+        newState.rhs.shift();
+        // delete the tail
+      } else if (index === newState.rhs.length - 1) {
+        newState.rhs.pop();
+        newState.lhs = newState.lhs.concat(newState.rhs);
+        newState.rhs = [];
+      } else {
+        // otherwise, delete in-place
+        // delete up to the index, splice is right-boundary non-inclusive
+        let appendRHS = newState.rhs.splice(0, index);
+        newState.lhs = newState.lhs.concat(appendRHS);
+        newState.rhs.shift();
+      }
+      break;
+    default:
+      throw new TypeError('Unhandled exception');
+  }
+
+  return newState;
+}
+
 function getTagAttributes(target: HTMLElement) {
   return {
     name: target.getAttribute('data-name'),
@@ -537,6 +586,11 @@ function getTagAttributes(target: HTMLElement) {
 
 function getDuplicateTagAlert(text: string): string {
   return `Unable to create the tag "${text}", duplicate of a tag that you've already created. Text cleared, please continue typing as you were`;
+}
+
+function isWhitespace(str: string): boolean {
+  const whitespaceTest = new RegExp(/\s/);
+  return whitespaceTest.test(str);
 }
 
 function getTags(tagEditorState: TagEditor): string[] {
