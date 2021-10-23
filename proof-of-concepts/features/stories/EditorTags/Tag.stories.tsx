@@ -115,6 +115,8 @@ const tagProps = {
 } as TagProps;
 
 const ENTER = 'Enter';
+const ARROW_LEFT = 'ArrowLeft';
+const ARROW_RIGHT = 'ArrowRight';
 const BACKSPACE = 'Backspace';
 const SPACEBAR = 32;
 const initTagEditorValue = '';
@@ -218,6 +220,7 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
     newState.inputState.index = index;
     newState.tags.delete(name);
     setTagEditorState(newState);
+    setTagEditorInputValue(initTagEditorValue);
     focusRef.current.focus();
   };
 
@@ -358,58 +361,83 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
       (e.key === ENTER && isEmpty(tagEditorInputValue) == false) ||
       (e.charCode === SPACEBAR && isEmpty(tagEditorInputValue) == false)
     ) {
-      createTag(e.target.value);
       setTagEditorInputValue(initTagEditorValue);
+      createTag(e.target.value);
     }
   };
 
   const handKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // while we have more than one tag and we're not currently editing the first tag of the LHS container
-    if (
-      e.key === 'ArrowLeft' &&
-      e.target.selectionStart === 0 &&
-      tagEditorState.lhs.length > 0 &&
-      tagEditorState.inputState.index !== 0
-    ) {
-      // store value of the input's current value, used later to create a tag
-      let inputTextValue = tagEditorInputValue;
+    if (editPrevIsValid(e, tagEditorState)) {
+      if (e.key === ARROW_LEFT) {
+        // store value of the input's current value, used later to create a tag
+        let inputTextValue = tagEditorInputValue;
 
-      // store the index of the left-hand container's last tag, used later to be the input value
-      let index = tagEditorState.lhs.length - 1;
+        // store the index of the left-hand container's last tag, used later to be the input value
+        let index = tagEditorState.lhs.length - 1;
 
-      if (tagEditorState.lhs.length > 0) {
-        // store the last tag to operate on
-        let leftMostTag = tagEditorState.lhs[index];
+        if (tagEditorState.lhs.length > 0) {
+          // store the last tag to operate on
+          let leftMostTag = tagEditorState.lhs[index];
 
-        // delete the left hand-side tag
-        let newState = reconstructContainer(tagEditorState, {
-          name: leftMostTag.name,
-          tagContainer: 'lhs',
-          index: tagEditorState.lhs.length - 1
-        });
-        newState.tags.delete(leftMostTag.name);
+          // delete the left hand-side tag
+          let newState = reconstructContainer(tagEditorState, {
+            name: leftMostTag.name,
+            tagContainer: 'lhs',
+            index: tagEditorState.lhs.length - 1
+          });
+          newState.tags.delete(leftMostTag.name);
 
+          if (isEmpty(inputTextValue) === false) {
+            // create and prepend the tag to the RHS container
+            let newTag = { name: inputTextValue } as EditorTag;
+            newState.rhs.unshift(newTag);
+            newState.tags.set(name, newTag);
+          }
+          // update the current index of the input, relative to the items in the LH and RH containers
+          newState.inputState.index = index;
+
+          // update the editor state
+          setTagEditorState(newState);
+
+          // update the controlled component's input value
+          setTagEditorInputValue(leftMostTag.name);
+          return;
+        }
+      } else if (e.key === BACKSPACE) {
+        return;
+      }
+    }
+
+    if (editForwardIsValid(e, tagEditorState)) {
+      console.log(e.key);
+      if (e.key === ARROW_RIGHT) {
+        // store value of the input's current value, used later to create a tag
+        let inputTextValue = tagEditorInputValue;
+        // the index of the new input, relateive to the lh and rh containers
+        let newInputIndex = tagEditorState.lhs.length + 1;
+        // store the head of the rh container, the tag that we will edit
+        let head = tagEditorState.rhs[0];
+        let newState = { ...tagEditorState };
+        // create a tag from the current input value
         if (isEmpty(inputTextValue) === false) {
-          // create and prepend the tag to the RHS container
           let newTag = { name: inputTextValue } as EditorTag;
-          newState.rhs.unshift(newTag);
+          newState.lhs.push(newTag);
           newState.tags.set(name, newTag);
         }
-        // update the current index of the input, relative to the items in the LH and RH containers
-        newState.inputState.index = index;
-
-        // update the editor state
+        // delete the head from the rh container
+        newState = reconstructContainer(newState, {
+          name: head.name,
+          index: 0, // the head of the RHS container
+          tagContainer: 'rhs'
+        });
+        newState.tags.delete(head.name);
+        // update the input state to be the new index
+        newState.inputState.index = newInputIndex;
         setTagEditorState(newState);
-
-        // update the controlled component's input value
-        setTagEditorInputValue(leftMostTag.name);
+        setTagEditorInputValue(head.name);
+        return;
       }
-    } else if (
-      e.key === BACKSPACE &&
-      e.target.selectionStart === 0 &&
-      tagEditorState.lhs.length > 0 &&
-      tagEditorState.inputState.index !== 0
-    ) {
     }
   };
 
@@ -574,6 +602,34 @@ function reconstructContainer(tagEditorState, { name, index, tagContainer }) {
   }
 
   return newState;
+}
+
+function editForwardIsValid(
+  e: React.KeyboardEvent<HTMLInputElement>,
+  tagEditorState: TagEditor
+): boolean {
+  // console.log('selection: ', e.target.selectionEnd);
+  // console.log('length of target:', e.target.value.length);
+
+  console.log('input index:', tagEditorState.inputState.index);
+  console.log('len(lhs): ', tagEditorState.lhs.length);
+  console.log('len(rhs): ', tagEditorState.rhs.length);
+  return (
+    e.target.selectionEnd === e.target.value.length &&
+    tagEditorState.rhs.length > 0 &&
+    tagEditorState.inputState.index !==
+      tagEditorState.lhs.length + tagEditorState.rhs.length
+  );
+}
+function editPrevIsValid(
+  e: React.KeyboardEvent<HTMLInputElement>,
+  tagEditorState: TagEditor
+): boolean {
+  return (
+    e.target.selectionStart === 0 &&
+    tagEditorState.lhs.length > 0 &&
+    tagEditorState.inputState.index !== 0
+  );
 }
 
 function getTagAttributes(target: HTMLElement) {
