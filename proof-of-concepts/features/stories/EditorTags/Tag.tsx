@@ -8,7 +8,7 @@ import './Tag.scss';
  *       Tag        *
  *                  *
  ********************/
-interface TagProps {
+export interface TagProps {
   size: 'small' | 'medium' | 'large';
   type: 'solid' | 'outlined' | 'no-outline';
   text: string;
