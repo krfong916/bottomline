@@ -119,6 +119,7 @@ export const TagEditor = () => {
   const [tagEditorInputValue, setTagEditorInputValue] = React.useState(
     initTagEditorValue
   );
+  const [tagSuggestions, setTagSuggestions] = React.useState({ data: null });
 
   /*********************************************************
    *                                                       *
@@ -543,87 +544,27 @@ export const TagEditor = () => {
         </ul>
         {duplicateTagAlert ? <p role="alert">{duplicateTagAlert}</p> : null}
       </div>
-      <div className="tag-suggestions">
-        <ul className="tag-suggestions__list">
-          <li className="tag-suggestions__list-item" tabIndex={0}>
-            <div className="tag-suggestions__header">
-              <Tag size="small" type="no-outline" text="material-analysis" />
-              <span className="tag-suggestions__count">80</span>
-              <GoQuestion className="tag-suggestions__info" />
-            </div>
-            <span className="tag-suggestions__body">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Possimus nisi
-              sequi aut neque earum ipsa, voluptas quo adipisci ratione iste nihil sed
-              placeat accusamus aliquid nam magnam laborum delectus quos?
-            </span>
-          </li>
-          <li className="tag-suggestions__list-item" tabIndex={0}>
-            <div className="tag-suggestions__header">
-              <Tag size="small" type="no-outline" text="material-analysis" />
-              <span className="tag-suggestions__count">14</span>
-              <GoQuestion className="tag-suggestions__info" />
-            </div>
-            <span className="tag-suggestions__body">
-              Lorem ipsum dolor, sit amet consectetur adipisicing, elit. Beatae
-              accusamus excepturi neque dolore in? Vel nisi excepturi et rerum laborum
-              nemo nam, iste dolor, accusamus ipsam tenetur doloremque. Deleniti,
-              veritatis.
-            </span>
-          </li>
-          <li className="tag-suggestions__list-item" tabIndex={0}>
-            <div className="tag-suggestions__header">
-              <Tag size="small" type="no-outline" text="material-analysis" />
-              <span className="tag-suggestions__count">17</span>
-              <GoQuestion className="tag-suggestions__info" />
-            </div>
-            <span className="tag-suggestions__body">
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quisquam at
-              fugit a veniam dolorum in odit necessitatibus ex debitis recusandae
-              architecto, amet atque facere iusto accusamus quidem tempore, corrupti
-              dolores.
-            </span>
-          </li>
-          <li className="tag-suggestions__list-item" tabIndex={0}>
-            <div className="tag-suggestions__header">
-              <Tag size="small" type="no-outline" text="material-analysis" />
-              <span className="tag-suggestions__count">403</span>
-              <GoQuestion className="tag-suggestions__info" />
-            </div>
-            <span className="tag-suggestions__body">
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eius amet
-              adipisci dolores hic debitis. Dicta rerum at explicabo adipisci, magni
-              perferendis veniam dolor voluptates fugiat fuga provident, ipsa! Harum,
-              vel?
-            </span>
-          </li>
-          <li className="tag-suggestions__list-item" tabIndex={0}>
-            <div className="tag-suggestions__header">
-              <Tag size="small" type="no-outline" text="material-analysis" />
-              <span className="tag-suggestions__count">211</span>
-              <GoQuestion className="tag-suggestions__info" />
-            </div>
-            <span className="tag-suggestions__body">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Similique,
-              voluptatem ullam suscipit ipsa at fugiat nostrum quisquam ad laudantium
-              sunt consequatur velit distinctio eligendi, labore neque. Aliquam
-              sapiente, eum dolorum!
-            </span>
-          </li>
-          <li className="tag-suggestions__list-item" tabIndex={0}>
-            <div className="tag-suggestions__header">
-              <Tag size="small" type="no-outline" text="material-analysis" />
-              <span className="tag-suggestions__count">5</span>
-              <GoQuestion className="tag-suggestions__info" />
-            </div>
-            <span className="tag-suggestions__body">
-              Lorem ipsum, dolor sit amet consectetur, adipisicing elit. Ipsum
-              eligendi vero sed rem, quisquam a dignissimos possimus nostrum
-              laudantium aliquid eaque, vel corrupti dolorum nisi alias aspernatur
-              molestias? Quos, maiores?
-            </span>
-          </li>
-        </ul>
-      </div>
+      {tagSuggestions.data ? (
+        <div className="tag-suggestions">
+          <ul className="tag-suggestions__list">
+            {tagSuggestions.suggestions.map((suggestion) => {
+              const url = `thebottomlineapp.com/tags/${suggestion.name}/info`;
+              return (
+                <li className="tag-suggestions__list-item" tabIndex={0}>
+                  <div className="tag-suggestions__header">
+                    <Tag size="small" type="no-outline" text={suggestion.name} />
+                    <span className="tag-suggestions__count">{suggestion.count}</span>
+                    <a href={url}>
+                      <GoQuestion className="tag-suggestions__info" />
+                    </a>
+                  </div>
+                  <span className="tag-suggestions__body">{suggestion.excerpt}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 };
