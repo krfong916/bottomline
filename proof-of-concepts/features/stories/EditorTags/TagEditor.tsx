@@ -26,6 +26,7 @@ type TagEditor = {
   tags: Map<string, EditorTag>;
   lhs: EditorTag[];
   rhs: EditorTag[];
+  inputValue: string;
 };
 
 type inputState = {
@@ -37,14 +38,15 @@ interface EditorTag {
   name: string;
 }
 
-const initialTagEditorState = {
+const initialState = {
   inputState: {
     index: 0,
     text: undefined
   },
   tags: new Map<string, EditorTag>(),
   lhs: [],
-  rhs: []
+  rhs: [],
+  inputValue: ''
 } as TagEditor;
 
 const props = {
@@ -113,14 +115,8 @@ function TagEditorReducer(state, action) {
  *
  */
 export const TagEditor = () => {
-  const [tagEditorState, setTagEditorState] = React.useState<TagEditor>(
-    initialTagEditorState
-  );
-  const [tagEditorInputValue, setTagEditorInputValue] = React.useState(
-    initTagEditorValue
-  );
+  const [state, setState] = React.useState<TagEditor>(initialState);
   const [tagSuggestions, setTagSuggestions] = React.useState({ data: null });
-
   /*********************************************************
    *                                                       *
    *       Screen Reader Dialogue and Form Errors          *
@@ -174,7 +170,7 @@ export const TagEditor = () => {
     console.log('[EDIT_TAG]');
     const { name, index, tagContainer } = getTagAttributes(e.target);
     console.log(name, index, tagContainer);
-    console.log(tagEditorInputValue);
+    console.log(state.inputValue);
   };
 
   /**
@@ -193,16 +189,16 @@ export const TagEditor = () => {
     e.stopPropagation();
     console.log('[REMOVE_TAG]');
     const { name, index, tagContainer } = getTagAttributes(e.target);
-    const newState = reconstructContainer(tagEditorState, {
+    const newState = reconstructContainer(state, {
       name,
       index,
       tagContainer
     });
     newState.inputState.index = index;
+    newState.inputValue = initTagEditorValue;
     newState.tags.delete(name);
     console.log('[REMOVE_TAG]:', newState);
-    setTagEditorState(newState);
-    setTagEditorInputValue(initTagEditorValue);
+    setState(newState);
     focusRef.current.focus();
   };
 
@@ -221,7 +217,7 @@ export const TagEditor = () => {
    *
    */
   const LHSTags = () =>
-    tagEditorState.lhs.map((tag, index) => (
+    state.lhs.map((tag, index) => (
       <Tag
         onClick={editTag}
         size={props.size}
@@ -254,7 +250,7 @@ export const TagEditor = () => {
    * Use the Tag Component
    */
   const RHSTags = () =>
-    tagEditorState.rhs.map((tag, index) => (
+    state.rhs.map((tag, index) => (
       <Tag
         onClick={editTag}
         size={props.size}
@@ -316,13 +312,13 @@ export const TagEditor = () => {
     if (text === '') return;
 
     // check if we have a duplicate tag entry
-    if (isDuplicate(text, tagEditorState)) {
+    if (isDuplicate(text, state)) {
       setDuplicateTagAlert(getDuplicateTagAlert(text));
 
       // create the tag
     } else {
       // create a fresh piece of state to modify
-      let newState = { ...tagEditorState };
+      let newState = { ...state };
 
       let newTag = {
         name: text
@@ -337,14 +333,18 @@ export const TagEditor = () => {
       // update our left-hand side container
       newState.lhs.push(newTag);
 
+      // refresh the value of the input
+      newState.inputValue = '';
+
       // update state
-      setTagEditorState(newState);
+      setState(newState);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.charCode === SPACEBAR && isEmpty(tagEditorInputValue) == false) {
-      setTagEditorInputValue(initTagEditorValue);
+    if (e.charCode === SPACEBAR && isEmpty(state.inputValue) == false) {
+      console.log('submit: ', { ...state, ...{ inputValue: initTagEditorValue } });
+      setState({ ...state, ...{ inputValue: initTagEditorValue } });
       createTag(e.target.value);
     }
   };
@@ -363,23 +363,23 @@ export const TagEditor = () => {
    */
   const handKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // while we have more than one tag and we're not currently editing the first tag of the LHS container
-    if (editPrevIsValid(e, tagEditorState)) {
+    if (editPrevIsValid(e, state)) {
       if (e.key === ARROW_LEFT) {
         // store value of the input's current value, used later to create a tag
-        let inputTextValue = tagEditorInputValue;
+        let inputTextValue = state.inputValue;
 
         // store the index of the left-hand container's last tag, used later to be the input value
-        let index = tagEditorState.lhs.length - 1;
+        let index = state.lhs.length - 1;
 
-        if (tagEditorState.lhs.length > 0) {
+        if (state.lhs.length > 0) {
           // store the last tag to operate on
-          let leftMostTag = tagEditorState.lhs[index];
+          let leftMostTag = state.lhs[index];
 
           // delete the left hand-side tag
-          let newState = reconstructContainer(tagEditorState, {
+          let newState = reconstructContainer(state, {
             name: leftMostTag.name,
             tagContainer: 'lhs',
-            index: tagEditorState.lhs.length - 1
+            index: state.lhs.length - 1
           });
           newState.tags.delete(leftMostTag.name);
 
@@ -392,12 +392,13 @@ export const TagEditor = () => {
           // update the current index of the input, relative to the items in the LH and RH containers
           newState.inputState.index = index;
 
+          // update the controlled component's input value
+          newState.inputValue = leftMostTag.name;
+
           // update the editor state
           console.log('[EDIT_PREV]:', newState);
-          setTagEditorState(newState);
+          setState(newState);
 
-          // update the controlled component's input value
-          setTagEditorInputValue(leftMostTag.name);
           return;
         }
       } else if (e.key === BACKSPACE) {
@@ -405,49 +406,50 @@ export const TagEditor = () => {
         e.preventDefault();
 
         // store value of the input's current value, used later to create a tag
-        let inputTextValue = tagEditorInputValue;
+        let inputTextValue = state.inputValue;
 
         // store the index of the left-hand container's last tag, used later to be the input value
-        let index = tagEditorState.lhs.length - 1;
+        let index = state.lhs.length - 1;
 
-        if (tagEditorState.lhs.length > 0) {
+        if (state.lhs.length > 0) {
           // store the last tag to operate on
-          let leftMostTag = tagEditorState.lhs[index];
+          let leftMostTag = state.lhs[index];
           let newInputText = leftMostTag.name.concat('', inputTextValue);
 
           // delete the left hand-side tag
-          let newState = reconstructContainer(tagEditorState, {
+          let newState = reconstructContainer(state, {
             name: leftMostTag.name,
             tagContainer: 'lhs',
-            index: tagEditorState.lhs.length - 1
+            index: state.lhs.length - 1
           });
           newState.tags.delete(leftMostTag.name);
 
           // update the current index of the input, relative to the items in the LH and RH containers
           newState.inputState.index = index;
 
-          // update the editor state
-          setTagEditorState(newState);
-
           // update the controlled component's input value
-          setTagEditorInputValue(newInputText);
+          newState.inputValue = newInputText;
+
+          // update the editor state
+          setState(newState);
+
           return;
         }
       }
     }
 
-    if (editForwardIsValid(e, tagEditorState)) {
+    if (editForwardIsValid(e, state)) {
       if (e.key === ARROW_RIGHT) {
         // store value of the input's current value, used later to create a tag
-        let inputTextValue = tagEditorInputValue;
+        let inputTextValue = state.inputValue;
 
         // the index of the new input, relateive to the lh and rh containers
-        let newInputIndex = tagEditorState.lhs.length + 1;
+        let newInputIndex = state.lhs.length + 1;
 
         // store the head of the rh container, the tag that we will edit
-        let head = tagEditorState.rhs[0];
+        let head = state.rhs[0];
 
-        let newState = { ...tagEditorState };
+        let newState = { ...state };
 
         // create a tag from the current input value
         if (isEmpty(inputTextValue) === false) {
@@ -468,12 +470,13 @@ export const TagEditor = () => {
         // update the input state to be the new index
         newState.inputState.index = newInputIndex;
 
+        // update the controlled component's input value
+        newState.inputValue = head.name;
+
         // update the editor state
         console.log('[ARROW_RIGHT]:', newState);
-        setTagEditorState(newState);
+        setState(newState);
 
-        // update the controlled component's input value
-        setTagEditorInputValue(head.name);
         return;
       }
     }
@@ -487,7 +490,8 @@ export const TagEditor = () => {
 
     if (isWhitespace(text) === false) {
       // update the text value
-      setTagEditorInputValue(text);
+      console.log({ ...state, ...{ inputValue: text } });
+      setState({ ...state, ...{ inputValue: text } });
 
       // if the editor has a duplicate tag, we remove the duplicate flag in the onChange handler
       // because the user is signaling that they've decided to correct the duplicate
@@ -523,7 +527,7 @@ export const TagEditor = () => {
         <input
           type="text"
           autoComplete="off"
-          value={tagEditorInputValue}
+          value={state.inputValue}
           onKeyDown={handKeyDown}
           onKeyPress={handleKeyPress}
           onChange={handleOnChange}
@@ -532,7 +536,7 @@ export const TagEditor = () => {
           onFocus={handleFocus}
           className="tag-editor-input"
           aria-describedby="tagInputDescription"
-          style={{ width: 20 + tagEditorInputValue.length + 'px' }}
+          style={{ width: 20 + state.inputValue.length + 'px' }}
           ref={focusRef}
         />
         <ul className="b-tag-list">
@@ -569,8 +573,8 @@ export const TagEditor = () => {
   );
 };
 
-function reconstructContainer(tagEditorState, { name, index, tagContainer }) {
-  const newState = { ...tagEditorState };
+function reconstructContainer(state, { name, index, tagContainer }) {
+  const newState = { ...state };
   switch (tagContainer) {
     case 'lhs':
       //
@@ -693,23 +697,22 @@ function reconstructContainer(tagEditorState, { name, index, tagContainer }) {
 
 function editForwardIsValid(
   e: React.KeyboardEvent<HTMLInputElement>,
-  tagEditorState: TagEditor
+  state: TagEditor
 ): boolean {
   return (
     e.target.selectionEnd === e.target.value.length &&
-    tagEditorState.rhs.length > 0 &&
-    tagEditorState.inputState.index !==
-      tagEditorState.lhs.length + tagEditorState.rhs.length
+    state.rhs.length > 0 &&
+    state.inputState.index !== state.lhs.length + state.rhs.length
   );
 }
 function editPrevIsValid(
   e: React.KeyboardEvent<HTMLInputElement>,
-  tagEditorState: TagEditor
+  state: TagEditor
 ): boolean {
   return (
     e.target.selectionStart === 0 &&
-    tagEditorState.lhs.length > 0 &&
-    tagEditorState.inputState.index !== 0
+    state.lhs.length > 0 &&
+    state.inputState.index !== 0
   );
 }
 
@@ -730,8 +733,8 @@ function isWhitespace(str: string): boolean {
   return whitespaceTest.test(str);
 }
 
-function getTags(tagEditorState: TagEditor): string[] {
-  let tags = tagEditorState.tags;
+function getTags(state: TagEditor): string[] {
+  let tags = state.tags;
   if (tags.size === 0) return [];
   let tagsList = [];
   tags.forEach((_, tagName) => tagsList.push(tagName));
@@ -746,8 +749,8 @@ function cleanText(text) {
   return res;
 }
 
-function isDuplicate(tagText: string, tagEditorState: TagEditor): boolean {
-  let tags: string[] = getTags(tagEditorState);
+function isDuplicate(tagText: string, state: TagEditor): boolean {
+  let tags: string[] = getTags(state);
   if (tags.length === 0) return false;
   return tags.includes(tagText);
 }
