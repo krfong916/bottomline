@@ -1,24 +1,30 @@
 import * as React from 'react';
+import bottomlineComboboxReducer from './combobox/reducer';
+import { useElementId, generateId } from './combobox/utils';
+type Item = {
+  name: string;
+};
 
-interface ComboBoxProps {
-  onChange: () => {};
+interface ItemToStringFunction {
+  (item: Item): string;
 }
 
-type Item = {};
+export interface ComboboxProps {
+  items?: Item[];
+  itemToString?: ItemToStringFunction;
+  initialInputValue?: string;
+  initialIsOpen?: boolean;
+  onInputChange?: () => string;
+  labelId?: string;
+  inputId?: string;
+  id?: string;
+}
 
-type ComboboxState = {
-  currentItem: Item;
-  isOpen: boolean;
-  currentIndex: number;
-};
+interface ItemsListRef {
+  [key: string]: Item;
+}
 
-const initialState = {
-  currentItem: null,
-  isOpen: false,
-  currentIndex: 0
-};
-
-export function useCombobox(props: ComboBoxProps) {
+export function useCombobox(props: ComboboxProps = {}) {
   /**
    * ****************
    *
@@ -27,9 +33,11 @@ export function useCombobox(props: ComboBoxProps) {
    * ****************
    *
    */
-  const [state, setState] = React.useState<ComboboxState>(
-    getInitialState(props, initialState)
+  const [state, setState] = React.useReducer(
+    bottomlineComboboxReducer,
+    getInitialState(props)
   );
+  const { isOpen, highlightedIndex } = state;
 
   /**
    * ******
@@ -40,39 +48,215 @@ export function useCombobox(props: ComboBoxProps) {
    *
    */
   // stores the DOM reference to the input element
-  const inputRef = React.useRef(null);
+  const inputRef = React.useRef<HTMLElement & HTMLInputElement>(null);
+  // stores the DOM reference to the label for the combobox
+  const labelRef = React.useRef<HTMLElement>(null);
   // stores the DOM reference to the popup box
-  const comboboxRef = React.useRef(null);
+  const popupRef = React.useRef(null);
   // stores the DOM reference to the list of items
-  const itemsListRef = React.useRef(null);
+  const itemsListRef = React.useRef<ItemsListRef>({});
   // stores the DOM reference to the current item
   const latestItem = React.useRef(null);
 
   /**
-   * ******
+   * *************************
    *
+   * Accessibility Identifiers
    *
-   *
-   * ******
+   * *************************
    *
    */
+  // Returns accessibility identifiers and identifiers for items
+  const elementIds = useElementId(props);
 
-  function getItemProps() {}
-  function getPopupProps() {}
-  function getInputProps() {}
-  function getLabelProps() {}
+  // props.items.forEach((item) => {
+  //   const uniqueKey = `bottomline-combobox-item-${generateId()}` as keyof ItemsListRef;
+  //   itemsListRef.current[uniqueKey] = item;
+  // });
+
+  /**
+   * ******************
+   *
+   * Focus Management
+   *
+   * ******************
+   *
+   *
+   */
+  React.useEffect(() => {
+    if (inputRef.current && state.isOpen) {
+      inputRef.current.focus();
+    }
+  }, [state.isOpen]);
+  // implement: when a combobox receives focus, DOM focus is placed on the textbox element
+  // implement: when an item of the popup is box focused, DOM focus remains on thextbox
+
+  /**
+   * **************
+   *
+   * Prop Getters
+   *
+   * **************
+   *
+   * The combobox implements the ARIA 1.1 pattern
+   * https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-6
+   *
+   */
+  function getLabelProps() {
+    return {
+      id: elementIds.labelId,
+      for: elementIds.inputId
+    };
+  }
+
+  function getComboboxProps(ariaLabel?: string) {
+    // Implement: if the combobox has a visible label, the element with role combobox has aria-labelledby
+    // set to a value that refers to the labelling element.
+    // Otherwise, the combobox element has a label provided by aria-label.
+    return {
+      role: 'combobox',
+      ['aria-expanded']: isOpen ? true : false
+    };
+  }
+
+  /**
+   * @param {ComboboxAriaPopup} = {} as ComboboxInputProps} { ariaPopup }
+   *   in the ugliest, most-verbose way possible, we're saying
+   *   if the user has defined a specific type of popup, then destructure
+   *   otherwise, the user may have not passed any args, so default to an empty object
+   */
+  function getInputProps(
+    { ariaPopup }: { ariaPopup?: ComboboxAriaPopup } = {} as ComboboxInputProps
+  ) {
+    let ariaHasPopup = ariaPopup ? ariaPopup : ('grid' as ComboboxAriaPopup);
+
+    // Implement: when a descendant of a grid is focused DOM focus remains on the textbox
+    // and the textbox has aria-activedescendant set to a value
+    // that refers to the focused element within the popup.
+    return {
+      ref: inputRef,
+      role: 'textbox',
+      ['aria-haspopup']: ariaHasPopup,
+      ['aria-controls']: isOpen ? 'bottomline-popup' : '',
+      ['aria-multiline']: false,
+      ['aria-autocomplete']: 'list' as ComboboxAriaAutoComplete
+      // ['aria-activedescendant']:
+    };
+  }
+  function getPopupProps(
+    {
+      role,
+      ariaLabel
+    }: { ariaLabel?: string; role?: string } = {} as ComboboxPopupProps
+  ) {
+    let popupRole = 'grid';
+    if (role) popupRole = role;
+
+    return {
+      role: popupRole,
+      id: 'bottomline-popup',
+      ['aria-label']: ariaLabel
+    };
+  }
+
+  function getItemProps() {
+    return {
+      // In a combobox with a grid
+      // when a suggested value is visually indicated as the currently selected value
+      // the gridcell containing that value has aria-selected set to true.
+    };
+  }
+
+  function getGridPopupProps() {}
+  function getGridPopupRowProps() {}
+  function getGridPopupItemProps() {
+    return {
+      role: 'gridcell'
+    };
+  }
 
   return {
+    isOpen,
+    highlightedIndex,
+    // combobox-specific prop getters
+    getLabelProps,
+    getComboboxProps,
+    getInputProps,
     getItemProps,
     getPopupProps,
-    getInputProps,
-    getLabelProps
+    // combobox-grid prop getters
+    getGridPopupProps,
+    getGridPopupRowProps,
+    getGridPopupItemProps
   };
 }
 
-function getInitialState(props: ComboBoxProps, state: ComboboxState): ComboboxState {
+export type ComboboxState = {
+  currentItem: null | Item;
+  isOpen: boolean;
+  highlightedIndex: number;
+  inputValue: string;
+};
+
+const initialState = {
+  currentItem: null,
+  isOpen: false,
+  highlightedIndex: -1,
+  inputValue: ''
+};
+
+function getInitialState(props: ComboboxProps): ComboboxState {
+  const isOpen = getInitialValue(props, 'isOpen');
+  const inputValue = getInitialValue(props, 'inputValue');
+  const highlightedIndex = getInitialValue(props, 'highlightedIndex');
+  const currentItem = getInitialValue(props, 'currentItem');
+
   return {
-    ...props,
-    ...state
+    isOpen,
+    inputValue,
+    highlightedIndex: isOpen ? (highlightedIndex !== -1 ? highlightedIndex : 0) : -1,
+    currentItem
   };
+}
+
+function getInitialValue(props: ComboboxProps, propKey: keyof ComboboxState): any {
+  // if props contains a key-name that also exists in the state object, word-for-word
+  if (propKey in props) {
+    return props[propKey as keyof ComboboxProps];
+  }
+
+  // get the user-provided initial prop state
+  const initialPropKey = `initial${capitalizeString(propKey)}` as keyof ComboboxProps;
+  if (props[initialPropKey]) {
+    return props[initialPropKey];
+  }
+
+  // otherwise, just return the properties initial value that exists in state
+  return initialState[propKey as keyof ComboboxState];
+}
+
+function capitalizeString(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export interface ComboboxInputProps {
+  ariaPopup?: ComboboxAriaPopup;
+  ariaAutoComplete?: ComboboxAriaAutoComplete;
+}
+
+export type ComboboxAriaAutoComplete = 'none' | 'list' | 'both';
+
+export type ComboboxAriaPopup =
+  | boolean
+  | 'dialog'
+  | 'menu'
+  | 'grid'
+  | 'false'
+  | 'true'
+  | 'listbox'
+  | 'tree';
+
+export interface ComboboxPopupProps {
+  ariaLabel?: string;
+  role?: string;
 }

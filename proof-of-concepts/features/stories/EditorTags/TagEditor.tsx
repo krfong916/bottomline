@@ -4,6 +4,7 @@ import { GoQuestion } from 'react-icons/go';
 import classNames from 'classnames';
 import './TagUseCase.scss';
 import './TagEditor.scss';
+import { TagSuggestions } from './__tests__/testingUtils';
 /**
  * *******************
  *
@@ -70,35 +71,14 @@ interface TagUseCaseProps {
   onChange?: () => void;
   defaultIsHighlighted?: boolean;
 }
-
-function TagEditorReducer(state, action) {
-  switch (action.type) {
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    case '':
-
-    default:
-      throw new TypeError(`Unhandled action: ${action.type} for Tag Editor Reducer`);
-  }
-}
+const sugg = [
+  { name: 'material-analysis', count: 5 },
+  { name: 'class-analysis', count: 33 },
+  { name: 'materialism', count: 12 },
+  { name: 'dialectical-materialism', count: 9 },
+  { name: 'historical-materialism', count: 5 },
+  { name: 'materialist-theory', count: 2 }
+];
 
 /**
  * *******************
@@ -114,7 +94,22 @@ function TagEditorReducer(state, action) {
  * user has option to use the editor as an autocomplete
  *
  */
+
+interface ItemsListRef {
+  [key: string]: Item;
+}
 export const TagEditor = () => {
+  const itemsListRef = React.useRef<ItemsListRef>({});
+  // we want to store the items and only update the list reference when the items change
+  // in the getItemProps, we want to assign each item an id that we can reference
+  React.useCallback(() => {
+    sugg.forEach((item: Item, index: number) => {
+      console.log('num times ran');
+      const id = `item-${index}`;
+      itemsListRef.current[id] = item;
+    });
+  }, [itemsListRef]);
+  console.log(itemsListRef);
   const [state, setState] = React.useState<TagEditor>(initialState);
   const [tagSuggestions, setTagSuggestions] = React.useState({ data: null });
   /*********************************************************

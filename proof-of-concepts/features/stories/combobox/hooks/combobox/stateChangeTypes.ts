@@ -7,6 +7,7 @@ export enum StateChangeTypes {
   INPUT_KEYDOWN_ENTER = '[input-keydown-enter]',
   INPUT_ITEM_CLICK = '[input-item-click]',
   INPUT_BLUR = '[input-blur]',
+  INPUT_VALUE_CHANGE = '[input-value-change]',
   FUNCTION_OPEN_POPUP = '[function-open-popup]',
   FUNCTION_CLOSE_POPUP = '[function-close-popup]',
   FUNCTION_SET_HIGHLIGHTED_INDEX = '[function-set-highlighted-index]',
