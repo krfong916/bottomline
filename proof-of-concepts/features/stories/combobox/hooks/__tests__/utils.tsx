@@ -6,16 +6,21 @@ import { SampleItems } from './testingUtils';
 
 const dataTestIds = {
   input: 'input-testid',
-  popup: 'popup-testid'
+  popup: 'popup-testid',
+  label: 'label-testid'
 };
 
-export function renderCombobox(props: ComboboxProps) {
+export function renderCombobox(props?: ComboboxProps) {
   const container = render(<ComboboxGrid {...props} />);
   const input = screen.getByTestId(dataTestIds.input);
   const popup = screen.getByTestId(dataTestIds.popup);
+  const label = screen.getByTestId(dataTestIds.label);
+  const combobox = screen.getByRole('combobox');
   return {
     input,
-    popup
+    popup,
+    combobox,
+    label
   };
 }
 
@@ -23,20 +28,22 @@ function ComboboxGrid(props: ComboboxProps) {
   const {
     isOpen,
     getLabelProps,
-    getPopupProps,
+    getComboboxProps,
     getInputProps,
+    getPopupProps,
     getItemProps,
     getGridPopupItemProps
   } = useCombobox(props);
   return (
     <div>
-      <div>
-        <label {...getLabelProps()}></label>
+      <label data-testid={dataTestIds.label} {...getLabelProps()}></label>
+      <div {...getComboboxProps()}>
         <input data-testid={dataTestIds.input} {...getInputProps()}></input>
-        {isOpen ? (
-          <div data-testid={dataTestIds.popup} {...getPopupProps()}>
-            <ul>
-              {SampleItems.map((item, index) => {
+      </div>
+      <div data-testid={dataTestIds.popup} {...getPopupProps()}>
+        <ul>
+          {isOpen
+            ? SampleItems.map((item, index) => {
                 const url = `thebottomlineapp.com/item/${item.name}/info`;
                 const itemKey = `item-${index}`;
                 return (
@@ -53,10 +60,9 @@ function ComboboxGrid(props: ComboboxProps) {
                     <span>{item.text}</span>
                   </li>
                 );
-              })}
-            </ul>
-          </div>
-        ) : null}
+              })
+            : null}
+        </ul>
       </div>
     </div>
   );

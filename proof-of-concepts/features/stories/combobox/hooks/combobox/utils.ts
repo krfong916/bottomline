@@ -5,16 +5,18 @@ let count = 0;
 export function useElementId({
   id = `bottomline-${generateId()}`,
   labelId,
-  inputId
+  inputId,
+  menuId
 }: Partial<ComboboxProps>) {
   const elementIds = useRef({
     id,
     labelId: labelId || `${id}-label`,
-    inputId: inputId || `${id}-input`
+    inputId: inputId || `${id}-input`,
+    menuId: menuId || `${id}-menu`
   });
   return elementIds.current;
 }
 
 export function generateId() {
-  return count++;
+  return Math.floor(Math.random() * 1000) + count;
 }

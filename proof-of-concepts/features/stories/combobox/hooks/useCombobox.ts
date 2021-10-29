@@ -18,6 +18,7 @@ export interface ComboboxProps {
   labelId?: string;
   inputId?: string;
   id?: string;
+  menuId?: string;
 }
 
 interface ItemsListRef {
@@ -89,6 +90,11 @@ export function useCombobox(props: ComboboxProps = {}) {
     }
   }, [state.isOpen]);
   // implement: when a combobox receives focus, DOM focus is placed on the textbox element
+  const setComboboxFocus = () => {
+    if (document.activeElement !== inputRef.current && inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
   // implement: when an item of the popup is box focused, DOM focus remains on thextbox
 
   /**
@@ -105,39 +111,40 @@ export function useCombobox(props: ComboboxProps = {}) {
   function getLabelProps() {
     return {
       id: elementIds.labelId,
-      for: elementIds.inputId
+      htmlFor: elementIds.inputId
     };
   }
 
-  function getComboboxProps(ariaLabel?: string) {
+  /**
+   * @param {ComboboxAriaPopup} = {} as ComboboxGetterProps} { ariaPopup }
+   *   in the ugliest, most-verbose way possible, we're saying
+   *   if the user has defined a specific type of popup, then destructure
+   *   otherwise, the user may have not passed any args, so default to an empty object
+   */
+  function getComboboxProps(
+    { ariaPopup }: { ariaPopup?: ComboboxAriaPopup } = {} as ComboboxGetterProps
+  ) {
+    let ariaHasPopup = ariaPopup ? ariaPopup : ('grid' as ComboboxAriaPopup);
     // Implement: if the combobox has a visible label, the element with role combobox has aria-labelledby
     // set to a value that refers to the labelling element.
     // Otherwise, the combobox element has a label provided by aria-label.
     return {
       role: 'combobox',
-      ['aria-expanded']: isOpen ? true : false
+      ['aria-expanded']: isOpen ? true : false,
+      ['aria-haspopup']: ariaHasPopup,
+      ['aria-labelledby']: elementIds.labelId,
+      onClick: setComboboxFocus
     };
   }
 
-  /**
-   * @param {ComboboxAriaPopup} = {} as ComboboxInputProps} { ariaPopup }
-   *   in the ugliest, most-verbose way possible, we're saying
-   *   if the user has defined a specific type of popup, then destructure
-   *   otherwise, the user may have not passed any args, so default to an empty object
-   */
-  function getInputProps(
-    { ariaPopup }: { ariaPopup?: ComboboxAriaPopup } = {} as ComboboxInputProps
-  ) {
-    let ariaHasPopup = ariaPopup ? ariaPopup : ('grid' as ComboboxAriaPopup);
-
+  function getInputProps() {
     // Implement: when a descendant of a grid is focused DOM focus remains on the textbox
     // and the textbox has aria-activedescendant set to a value
     // that refers to the focused element within the popup.
     return {
       ref: inputRef,
       role: 'textbox',
-      ['aria-haspopup']: ariaHasPopup,
-      ['aria-controls']: isOpen ? 'bottomline-popup' : '',
+      ['aria-controls']: isOpen ? elementIds.menuId : '',
       ['aria-multiline']: false,
       ['aria-autocomplete']: 'list' as ComboboxAriaAutoComplete
       // ['aria-activedescendant']:
@@ -154,7 +161,7 @@ export function useCombobox(props: ComboboxProps = {}) {
 
     return {
       role: popupRole,
-      id: 'bottomline-popup',
+      id: elementIds.menuId,
       ['aria-label']: ariaLabel
     };
   }
@@ -238,9 +245,11 @@ function getInitialValue(props: ComboboxProps, propKey: keyof ComboboxState): an
 function capitalizeString(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+export interface ComboboxGetterProps {
+  ariaPopup?: ComboboxAriaPopup;
+}
 
 export interface ComboboxInputProps {
-  ariaPopup?: ComboboxAriaPopup;
   ariaAutoComplete?: ComboboxAriaAutoComplete;
 }
 
