@@ -146,9 +146,22 @@ describe('combobox accessibility', () => {
     expect(input).toHaveFocus();
   });
 
-  // test('when a descendant (gridcell in our case) is highlighted, the input continues to have focus ', () => {});
-  // test('when a descendant (gridcell in our case) is highlighted, aria-activedescendant value refers to element of the highlightedIndex within the grid', () => {});
-  // test('when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true', () => {});
+  test('when a descendant (gridcell in our case) is highlighted, the input continues to have focus ', () => {
+    const { input } = renderCombobox({ initialIsOpen: true });
+    const item = screen.getByRole('gridcell', { selected: true });
+    expect(item).toBeDefined();
+    expect(input).toHaveFocus();
+  });
+
+  /* Implicitly, this test also tests the following condition:
+     - when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true */
+  test('when a descendant (gridcell in our case) is highlighted, the aria-activedescendant value assigned to textbox refers to element of the highlightedIndex within the grid', () => {
+    const { input } = renderCombobox({ initialIsOpen: true });
+    const item = screen.getByRole('gridcell', { selected: true });
+    const activeDescendant = input.getAttribute('aria-activedescendant');
+    const highlightedDescendantId = item.getAttribute('id');
+    expect(activeDescendant).toEqual(highlightedDescendantId);
+  });
 
   test('if the combobox has a label, the element with combobox has aria-labelledby set to a value that refers to the labelling element', () => {
     const { label, combobox } = renderCombobox();
@@ -166,7 +179,7 @@ describe('combobox accessibility', () => {
 /**
  * ****************
  *
- * Testing ways to select an item
+ * Testing ways to select an item and custom click handlers
  *
  * ****************
  */

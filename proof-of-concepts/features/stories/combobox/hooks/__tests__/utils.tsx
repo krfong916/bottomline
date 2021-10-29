@@ -31,8 +31,7 @@ function ComboboxGrid(props: ComboboxProps) {
     getComboboxProps,
     getInputProps,
     getPopupProps,
-    getItemProps,
-    getGridPopupItemProps
+    getItemProps
   } = useCombobox(props);
   return (
     <div>
@@ -47,12 +46,7 @@ function ComboboxGrid(props: ComboboxProps) {
                 const url = `thebottomlineapp.com/item/${item.name}/info`;
                 const itemKey = `item-${index}`;
                 return (
-                  <li
-                    key={itemKey}
-                    tabIndex={0}
-                    {...getItemProps(index)}
-                    {...getGridPopupItemProps()}
-                  >
+                  <li key={itemKey} tabIndex={0} {...getItemProps(index)}>
                     <div>
                       <span>{item.name}</span>
                       <span>{item.count}</span>

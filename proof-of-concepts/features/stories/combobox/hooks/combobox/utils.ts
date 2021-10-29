@@ -12,7 +12,8 @@ export function useElementId({
     id,
     labelId: labelId || `${id}-label`,
     inputId: inputId || `${id}-input`,
-    menuId: menuId || `${id}-menu`
+    menuId: menuId || `${id}-menu`,
+    getItemId: (index: number) => `${id}-item-${index}`
   });
   return elementIds.current;
 }

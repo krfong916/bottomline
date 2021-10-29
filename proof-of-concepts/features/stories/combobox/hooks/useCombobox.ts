@@ -70,10 +70,11 @@ export function useCombobox(props: ComboboxProps = {}) {
   // Returns accessibility identifiers and identifiers for items
   const elementIds = useElementId(props);
 
-  // props.items.forEach((item) => {
-  //   const uniqueKey = `bottomline-combobox-item-${generateId()}` as keyof ItemsListRef;
-  //   itemsListRef.current[uniqueKey] = item;
-  // });
+  // fetches the item based on the index as argument
+  const getItemFromIndex = React.useCallback(
+    (index) => itemsListRef.current[elementIds.getItemId(index)],
+    [itemsListRef]
+  );
 
   /**
    * ******************
@@ -89,7 +90,8 @@ export function useCombobox(props: ComboboxProps = {}) {
       inputRef.current.focus();
     }
   }, [state.isOpen]);
-  // implement: when a combobox receives focus, DOM focus is placed on the textbox element
+
+  // Area of concern: when a combobox receives focus, DOM focus is placed on the textbox element
   const setComboboxFocus = () => {
     if (document.activeElement !== inputRef.current && inputRef.current) {
       inputRef.current.focus();
@@ -144,10 +146,15 @@ export function useCombobox(props: ComboboxProps = {}) {
     return {
       ref: inputRef,
       role: 'textbox',
-      ['aria-controls']: isOpen ? elementIds.menuId : '',
+      ['aria-controls']: elementIds.menuId,
       ['aria-multiline']: false,
-      ['aria-autocomplete']: 'list' as ComboboxAriaAutoComplete
-      // ['aria-activedescendant']:
+      ['aria-autocomplete']: 'list' as ComboboxAriaAutoComplete,
+      // fancy way of saying: assign the id of the item that is stored in the list of items
+      // as the aria-activedescendant, otherwise, merge a "null" (false) value
+      ...(isOpen &&
+        highlightedIndex > -1 && {
+          ['aria-activedescendant']: elementIds.getItemId(highlightedIndex)
+        })
     };
   }
   function getPopupProps(
@@ -162,24 +169,21 @@ export function useCombobox(props: ComboboxProps = {}) {
     return {
       role: popupRole,
       id: elementIds.menuId,
-      ['aria-label']: ariaLabel
+      ['aria-labelledby']: elementIds.labelId
     };
   }
 
-  function getItemProps() {
+  // items are excluded from the tab sequence
+  function getItemProps(index: number) {
     return {
-      // In a combobox with a grid
-      // when a suggested value is visually indicated as the currently selected value
-      // the gridcell containing that value has aria-selected set to true.
+      role: 'gridcell',
+      id: elementIds.getItemId(index),
+      ['aria-selected']: `${index === highlightedIndex}`
     };
   }
 
-  function getGridPopupProps() {}
-  function getGridPopupRowProps() {}
-  function getGridPopupItemProps() {
-    return {
-      role: 'gridcell'
-    };
+  function getGridPopupRowProps() {
+    return { role: 'row' };
   }
 
   return {
@@ -192,9 +196,7 @@ export function useCombobox(props: ComboboxProps = {}) {
     getItemProps,
     getPopupProps,
     // combobox-grid prop getters
-    getGridPopupProps,
-    getGridPopupRowProps,
-    getGridPopupItemProps
+    getGridPopupRowProps
   };
 }
 
