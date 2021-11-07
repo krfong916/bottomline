@@ -1,53 +1,59 @@
-import { StateChangeTypes } from './stateChangeTypes';
-import { ComboboxState } from '../useCombobox';
-
-interface ComboboxAction {
-  type: StateChangeTypes;
-}
+import { BL } from './types';
 
 export default function bottomlineComboboxReducer(
-  state: ComboboxState,
-  action: ComboboxAction
-) {
-  const { type } = action;
+  state: BL.ComboboxState,
+  action: BL.ComboboxAction
+): BL.ComboboxState {
+  const { type, getItemFromIndex } = action;
+  const { isOpen, highlightedIndex } = state;
   switch (type) {
-    case StateChangeTypes.INPUT_KEYDOWN_ARROW_UP: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP: {
       return state;
     }
-    case StateChangeTypes.INPUT_KEYDOWN_ARROW_UP: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN: {
+      console.log(highlightedIndex);
       return state;
     }
-    case StateChangeTypes.INPUT_KEYDOWN_ARROW_DOWN: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT: {
       return state;
     }
-    case StateChangeTypes.INPUT_KEYDOWN_ARROW_LEFT: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT: {
       return state;
     }
-    case StateChangeTypes.INPUT_KEYDOWN_ARROW_RIGHT: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_ESCAPE: {
       return state;
     }
-    case StateChangeTypes.INPUT_KEYDOWN_ESCAPE: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_ENTER: {
       return state;
     }
-    case StateChangeTypes.INPUT_KEYDOWN_ENTER: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_BACKSPACE: {
       return state;
     }
-    case StateChangeTypes.INPUT_ITEM_CLICK: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_DELETE: {
       return state;
     }
-    case StateChangeTypes.INPUT_BLUR: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_HOME: {
       return state;
     }
-    case StateChangeTypes.FUNCTION_OPEN_POPUP: {
+    case BL.ComboboxActions.INPUT_KEYDOWN_END: {
       return state;
     }
-    case StateChangeTypes.FUNCTION_CLOSE_POPUP: {
+    case BL.ComboboxActions.INPUT_ITEM_CLICK: {
       return state;
     }
-    case StateChangeTypes.FUNCTION_SET_HIGHLIGHTED_INDEX: {
+    case BL.ComboboxActions.INPUT_BLUR: {
       return state;
     }
-    case StateChangeTypes.FUNCTION_SELECT_ITEM: {
+    case BL.ComboboxActions.FUNCTION_OPEN_POPUP: {
+      return state;
+    }
+    case BL.ComboboxActions.FUNCTION_CLOSE_POPUP: {
+      return state;
+    }
+    case BL.ComboboxActions.FUNCTION_SET_HIGHLIGHTED_INDEX: {
+      return state;
+    }
+    case BL.ComboboxActions.FUNCTION_SELECT_ITEM: {
       return state;
     }
     default:
