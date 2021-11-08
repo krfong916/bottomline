@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
 import { renderCombobox, renderUseCombobox } from './utils';
-import { screen, render, fireEvent } from '@testing-library/react';
+import { screen, render, fireEvent, getAllByRole } from '@testing-library/react';
+import { SampleItems } from './testingUtils';
 import '@testing-library/jest-dom/extend-expect';
 
 describe('useCombobox hook', () => {
@@ -68,9 +69,17 @@ describe('useCombobox hook', () => {
    *
    * ****************
    */
-  test('when the popup is open, a down arrow keydown event places highlighted index on the first grid cell', () => {
-    const { input } = renderCombobox({ initialIsOpen: true });
+  test('when the popup is open, a down arrow keydown event places highlighted index on the first grid item', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const firstItem = items[0];
+    expect(firstItem.classList).not.toContain('current-item-highlight');
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    expect(input).toHaveFocus();
+    expect(firstItem.classList).toContain('current-item-highlight');
   });
 
   // up arrow when on the first element places focus back on the input but does not clsoe the popup

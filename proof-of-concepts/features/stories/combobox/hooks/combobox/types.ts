@@ -13,7 +13,7 @@ export namespace BL {
     initialIsOpen?: boolean;
     initialInputValue?: string;
     selectedItem?: Item;
-    items?: Item[];
+    items: Item[];
     itemToString?: (item: Item) => string;
     onSelectedItemChange?: (changes: ComboboxState) => void;
     onInputValueChange?: (changes: ComboboxState) => void;
@@ -29,10 +29,10 @@ export namespace BL {
   };
 
   // Combobox Items
-  export type Item = {
+  export interface Item {
     name: string;
     contents: any;
-  };
+  }
   export type ItemsList = Record<string, Item>;
 
   // Prop Getters
@@ -58,14 +58,6 @@ export namespace BL {
   }
 
   // Combobox reducer
-  export interface ComboboxAction {
-    type: ComboBoxStateChangeTypes;
-    getItemFromIndex: (index: number) => Item;
-  }
-
-  export type ComboBoxStateChangeTypes = ComboboxActions;
-  export type ComboboxActionAndChanges = ComboboxState & ComboBoxStateChangeTypes;
-
   export enum ComboboxActions {
     INPUT_KEYDOWN_ARROW_UP = '[input-keydown-arrow-up]',
     INPUT_KEYDOWN_ARROW_DOWN = '[input-keydown-arrow-down]',
@@ -84,5 +76,15 @@ export namespace BL {
     FUNCTION_CLOSE_POPUP = '[function-close-popup]',
     FUNCTION_SET_HIGHLIGHTED_INDEX = '[function-set-highlighted-index]',
     FUNCTION_SELECT_ITEM = '[function-select-item]'
+  }
+
+  export type ComboBoxStateChangeTypes = ComboboxActions;
+
+  export type ComboboxActionAndChanges = ComboboxState & ComboBoxStateChangeTypes;
+
+  export interface ComboboxAction {
+    type: ComboBoxStateChangeTypes;
+    getItemFromIndex: (index: number) => Item;
+    props: ComboboxProps;
   }
 }

@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { useCombobox, ComboboxProps } from '../useCombobox';
-import { render, screen } from '@testing-library/react';
+import { useCombobox } from '../useCombobox';
+import { BL } from '../combobox/types';
+import { render, screen, getAllByRole } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { SampleItems } from './testingUtils';
 
@@ -10,11 +11,12 @@ const dataTestIds = {
   label: 'label-testid'
 };
 
-export function renderCombobox(props?: ComboboxProps) {
+export function renderCombobox(props?: BL.ComboboxProps) {
   const container = render(<ComboboxGrid {...props} />);
   const input = screen.getByTestId(dataTestIds.input);
   const popup = screen.getByTestId(dataTestIds.popup);
   const label = screen.getByTestId(dataTestIds.label);
+
   const combobox = screen.getByRole('combobox');
   return {
     input,
@@ -24,14 +26,15 @@ export function renderCombobox(props?: ComboboxProps) {
   };
 }
 
-function ComboboxGrid(props: ComboboxProps) {
+function ComboboxGrid(props: BL.ComboboxProps) {
   const {
     isOpen,
     getLabelProps,
     getComboboxProps,
     getInputProps,
     getPopupProps,
-    getItemProps
+    getItemProps,
+    highlightedIndex
   } = useCombobox(props);
   return (
     <div>
@@ -46,12 +49,19 @@ function ComboboxGrid(props: ComboboxProps) {
                 const url = `thebottomlineapp.com/item/${item.name}/info`;
                 const itemKey = `item-${index}`;
                 return (
-                  <li key={itemKey} tabIndex={0} {...getItemProps(index)}>
+                  <li
+                    key={itemKey}
+                    tabIndex={0}
+                    {...getItemProps(index)}
+                    className={
+                      highlightedIndex === index ? 'current-item-highlight' : ''
+                    }
+                  >
                     <div>
                       <span>{item.name}</span>
                       <span>{item.count}</span>
                     </div>
-                    <span>{item.text}</span>
+                    <span>{item.contents}</span>
                   </li>
                 );
               })

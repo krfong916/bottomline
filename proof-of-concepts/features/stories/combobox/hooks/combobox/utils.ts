@@ -17,7 +17,7 @@ export function computeInitialState(props: BL.ComboboxProps): BL.ComboboxState {
   return {
     isOpen,
     inputValue,
-    highlightedIndex: isOpen ? (highlightedIndex !== -1 ? highlightedIndex : 0) : -1,
+    highlightedIndex: highlightedIndex !== -1 ? highlightedIndex : -1,
     selectedItem
   } as BL.ComboboxState;
 }
@@ -87,6 +87,8 @@ export function useControlledReducer<
   // allows us to choose when to update this ref
   const prevStateRef = React.useRef<ComponentState>();
 
+  // const propsRef = React.useRef<Props>(props);
+
   // return either the internal changes based on our state reducer,
   // or the internal changes based on the user's recommendations
   const controlledReducer = React.useCallback(
@@ -112,7 +114,9 @@ export function useControlledReducer<
   // if we declared useReducer within the component itself
   const dispatchWithProps = React.useCallback(
     ({ type }: { type: StateChangeType }) => {
-      dispatch({ type, ...props });
+      // console.log('dispatch with props:', propsRef);
+      // dispatch({ type, props: propsRef.current });
+      dispatch({ type, props });
     },
     [props]
   );
@@ -175,4 +179,19 @@ export function normalizeKey(e: React.KeyboardEvent) {
     name: e.key,
     code: e.charCode
   };
+}
+
+export function getNewIndex(
+  currentIndex: number,
+  length: number,
+  action: BL.ComboboxActions
+): number {
+  switch (action) {
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN: {
+      if (currentIndex == length - 1) return currentIndex;
+      return currentIndex + 1;
+    }
+    default:
+      return 0;
+  }
 }

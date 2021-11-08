@@ -1,18 +1,31 @@
 import { BL } from './types';
+import { getNewIndex } from './utils';
 
 export default function bottomlineComboboxReducer(
   state: BL.ComboboxState,
   action: BL.ComboboxAction
 ): BL.ComboboxState {
-  const { type, getItemFromIndex } = action;
+  console.log('[REDUCER] state', state);
+  console.log('[REDUCER] action:', action);
+
+  const { type, getItemFromIndex, props } = action;
   const { isOpen, highlightedIndex } = state;
   switch (type) {
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP: {
       return state;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN: {
-      console.log(highlightedIndex);
-      return state;
+      const newState = { ...state };
+      const nextIndex = getNewIndex(
+        state.highlightedIndex,
+        props.items.length,
+        BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN
+      );
+      console.log('[INPUT_KEYDOWN_ARROW_DOWN] nextIndex:', nextIndex);
+      newState.highlightedIndex = nextIndex;
+      newState.selectedItem = props.items[nextIndex];
+      console.log('[INPUT_KEYDOWN_ARROW_DOWN] newstate:', newState);
+      return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT: {
       return state;

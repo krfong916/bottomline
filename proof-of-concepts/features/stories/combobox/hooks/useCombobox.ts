@@ -56,10 +56,21 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
   // Returns accessibility identifiers and identifiers for items
   const elementIds = useElementId(props);
 
+  /**
+   * *************************
+   *
+   * Items List (Combobox Items)
+   *
+   * *************************
+   *
+   */
+  props.items.forEach((item: BL.Item, index: number) => {
+    itemsListRef.current[elementIds.getItemId(index)] = item;
+  });
   // fetches the item based on the index as argument
   const getItemFromIndex = React.useCallback(
-    (index) => itemsListRef.current[elementIds.getItemId(index)],
-    [itemsListRef, elementIds]
+    (index: number) => itemsListRef.current[elementIds.getItemId(index)],
+    [elementIds]
   );
 
   /**
