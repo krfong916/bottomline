@@ -13,15 +13,10 @@ describe('useCombobox hook', () => {
    *
    * ****************
    */
-  // test('the popup is open when initial isOpen is true', () => {
-  //   const { input } = renderCombobox({ initialIsOpen: true });
-  //   expect(input).toHaveFocus();
-  // });
-
-  // test('when initial isOpen is true and no highlightedIndex is specified, then the highlightedIndex has an index of 0', () => {
-  //   const { input } = renderCombobox({ initialIsOpen: true });
-  //   expect(input).toHaveFocus();
-  // });
+  test('the popup is open when initial isOpen is true', () => {
+    const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(input).toHaveFocus();
+  });
 
   /**
    * ****************
@@ -31,7 +26,7 @@ describe('useCombobox hook', () => {
    * ****************
    */
   // test('it focuses the input when the popup is open', () => {
-  //   const { input } = renderCombobox({ initialIsOpen: true });
+  //   const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
   //   expect(input).toHaveFocus();
   // });
 
@@ -82,19 +77,147 @@ describe('useCombobox hook', () => {
     expect(firstItem.classList).toContain('current-item-highlight');
   });
 
-  // up arrow when on the first element places focus back on the input but does not clsoe the popup
+  test('when the popup is open, and selected item and highlightedIndex are not defined, any arrow down event that is not a down arrow does nothing', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    fireEvent.keyDown(input, { key: 'ArrowLeft', code: 'ArrowLeft', charCode: 37 });
+    fireEvent.keyDown(input, { key: 'ArrowUp', code: 'ArrowUp', charCode: 38 });
+    fireEvent.keyDown(input, { key: 'ArrowRight', code: 'ArrowRight', charCode: 39 });
+    let highlightPresence = screen.queryByText('current-item-highlight');
+    expect(highlightPresence).toBeNull();
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    const firstItem = items[0];
+    expect(firstItem.classList).toContain('current-item-highlight');
+    expect(input).toHaveFocus();
+  });
 
-  // a down arrow keydown event selects the next element in grid order
+  test('up arrow when on the first element places focus back on the input but does not close the popup', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'ArrowUp', code: 'ArrowUp', charCode: 38 });
+    const items = getAllByRole(popup, 'gridcell');
+    const firstItem = items[0];
+    expect(firstItem.classList).not.toContain('current-item-highlight');
+    expect(input).toHaveFocus();
+  });
 
-  // a left arrow keydown event selects the previous element in grid order
+  test('a down arrow keydown event selects the next element in grid order', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const firstItem = items[0];
+    const secondItem = items[1];
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    expect(firstItem.classList).not.toContain('current-item-highlight');
+    expect(secondItem.classList).toContain('current-item-highlight');
+  });
 
-  // a left arrow keydown event does nothing if the current element and index is the left-most element and index. It maintains focus on the correct element
+  test('a left arrow keydown event sets highlight on the previous element in grid order', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems,
+      initialHighlightedIndex: 2,
+      selectedItem: SampleItems[2]
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const secondItem = items[1];
+    const thirdItem = items[2];
+    expect(thirdItem.classList).toContain('current-item-highlight');
+    fireEvent.keyDown(input, { key: 'ArrowLeft', code: 'ArrowLeft', charCode: 37 });
+    expect(secondItem.classList).toContain('current-item-highlight');
+    expect(thirdItem.classList).not.toContain('current-item-highlight');
+  });
+  test('a left arrow keydown event does nothing if the current element and index is the left-most element and index, in the first row. It maintains highlight on the correct element', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const firstItem = items[0];
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'ArrowLeft', code: 'ArrowLeft', charCode: 37 });
+    expect(firstItem.classList).toContain('current-item-highlight');
+  });
+  test('a right arrow keydown event selects the next element in grid order', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const firstItem = items[0];
+    const secondItem = items[1];
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'ArrowRight', code: 'ArrowRight', charCode: 39 });
+    expect(firstItem.classList).not.toContain('current-item-highlight');
+    expect(secondItem.classList).toContain('current-item-highlight');
+  });
 
-  // a right arrow keydown event selects the next element in grid order
+  test('a right arrow or down arrow keydown event on the right-most element in the last row does nothing', () => {
+    const lastItemIndex = SampleItems.length - 1;
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems,
+      initialHighlightedIndex: lastItemIndex,
+      selectedItem: SampleItems[lastItemIndex]
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const lastItem = items[lastItemIndex];
+    fireEvent.keyDown(input, { key: 'ArrowRight', code: 'ArrowRight', charCode: 39 });
+    expect(lastItem.classList).toContain('current-item-highlight');
+  });
 
-  // a right arrow keydown event on the right-most element places selection on the first element in the next row in grid order
+  /**
+   * ****************
+   *
+   * Selecting an element
+   *
+   * ****************
+   */
 
-  // a right arrow keydown event on the right-most element in the last row does nothing
+  /**
+   * ****************
+   *
+   * Pre-defined element
+   *
+   * ****************
+   */
+
+  test('if defined, the combobox assigns an initially selected item and highlighted index', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems,
+      initialHighlightedIndex: 0,
+      selectedItem: SampleItems[0]
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const firstItem = items[0];
+    expect(firstItem.classList).toContain('current-item-highlight');
+  });
+
+  test('a user is able to use keydown event navigation keys when an initially selected item and highlighted index is defined', () => {
+    const lastItemIndex = SampleItems.length - 1;
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems,
+      initialHighlightedIndex: lastItemIndex,
+      selectedItem: SampleItems[lastItemIndex]
+    });
+    const items = getAllByRole(popup, 'gridcell');
+    const secondToLastItem = items[lastItemIndex - 1];
+    const lastItem = items[lastItemIndex];
+    fireEvent.keyDown(input, { key: 'ArrowLeft', code: 'ArrowLeft', charCode: 37 });
+    expect(secondToLastItem.classList).toContain('current-item-highlight');
+    expect(lastItem.classList).not.toContain('current-item-highlight');
+  });
 
   /**
    * ****************
@@ -120,87 +243,98 @@ describe('useCombobox hook', () => {
  * Our implementation follows the ARIA 1.1 pattern for a Combobox
  * https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-6
  */
-// describe('combobox accessibility', () => {
-//   test('the combobox has the role of combobox', () => {
-//     renderCombobox({ initialIsOpen: true });
-//     expect(screen.getByRole('combobox')).toBeDefined();
-//   });
+describe('combobox accessibility', () => {
+  test('the combobox has the role of combobox', () => {
+    renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(screen.getByRole('combobox')).toBeDefined();
+  });
 
-//   test('the element with combobox contains an element with role: textbox', () => {
-//     renderCombobox({ initialIsOpen: true });
-//     expect(screen.getByRole('textbox')).toBeDefined();
-//   });
+  test('the element with combobox contains an element with role: textbox', () => {
+    renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(screen.getByRole('textbox')).toBeDefined();
+  });
 
-//   // our implementation of combobox defaults to grid rather than listbox
-//   test('when the popup is visible the combobox contains an element with role that defaults to grid', () => {
-//     renderCombobox({ initialIsOpen: true });
-//     expect(screen.getByRole('grid')).toBeDefined();
-//   });
+  // our implementation of combobox defaults to grid rather than listbox
+  test('when the popup is visible the combobox contains an element with role that defaults to grid', () => {
+    renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(screen.getByRole('grid')).toBeDefined();
+  });
 
-//   test('the combobox has value aria-haspopup === grid', () => {
-//     const { combobox } = renderCombobox({ initialIsOpen: true });
-//     expect(combobox).toHaveAttribute('aria-haspopup', 'grid');
-//   });
+  test('the combobox has value aria-haspopup === grid', () => {
+    const { combobox } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(combobox).toHaveAttribute('aria-haspopup', 'grid');
+  });
 
-//   test('when the popup is visible, the input has aria-controls set to a value that refers to popup element ', () => {
-//     const { input, popup } = renderCombobox({ initialIsOpen: true });
-//     expect(input).toHaveAttribute('aria-controls');
+  test('when the popup is visible, the input has aria-controls set to a value that refers to popup element ', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    expect(input).toHaveAttribute('aria-controls');
 
-//     const inputAriaControlsId = input.getAttribute('aria-controls');
-//     const popupId = popup.getAttribute('id');
-//     expect(inputAriaControlsId).toBe(popupId);
-//   });
+    const inputAriaControlsId = input.getAttribute('aria-controls');
+    const popupId = popup.getAttribute('id');
+    expect(inputAriaControlsId).toBe(popupId);
+  });
 
-//   test('the input has aria-multline of false', () => {
-//     const { input } = renderCombobox({ initialIsOpen: true });
-//     expect(input.getAttribute('aria-multline')).toBeFalsy();
-//   });
+  test('the input has aria-multline of false', () => {
+    const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(input.getAttribute('aria-multline')).toBeFalsy();
+  });
 
-//   test('when the popup is not visible, the combobox has aria-expanded == false', () => {
-//     const { combobox } = renderCombobox();
-//     expect(combobox.getAttribute('aria-expanded')).toBeDefined();
-//     expect(combobox.getAttribute('aria-expanded')).toBe('false');
-//   });
+  test('when the popup is not visible, the combobox has aria-expanded == false', () => {
+    const { combobox } = renderCombobox({ initialIsOpen: false, items: SampleItems });
+    expect(combobox.getAttribute('aria-expanded')).toBeDefined();
+    expect(combobox.getAttribute('aria-expanded')).toBe('false');
+  });
 
-//   test('when the popup is visible, the combobox has aria-expanded == true', () => {
-//     const { combobox } = renderCombobox({ initialIsOpen: true });
-//     expect(combobox.getAttribute('aria-expanded')).toBeDefined();
-//     expect(combobox.getAttribute('aria-expanded')).toBe('true');
-//   });
+  test('when the popup is visible, the combobox has aria-expanded == true', () => {
+    const { combobox } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(combobox.getAttribute('aria-expanded')).toBeDefined();
+    expect(combobox.getAttribute('aria-expanded')).toBe('true');
+  });
 
-//   test('when the combobox recieves focus, the input is the default element with focus', () => {
-//     const { combobox, input } = renderCombobox();
-//     fireEvent.click(combobox);
-//     expect(input).toHaveFocus();
-//   });
+  test('when the combobox recieves focus, the input is the default element with focus', () => {
+    const { combobox, input } = renderCombobox({
+      initialIsOpen: false,
+      items: SampleItems
+    });
+    fireEvent.click(combobox);
+    expect(input).toHaveFocus();
+  });
 
-//   test('when a descendant (gridcell in our case) is highlighted, the input continues to have focus ', () => {
-//     const { input } = renderCombobox({ initialIsOpen: true });
-//     const item = screen.getByRole('gridcell', { selected: true });
-//     expect(item).toBeDefined();
-//     expect(input).toHaveFocus();
-//   });
+  test('when a descendant (gridcell in our case) is highlighted, the input continues to have focus ', () => {
+    const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    const item = screen.getByRole('gridcell', { selected: true });
+    expect(item).toBeDefined();
+    expect(input).toHaveFocus();
+  });
 
-//   /* Implicitly, this test also tests the following condition:
-//      - when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true */
-//   test('when a descendant (gridcell in our case) is highlighted, the aria-activedescendant value assigned to textbox refers to element of the highlightedIndex within the grid', () => {
-//     const { input } = renderCombobox({ initialIsOpen: true });
-//     const item = screen.getByRole('gridcell', { selected: true });
-//     const activeDescendant = input.getAttribute('aria-activedescendant');
-//     const highlightedDescendantId = item.getAttribute('id');
-//     expect(activeDescendant).toEqual(highlightedDescendantId);
-//   });
+  /* Implicitly, this test also tests the following condition:
+     when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true */
+  test('when a descendant (gridcell in our case) is highlighted, the aria-activedescendant value assigned to textbox refers to element of the highlightedIndex within the grid', () => {
+    const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    const item = screen.getByRole('gridcell', { selected: true });
+    const activeDescendant = input.getAttribute('aria-activedescendant');
+    const highlightedDescendantId = item.getAttribute('id');
+    expect(activeDescendant).toEqual(highlightedDescendantId);
+  });
 
-//   test('if the combobox has a label, the element with combobox has aria-labelledby set to a value that refers to the labelling element', () => {
-//     const { label, combobox } = renderCombobox();
-//     const comboboxLabelId = combobox.getAttribute('aria-labelledby');
-//     expect(combobox).toHaveAttribute('aria-labelledby');
-//     expect(label).toHaveAttribute('for');
-//     expect(comboboxLabelId).toBe(label.getAttribute('id'));
-//   });
+  test('if the combobox has a label, the element with combobox has aria-labelledby set to a value that refers to the labelling element', () => {
+    const { label, combobox } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const comboboxLabelId = combobox.getAttribute('aria-labelledby');
+    expect(combobox).toHaveAttribute('aria-labelledby');
+    expect(label).toHaveAttribute('for');
+    expect(comboboxLabelId).toBe(label.getAttribute('id'));
+  });
 
-//   test('the input has aria-autocomplete set to list', () => {
-//     const { input } = renderCombobox();
-//     expect(input.getAttribute('aria-autocomplete')).toBe('list');
-//   });
-// });
+  test('the input has aria-autocomplete set to list', () => {
+    const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    expect(input.getAttribute('aria-autocomplete')).toBe('list');
+  });
+});

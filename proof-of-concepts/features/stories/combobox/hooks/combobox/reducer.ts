@@ -5,14 +5,26 @@ export default function bottomlineComboboxReducer(
   state: BL.ComboboxState,
   action: BL.ComboboxAction
 ): BL.ComboboxState {
-  console.log('[REDUCER] state', state);
-  console.log('[REDUCER] action:', action);
+  // console.log('[REDUCER] state', state);
+  // console.log('[REDUCER] action:', action);
 
   const { type, getItemFromIndex, props } = action;
   const { isOpen, highlightedIndex } = state;
   switch (type) {
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP: {
-      return state;
+      const newState = { ...state };
+      const nextIndex = getNewIndex(
+        state.highlightedIndex,
+        props.items.length,
+        BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP
+      );
+      newState.highlightedIndex = nextIndex;
+      if (nextIndex === -1) {
+        newState.selectedItem = null;
+      } else {
+        newState.selectedItem = props.items[nextIndex];
+      }
+      return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN: {
       const newState = { ...state };
@@ -21,17 +33,33 @@ export default function bottomlineComboboxReducer(
         props.items.length,
         BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN
       );
-      console.log('[INPUT_KEYDOWN_ARROW_DOWN] nextIndex:', nextIndex);
       newState.highlightedIndex = nextIndex;
       newState.selectedItem = props.items[nextIndex];
-      console.log('[INPUT_KEYDOWN_ARROW_DOWN] newstate:', newState);
       return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT: {
-      return state;
+      let newState = { ...state };
+      const prevIndex = getNewIndex(
+        state.highlightedIndex,
+        props.items.length,
+        BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT
+      );
+      newState.highlightedIndex = prevIndex;
+      if (prevIndex !== -1) {
+        newState.selectedItem = props.items[prevIndex];
+      }
+      return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT: {
-      return state;
+      const newState = { ...state };
+      const nextIndex = getNewIndex(
+        state.highlightedIndex,
+        props.items.length,
+        BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT
+      );
+      newState.highlightedIndex = nextIndex;
+      newState.selectedItem = props.items[nextIndex];
+      return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ESCAPE: {
       return state;

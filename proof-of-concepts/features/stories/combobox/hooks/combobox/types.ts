@@ -12,6 +12,7 @@ export namespace BL {
     menuId?: string;
     initialIsOpen?: boolean;
     initialInputValue?: string;
+    initialHighlightedIndex?: number;
     selectedItem?: Item;
     items: Item[];
     itemToString?: (item: Item) => string;

@@ -11,13 +11,17 @@ export const initialState: BL.ComboboxState = {
 export function computeInitialState(props: BL.ComboboxProps): BL.ComboboxState {
   const isOpen = getInitialValue(props, 'isOpen');
   const inputValue = getInitialValue(props, 'inputValue');
-  const highlightedIndex = getInitialValue(props, 'highlightedIndex');
   const selectedItem = getInitialValue(props, 'selectedItem');
-
+  let highlightedIndex = getInitialValue(props, 'highlightedIndex');
+  // console.log('[COMPUTE_INITIAL_STATE]:highlightedIndex', highlightedIndex);
+  // console.log('items length:', props.items.length - 1);
+  if (highlightedIndex > props.items.length - 1) {
+    highlightedIndex = -1 as Partial<BL.ComboboxState>;
+  }
   return {
     isOpen,
     inputValue,
-    highlightedIndex: highlightedIndex !== -1 ? highlightedIndex : -1,
+    highlightedIndex,
     selectedItem
   } as BL.ComboboxState;
 }
@@ -38,7 +42,9 @@ export function getInitialValue(
   const initialPropKey = `initial${capitalizeString(
     propKey
   )}` as keyof BL.ComboboxProps;
-  if (props[initialPropKey]) {
+  if (initialPropKey in props) {
+    // console.log('initialPropKey', initialPropKey);
+    // console.log('initialPropKey', props[initialPropKey]);
     return props[initialPropKey] as Partial<BL.ComboboxState>;
   }
 
@@ -80,6 +86,8 @@ export function useControlledReducer<
   React.ReducerState<ComponentReducer>,
   React.Dispatch<React.ReducerAction<ComponentReducer>>
 ] {
+  // console.log('[CONTROLLED_REDUCER]:initialState', initialState);
+  // console.log('[CONTROLLED_REDUCER]:props', props);
   // store and track dispatched actions
   const actionRef = React.useRef<StateChangeType>();
 
@@ -188,7 +196,19 @@ export function getNewIndex(
 ): number {
   switch (action) {
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN: {
-      if (currentIndex == length - 1) return currentIndex;
+      if (currentIndex === length - 1) return currentIndex;
+      return currentIndex + 1;
+    }
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP: {
+      if (currentIndex === -1) return currentIndex;
+      return currentIndex - 1;
+    }
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT: {
+      if (currentIndex === -1 || currentIndex === 0) return currentIndex;
+      return currentIndex - 1;
+    }
+    case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT: {
+      if (currentIndex === length - 1 || currentIndex === -1) return currentIndex;
       return currentIndex + 1;
     }
     default:
