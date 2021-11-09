@@ -1,17 +1,15 @@
 import { BL } from './types';
-import { getNewIndex } from './utils';
+import { getNewIndex, initialState } from './utils';
 
 export default function bottomlineComboboxReducer(
   state: BL.ComboboxState,
   action: BL.ComboboxAction
 ): BL.ComboboxState {
-  // console.log('[REDUCER] state', state);
-  // console.log('[REDUCER] action:', action);
-
-  const { type, getItemFromIndex, props } = action;
+  const { type, getItemFromIndex, props, index, text } = action;
   const { isOpen, highlightedIndex } = state;
   switch (type) {
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP: {
+      if (!props) return state;
       const newState = { ...state };
       const nextIndex = getNewIndex(
         state.highlightedIndex,
@@ -19,14 +17,10 @@ export default function bottomlineComboboxReducer(
         BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP
       );
       newState.highlightedIndex = nextIndex;
-      if (nextIndex === -1) {
-        newState.selectedItem = null;
-      } else {
-        newState.selectedItem = props.items[nextIndex];
-      }
       return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN: {
+      if (!props) return state;
       const newState = { ...state };
       const nextIndex = getNewIndex(
         state.highlightedIndex,
@@ -34,10 +28,10 @@ export default function bottomlineComboboxReducer(
         BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN
       );
       newState.highlightedIndex = nextIndex;
-      newState.selectedItem = props.items[nextIndex];
       return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT: {
+      if (!props) return state;
       let newState = { ...state };
       const prevIndex = getNewIndex(
         state.highlightedIndex,
@@ -45,12 +39,10 @@ export default function bottomlineComboboxReducer(
         BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT
       );
       newState.highlightedIndex = prevIndex;
-      if (prevIndex !== -1) {
-        newState.selectedItem = props.items[prevIndex];
-      }
       return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT: {
+      if (!props) return state;
       const newState = { ...state };
       const nextIndex = getNewIndex(
         state.highlightedIndex,
@@ -58,45 +50,70 @@ export default function bottomlineComboboxReducer(
         BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT
       );
       newState.highlightedIndex = nextIndex;
-      newState.selectedItem = props.items[nextIndex];
       return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ESCAPE: {
-      return state;
+      // close popup, set to initial state
+      return initialState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_ENTER: {
-      return state;
+      // select the item with the highlighted index
+      if (!props) return state;
+      const newState = { ...state };
+      if (newState.highlightedIndex !== -1) {
+        newState.selectedItem = props.items[newState.highlightedIndex];
+      }
+      return newState;
     }
-    case BL.ComboboxActions.INPUT_KEYDOWN_BACKSPACE: {
-      return state;
-    }
-    case BL.ComboboxActions.INPUT_KEYDOWN_DELETE: {
-      return state;
+    case BL.ComboboxActions.INPUT_VALUE_CHANGE: {
+      // does nothing, does not move the input cursor, only when the highlightedIndex is -1
+      // combobox can be open
+      const newState = { ...state };
+      if (newState.highlightedIndex === -1 && text) {
+        newState.inputValue = text;
+      }
+
+      return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_HOME: {
+      // only if highlightedIndex >= 0, goes to 0
       return state;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_END: {
+      // only if highlightedIndex >= 0, goes to items.length-1
       return state;
     }
     case BL.ComboboxActions.INPUT_ITEM_CLICK: {
-      return state;
+      // select an item, selected item onchange event and highlight index on change
+      const newState = { ...state };
+      if (index && getItemFromIndex) {
+        newState.highlightedIndex = index;
+        newState.selectedItem = getItemFromIndex(index);
+      }
+      return newState;
     }
     case BL.ComboboxActions.INPUT_BLUR: {
+      // reset the combobox to initial state
       return state;
     }
-    case BL.ComboboxActions.FUNCTION_OPEN_POPUP: {
-      return state;
-    }
-    case BL.ComboboxActions.FUNCTION_CLOSE_POPUP: {
-      return state;
-    }
-    case BL.ComboboxActions.FUNCTION_SET_HIGHLIGHTED_INDEX: {
-      return state;
-    }
-    case BL.ComboboxActions.FUNCTION_SELECT_ITEM: {
-      return state;
-    }
+    // case BL.ComboboxActions.INPUT_KEYDOWN_DELETE: {
+    //   // does nothing, does not move the input cursor, only when the highlightedIndex is -1
+    //   // combobox can be open
+    //   const newState = { ...state };
+    //   return newState;
+    // }
+    // case BL.ComboboxActions.FUNCTION_OPEN_POPUP: {
+    //   return state;
+    // }
+    // case BL.ComboboxActions.FUNCTION_CLOSE_POPUP: {
+    //   return state;
+    // }
+    // case BL.ComboboxActions.FUNCTION_SET_HIGHLIGHTED_INDEX: {
+    //   return state;
+    // }
+    // case BL.ComboboxActions.FUNCTION_SELECT_ITEM: {
+    //   return state;
+    // }
     default:
       throw new TypeError(`Unhandled action: ${action.type} for Tag Editor Reducer`);
   }

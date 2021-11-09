@@ -65,7 +65,6 @@ export namespace BL {
     INPUT_KEYDOWN_ARROW_LEFT = '[input-keydown-arrow-left]',
     INPUT_KEYDOWN_ARROW_RIGHT = '[input-keydown-arrow-right]',
     INPUT_KEYDOWN_ESCAPE = '[input-keydown-escape]',
-    INPUT_KEYDOWN_BACKSPACE = '[input-keydown-backspace]',
     INPUT_KEYDOWN_DELETE = '[input-keydown-delete]',
     INPUT_KEYDOWN_ENTER = '[input-keydown-enter]',
     INPUT_KEYDOWN_HOME = '[input-keydown-home]',
@@ -85,7 +84,9 @@ export namespace BL {
 
   export interface ComboboxAction {
     type: ComboBoxStateChangeTypes;
-    getItemFromIndex: (index: number) => Item;
-    props: ComboboxProps;
+    getItemFromIndex?: (index: number) => Item;
+    index?: number;
+    text?: string;
+    props?: ComboboxProps;
   }
 }

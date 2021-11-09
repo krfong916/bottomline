@@ -24,7 +24,7 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
     BL.ComboBoxStateChangeTypes,
     BL.ComboboxActionAndChanges
   >(bottomlineComboboxReducer, computeInitialState(props), props);
-  const { isOpen, highlightedIndex } = state;
+  const { isOpen, highlightedIndex, inputValue } = state;
 
   /**
    * ******
@@ -113,12 +113,6 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
     Escape: () => {
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_ESCAPE,
-        getItemFromIndex
-      });
-    },
-    Backspace: () => {
-      dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_BACKSPACE,
         getItemFromIndex
       });
     },
@@ -214,12 +208,21 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
       }
     };
 
+    const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+      dispatch({
+        type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
+        text: e.currentTarget.value
+      });
+    };
+
     const eventHandlers = {
       onKeyDown: inputKeyDownHandler
     };
 
     return {
       ref: inputRef,
+      value: inputValue,
+      onChange: inputChangeHandler,
       role: 'textbox',
       'aria-controls': elementIds.menuId,
       'aria-multiline': false,
@@ -252,11 +255,20 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
 
   // items are excluded from the tab sequence
   function getItemProps(index: number) {
+    const handleClick = () => {
+      dispatch({
+        type: BL.ComboboxActions.INPUT_ITEM_CLICK,
+        getItemFromIndex,
+        index
+      });
+    };
+
     const selected = index === highlightedIndex;
     return {
       role: 'gridcell',
       id: elementIds.getItemId(index),
-      'aria-selected': selected
+      'aria-selected': selected,
+      onClick: handleClick
     };
   }
 

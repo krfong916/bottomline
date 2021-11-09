@@ -121,10 +121,10 @@ export function useControlledReducer<
   // this function saves us from having to declare props on every dispatch,
   // if we declared useReducer within the component itself
   const dispatchWithProps = React.useCallback(
-    ({ type }: { type: StateChangeType }) => {
+    ({ type, ...rest }: { type: StateChangeType }) => {
       // console.log('dispatch with props:', propsRef);
       // dispatch({ type, props: propsRef.current });
-      dispatch({ type, props });
+      dispatch({ type, props, ...rest });
     },
     [props]
   );

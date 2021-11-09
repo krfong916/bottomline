@@ -1,10 +1,18 @@
 import * as React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
 import { renderCombobox, renderUseCombobox } from './utils';
-import { screen, render, fireEvent, getAllByRole } from '@testing-library/react';
+import {
+  screen,
+  render,
+  fireEvent,
+  getAllByRole,
+  getByText
+} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SampleItems } from './testingUtils';
 import '@testing-library/jest-dom/extend-expect';
 
+// prevent input cursor from moving on arrow keys and backspace
 describe('useCombobox hook', () => {
   /**
    * ****************
@@ -41,26 +49,105 @@ describe('useCombobox hook', () => {
    *
    * ****************
    */
-  // test('popup is open when isOpen prop is true', () => {});
+  test('when the popup is open, the escape keydown event closes the popup', () => {
+    const { input } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    fireEvent.keyDown(input, { key: 'Escape', code: 'Escape', charCode: 27 });
+    expect(input).toHaveFocus();
+  });
 
   /**
    * ****************
    *
-   * Testing ways to select an item and custom click handlers
+   * Selecting an element
    *
    * ****************
    */
 
-  // when an item is focused, a click event selects the item
+  test('when an item is focused, a click event selects the item', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const items = screen.getAllByRole('gridcell');
+    const currentItem = items[3]; // random item
+    fireEvent.click(currentItem);
+    expect(currentItem.getAttribute('aria-selected')).toBe('true');
+  });
 
-  // when an item is focused and the user issues an enter keydown event, the current element is selected and the popup closes
-
-  // when a user issues an escape keydown event while the popup is open, the popup closes and the
+  test('when an item is focused and the user issues an enter keydown event, the current element is selected', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    // go to a random item
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', charCode: 13 });
+    const items = screen.getAllByRole('gridcell');
+    const currentItem = items[2];
+    expect(currentItem.getAttribute('aria-selected')).toBe('true');
+  });
 
   /**
    * ****************
    *
-   * Popup keyboard interaction
+   * Deleting input characters
+   *
+   * ****************
+   */
+  test('backspace on an open popup with highlight does nothing', () => {
+    const { combobox, input, popup } = renderCombobox({
+      initialIsOpen: false,
+      items: SampleItems
+    });
+    userEvent.click(input);
+    userEvent.type(input, 'any-random-string');
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'Backspace', code: 'Backspace', charCode: 8 });
+    expect(screen.getByDisplayValue('any-random-string')).toBeDefined();
+  });
+
+  test('only when the highlightedIndex is -1, can we change the input value popup', () => {
+    const { input, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    userEvent.click(input);
+    userEvent.type(input, 'any-random-string');
+    userEvent.type(input, '{backspace}');
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
+    fireEvent.keyDown(input, { key: 'ArrowUp', code: 'ArrowUp', charCode: 38 });
+    userEvent.type(input, '{backspace}');
+    expect(screen.getByDisplayValue('any-random-stri')).toBeDefined();
+  });
+  /**
+   * ****************
+   *
+   * On Change while popup
+   *
+   * ****************
+   */
+
+  // a user should be able to type characters in the input while the dropdown is open and item is focused
+
+  // deleting all characters closes the popup
+
+  /**
+   * ****************
+   *
+   * Blur
+   *
+   * ****************
+   */
+
+  /**
+   * ****************
+   *
+   * Popup keyboard interaction, arrow events
    *
    * ****************
    */
@@ -178,14 +265,6 @@ describe('useCombobox hook', () => {
   /**
    * ****************
    *
-   * Selecting an element
-   *
-   * ****************
-   */
-
-  /**
-   * ****************
-   *
    * Pre-defined element
    *
    * ****************
@@ -218,31 +297,19 @@ describe('useCombobox hook', () => {
     expect(secondToLastItem.classList).toContain('current-item-highlight');
     expect(lastItem.classList).not.toContain('current-item-highlight');
   });
-
-  /**
-   * ****************
-   *
-   * On Change while popup
-   *
-   * ****************
-   */
-
-  // a user should be able to type characters in the input while the dropdown is open and item is focused
-
-  // deleting all characters closes the popup
 });
 
-/**
- * ****************
- *
- * Accessibility
- *
- * ****************
- *
- * We want to make sure accessibility props are placed correctly
- * Our implementation follows the ARIA 1.1 pattern for a Combobox
- * https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-6
- */
+// /**
+//  * ****************
+//  *
+//  * Accessibility
+//  *
+//  * ****************
+//  *
+//  * We want to make sure accessibility props are placed correctly
+//  * Our implementation follows the ARIA 1.1 pattern for a Combobox
+//  * https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-6
+//  */
 describe('combobox accessibility', () => {
   test('the combobox has the role of combobox', () => {
     renderCombobox({ initialIsOpen: true, items: SampleItems });
@@ -312,7 +379,7 @@ describe('combobox accessibility', () => {
   });
 
   /* Implicitly, this test also tests the following condition:
-     when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true */
+       when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true */
   test('when a descendant (gridcell in our case) is highlighted, the aria-activedescendant value assigned to textbox refers to element of the highlightedIndex within the grid', () => {
     const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
