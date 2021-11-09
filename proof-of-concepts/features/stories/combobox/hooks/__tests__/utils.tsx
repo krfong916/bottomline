@@ -8,7 +8,8 @@ import { SampleItems } from './testingUtils';
 const dataTestIds = {
   input: 'input-testid',
   popup: 'popup-testid',
-  label: 'label-testid'
+  label: 'label-testid',
+  outside: 'outside-testid'
 };
 
 export function renderCombobox(props?: BL.ComboboxProps) {
@@ -16,13 +17,15 @@ export function renderCombobox(props?: BL.ComboboxProps) {
   const input = screen.getByTestId(dataTestIds.input);
   const popup = screen.getByTestId(dataTestIds.popup);
   const label = screen.getByTestId(dataTestIds.label);
+  const outside = screen.getByTestId(dataTestIds.outside);
 
   const combobox = screen.getByRole('combobox');
   return {
     input,
     popup,
     combobox,
-    label
+    label,
+    outside
   };
 }
 
@@ -68,6 +71,7 @@ function ComboboxGrid(props: BL.ComboboxProps) {
             : null}
         </ul>
       </div>
+      <button data-testid={dataTestIds.outside}></button>
     </div>
   );
 }

@@ -12,7 +12,6 @@ import userEvent from '@testing-library/user-event';
 import { SampleItems } from './testingUtils';
 import '@testing-library/jest-dom/extend-expect';
 
-// prevent input cursor from moving on arrow keys and backspace
 describe('useCombobox hook', () => {
   /**
    * ****************
@@ -25,22 +24,6 @@ describe('useCombobox hook', () => {
     const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
     expect(input).toHaveFocus();
   });
-
-  /**
-   * ****************
-   *
-   * Focusing
-   *
-   * ****************
-   */
-  // test('it focuses the input when the popup is open', () => {
-  //   const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
-  //   expect(input).toHaveFocus();
-  // });
-
-  // test('it focuses the input and the first item is highlighted', () => {
-  //   // we want to make sure the current index in state corresponds to the currently highlighted element
-  // });
 
   /**
    * ****************
@@ -124,17 +107,6 @@ describe('useCombobox hook', () => {
     userEvent.type(input, '{backspace}');
     expect(screen.getByDisplayValue('any-random-stri')).toBeDefined();
   });
-  /**
-   * ****************
-   *
-   * On Change while popup
-   *
-   * ****************
-   */
-
-  // a user should be able to type characters in the input while the dropdown is open and item is focused
-
-  // deleting all characters closes the popup
 
   /**
    * ****************
@@ -143,6 +115,21 @@ describe('useCombobox hook', () => {
    *
    * ****************
    */
+  test('the input loses focuses and the popup closes if the input is blurred', () => {
+    const { input, outside, popup } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    expect(input).toHaveFocus();
+    expect(popup).toBeDefined();
+    userEvent.click(outside);
+
+    const items = screen.queryByRole('gridcell');
+
+    expect(input).not.toHaveFocus();
+    expect(items).not.toBeInTheDocument();
+    expect(outside).toHaveFocus();
+  });
 
   /**
    * ****************
@@ -297,19 +284,28 @@ describe('useCombobox hook', () => {
     expect(secondToLastItem.classList).toContain('current-item-highlight');
     expect(lastItem.classList).not.toContain('current-item-highlight');
   });
+  /**
+   * ****************
+   *
+   * On Change while popup
+   *
+   * ****************
+   * - a user should be able to type characters in the input while the dropdown is open and item is focused
+   * - deleting all characters closes the popup
+   */
 });
 
-// /**
-//  * ****************
-//  *
-//  * Accessibility
-//  *
-//  * ****************
-//  *
-//  * We want to make sure accessibility props are placed correctly
-//  * Our implementation follows the ARIA 1.1 pattern for a Combobox
-//  * https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-6
-//  */
+/**
+ * ****************
+ *
+ * Accessibility
+ *
+ * ****************
+ *
+ * We want to make sure accessibility props are placed correctly
+ * Our implementation follows the ARIA 1.1 pattern for a Combobox
+ * https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-6
+ */
 describe('combobox accessibility', () => {
   test('the combobox has the role of combobox', () => {
     renderCombobox({ initialIsOpen: true, items: SampleItems });
@@ -379,7 +375,7 @@ describe('combobox accessibility', () => {
   });
 
   /* Implicitly, this test also tests the following condition:
-       when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true */
+         when the popup is open, the item (aka descendant or gridcell) with highlightedIndex has aria-selected to true */
   test('when a descendant (gridcell in our case) is highlighted, the aria-activedescendant value assigned to textbox refers to element of the highlightedIndex within the grid', () => {
     const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });

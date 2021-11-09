@@ -77,11 +77,20 @@ export default function bottomlineComboboxReducer(
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_HOME: {
       // only if highlightedIndex >= 0, goes to 0
-      return state;
+      const newState = { ...state };
+      if (newState.highlightedIndex !== -1) {
+        newState.highlightedIndex = 0;
+      }
+      return newState;
     }
     case BL.ComboboxActions.INPUT_KEYDOWN_END: {
       // only if highlightedIndex >= 0, goes to items.length-1
-      return state;
+      if (!props) return state;
+      const newState = { ...state };
+      if (newState.highlightedIndex !== -1) {
+        newState.highlightedIndex = props.items.length - 1;
+      }
+      return newState;
     }
     case BL.ComboboxActions.INPUT_ITEM_CLICK: {
       // select an item, selected item onchange event and highlight index on change
@@ -93,8 +102,7 @@ export default function bottomlineComboboxReducer(
       return newState;
     }
     case BL.ComboboxActions.INPUT_BLUR: {
-      // reset the combobox to initial state
-      return state;
+      return initialState;
     }
     // case BL.ComboboxActions.INPUT_KEYDOWN_DELETE: {
     //   // does nothing, does not move the input cursor, only when the highlightedIndex is -1

@@ -208,6 +208,12 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
       }
     };
 
+    const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
+      dispatch({
+        type: BL.ComboboxActions.INPUT_BLUR
+      });
+    };
+
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       dispatch({
         type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
@@ -223,6 +229,7 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
       ref: inputRef,
       value: inputValue,
       onChange: inputChangeHandler,
+      onBlur: inputBlurHandler,
       role: 'textbox',
       'aria-controls': elementIds.menuId,
       'aria-multiline': false,
