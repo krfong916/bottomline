@@ -1,66 +1,70 @@
 import React from 'react';
 import { BL, ComponentProps } from './types';
 
-export const initialState: BL.ComboboxState = {
+export const initialState = {
   selectedItem: null,
   isOpen: false,
   highlightedIndex: -1,
   inputValue: ''
 };
 
-export function computeInitialState(props: BL.ComboboxProps): BL.ComboboxState {
+export function computeInitialState<Item>(
+  props: BL.ComboboxProps<Item>
+): BL.ComboboxState<Item> {
   const isOpen = getInitialValue(props, 'isOpen');
   const inputValue = getInitialValue(props, 'inputValue');
   const selectedItem = getInitialValue(props, 'selectedItem');
   let highlightedIndex = getInitialValue(props, 'highlightedIndex');
   // console.log('[COMPUTE_INITIAL_STATE]:highlightedIndex', highlightedIndex);
   // console.log('items length:', props.items.length - 1);
-  if (highlightedIndex > props.items.length - 1) {
-    highlightedIndex = -1 as Partial<BL.ComboboxState>;
+  if (props.items && highlightedIndex > props.items.length - 1) {
+    highlightedIndex = -1 as Partial<BL.ComboboxState<Item>>;
   }
   return {
     isOpen,
     inputValue,
     highlightedIndex,
     selectedItem
-  } as BL.ComboboxState;
+  } as BL.ComboboxState<Item>;
 }
 
 /**
  * Use the keys of state to get the initial values of properties defined in props
  * Props and State share the same keys.
  */
-export function getInitialValue(
-  props: BL.ComboboxProps,
-  propKey: keyof BL.ComboboxState
-): Partial<BL.ComboboxState> {
+export function getInitialValue<Item>(
+  props: BL.ComboboxProps<Item>,
+  propKey: keyof BL.ComboboxState<Item>
+): Partial<BL.ComboboxState<Item>> {
   if (propKey in props) {
-    return props[propKey as keyof BL.ComboboxProps] as Partial<BL.ComboboxState>;
+    return props[propKey as keyof BL.ComboboxProps<Item>] as Partial<
+      BL.ComboboxState<Item>
+    >;
   }
 
   // get the user-provided initial prop state, it is a piece of state
   const initialPropKey = `initial${capitalizeString(
     propKey
-  )}` as keyof BL.ComboboxProps;
+  )}` as keyof BL.ComboboxProps<Item>;
   if (initialPropKey in props) {
     // console.log('initialPropKey', initialPropKey);
     // console.log('initialPropKey', props[initialPropKey]);
-    return props[initialPropKey] as Partial<BL.ComboboxState>;
+    return props[initialPropKey] as Partial<BL.ComboboxState<Item>>;
   }
 
   // return values from statically defined initial state object
-  return initialState[propKey] as Partial<BL.ComboboxState>;
+  return initialState[propKey] as Partial<BL.ComboboxState<Item>>;
 }
 
 /**
  * Generates unique ids for the combobox component to avoid naming conflicts w/ other ids
  */
-export function useElementId({
+export function useElementId<Item>({
   id = `bottomline-${generateId()}`,
   labelId,
   inputId,
   menuId
-}: Partial<BL.ComboboxProps>) {
+}: Partial<BL.ComboboxProps<Item>>) {
   const elementIds = React.useRef({
     id,
     labelId: labelId || `${id}-label`,
@@ -86,8 +90,6 @@ export function useControlledReducer<
   React.ReducerState<ComponentReducer>,
   React.Dispatch<React.ReducerAction<ComponentReducer>>
 ] {
-  // console.log('[CONTROLLED_REDUCER]:initialState', initialState);
-  // console.log('[CONTROLLED_REDUCER]:props', props);
   // store and track dispatched actions
   const actionRef = React.useRef<StateChangeType>();
 
@@ -122,7 +124,6 @@ export function useControlledReducer<
   // if we declared useReducer within the component itself
   const dispatchWithProps = React.useCallback(
     ({ type, ...rest }: { type: StateChangeType }) => {
-      // console.log('dispatch with props:', propsRef);
       // dispatch({ type, props: propsRef.current });
       dispatch({ type, props, ...rest });
     },
@@ -168,9 +169,9 @@ export function invokeOnStateChange<
   newState: ComponentState
 ) {
   const prop = capitalizeString(pieceOfState as string);
-  const stateChangeCallback = `on${prop}Change`;
+  const stateChangeCallback = `on${pieceOfState}Change`;
   if (stateChangeCallback in props) {
-    props[stateChangeCallback]({ changes: newState });
+    props[stateChangeCallback](newState[pieceOfState]);
   }
 }
 

@@ -1,14 +1,14 @@
 import * as React from 'react';
-import bottomlineComboboxReducer from './combobox/reducer';
+import bottomlineComboboxReducer from './reducer';
 import {
   useElementId,
   normalizeKey,
   useControlledReducer,
   computeInitialState
-} from './combobox/utils';
-import { BL } from './combobox/types';
+} from './utils';
+import { BL } from './types';
 
-export function useCombobox(props: BL.ComboboxProps = {}) {
+export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   /**
    * ****************
    *
@@ -18,13 +18,20 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
    *
    */
   const [state, dispatch] = useControlledReducer<
-    (state: BL.ComboboxState, action: BL.ComboboxAction) => BL.ComboboxState,
-    BL.ComboboxState,
-    BL.ComboboxProps,
+    (
+      state: BL.ComboboxState<Item>,
+      action: BL.ComboboxAction<Item>
+    ) => BL.ComboboxState<Item>,
+    BL.ComboboxState<Item>,
+    BL.ComboboxProps<Item>,
     BL.ComboBoxStateChangeTypes,
-    BL.ComboboxActionAndChanges
-  >(bottomlineComboboxReducer, computeInitialState(props), props);
+    BL.ComboboxActionAndChanges<Item>
+  >(bottomlineComboboxReducer, computeInitialState<Item>(props), props);
   const { isOpen, highlightedIndex, inputValue } = state;
+
+  React.useEffect(() => {
+    console.log('combobox state:', state);
+  });
 
   /**
    * ******
@@ -54,7 +61,7 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
    *
    */
   // Returns accessibility identifiers and identifiers for items
-  const elementIds = useElementId(props);
+  const elementIds = useElementId<Item>(props);
 
   /**
    * *************************
@@ -64,9 +71,11 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
    * *************************
    *
    */
-  props.items.forEach((item: BL.Item, index: number) => {
-    itemsListRef.current[elementIds.getItemId(index)] = item;
-  });
+  if (props.items) {
+    props.items.forEach((item, index) => {
+      itemsListRef.current[elementIds.getItemId(index)] = item;
+    });
+  }
   // fetches the item based on the index as argument
   const getItemFromIndex = React.useCallback(
     (index: number) => itemsListRef.current[elementIds.getItemId(index)],
@@ -200,8 +209,13 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
     };
   }
 
-  function getInputProps() {
+  // here is the area that we need to focus on
+  // this is the entry point for handling the change event for the input value
+  // I think that we can add a debounce function here as a prop
+  // onchange prop will let the user control when the state updates
+  function getInputProps(props?: BL.ComboboxInputProps) {
     const inputKeyDownHandler = (e: React.KeyboardEvent) => {
+      console.log('[INPUT_KEYDOWN]');
       const keyEvt = normalizeKey(e);
       if (keyEvt.name in inputKeyDownHandlers) {
         inputKeyDownHandlers[keyEvt.name]();
@@ -209,16 +223,30 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
     };
 
     const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      console.log('[INPUT_BLUR]');
       dispatch({
         type: BL.ComboboxActions.INPUT_BLUR
       });
     };
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-      dispatch({
-        type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
-        text: e.currentTarget.value
-      });
+      const val = e.currentTarget.value;
+      console.log('current target:', val);
+      if (props?.controlDispatch) {
+        const fn = () => {
+          dispatch({
+            type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
+            text: val
+          });
+        };
+        props.controlDispatch(fn);
+      } else {
+        dispatch({
+          type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
+          text: e.currentTarget.value
+        });
+      }
     };
 
     const eventHandlers = {
@@ -227,7 +255,6 @@ export function useCombobox(props: BL.ComboboxProps = {}) {
 
     return {
       ref: inputRef,
-      value: inputValue,
       onChange: inputChangeHandler,
       onBlur: inputBlurHandler,
       role: 'textbox',

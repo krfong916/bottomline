@@ -5,7 +5,7 @@ export interface ComponentProps<State, ActionAndChanges> {
 }
 export namespace BL {
   // Combobox
-  export type ComboboxProps = {
+  export type ComboboxProps<Item> = {
     id?: string;
     labelId?: string;
     inputId?: string;
@@ -14,27 +14,22 @@ export namespace BL {
     initialInputValue?: string;
     initialHighlightedIndex?: number;
     selectedItem?: Item;
-    items: Item[];
-    itemToString?: (item: Item) => string;
-    onSelectedItemChange?: (changes: ComboboxState) => void;
-    onInputValueChange?: (changes: ComboboxState) => void;
-    onHighightedIndexChange?: (changes: ComboboxState) => void;
-    onIsOpenChange?: (changes: ComboboxState) => void;
-  } & ComponentProps<ComboboxState, ComboboxActionAndChanges>;
+    items?: Item[];
+    itemToString?: (item: any) => string;
+    onSelectedItemChange?: (changes: Partial<ComboboxState<Item>>) => void;
+    onInputValueChange?: (changes: Partial<ComboboxState<string>>) => void;
+    onHighightedIndexChange?: (changes: Partial<ComboboxState<number>>) => void;
+    onIsOpenChange?: (changes: Partial<ComboboxState<boolean>>) => void;
+  } & ComponentProps<ComboboxState<Item>, ComboboxActionAndChanges<Item>>;
 
-  export type ComboboxState = {
+  export type ComboboxState<Item> = {
     isOpen: boolean;
     inputValue: string;
     highlightedIndex: number;
     selectedItem: Item | null;
   };
 
-  // Combobox Items
-  export interface Item {
-    name: string;
-    contents: any;
-  }
-  export type ItemsList = Record<string, Item>;
+  export type ItemsList = Record<string, any>;
 
   // Prop Getters
   export interface ComboboxGetterProps {
@@ -80,13 +75,20 @@ export namespace BL {
 
   export type ComboBoxStateChangeTypes = ComboboxActions;
 
-  export type ComboboxActionAndChanges = ComboboxState & ComboBoxStateChangeTypes;
+  export type ComboboxActionAndChanges<Item> = {
+    changes: ComboboxState<Item>;
+    action: ComboboxAction<Item>;
+  };
 
-  export interface ComboboxAction {
+  export interface ComboboxAction<Item> {
     type: ComboBoxStateChangeTypes;
-    getItemFromIndex?: (index: number) => Item;
+    getItemFromIndex?: (index: number) => any;
     index?: number;
     text?: string;
-    props?: ComboboxProps;
+    props?: ComboboxProps<Item>;
+  }
+
+  export interface ComboboxInputProps {
+    controlDispatch?: (...args: any[]) => any;
   }
 }

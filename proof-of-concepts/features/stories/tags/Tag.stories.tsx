@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { Tag, TagIcon, TagCloseButton } from './Tag';
-import { TagEditor } from './TagEditor';
+import { TagEditor } from './TagEditor/TagEditor';
 import { GoPlus } from 'react-icons/go';
 
 export default {

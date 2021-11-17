@@ -1,0 +1,10 @@
+{
+  "tags": [
+    { "id": 1, "name": "material-analysis", "count": 5 },
+    { "id": 2, "name": "class-analysis", "count": 33 },
+    { "id": 3, "name": "materialism", "count": 12 },
+    { "id": 4, "name": "dialectical-materialism", "count": 9 },
+    { "id": 5, "name": "historical-materialism", "count": 5 },
+    { "id": 6, "name": "materialist-theory", "count": 2 }
+  ]
+}

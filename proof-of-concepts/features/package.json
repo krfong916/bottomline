@@ -8,6 +8,7 @@
     "test:watch": "jest --watch --maxWorkers=50%",
     "start": "react-scripts start",
     "storybook": "start-storybook -p 6006",
+    "mockServer": "json-server --watch db.json",
     "build-storybook": "build-storybook"
   },
   "author": "",
@@ -45,6 +46,7 @@
     "eslint-plugin-react-hooks": "^4.2.0",
     "fork-ts-checker-webpack-plugin": "^4.1.6",
     "jest": "^27.3.1",
+    "json-server": "^0.17.0",
     "msw": "^0.35.0",
     "react-docgen-typescript": "^2.1.1",
     "react-docgen-typescript-plugin": "^1.0.0",

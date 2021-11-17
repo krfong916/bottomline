@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCombobox } from '../useCombobox';
-import { BL } from '../combobox/types';
+import { BL } from '../types';
 import { render, screen, getAllByRole } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { SampleItems } from './testingUtils';
