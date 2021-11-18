@@ -154,6 +154,7 @@ export function onStateChange<ComponentProps, ComponentState>(
     const stateValue = state[pieceOfState];
     const newStateValue = newState[pieceOfState];
     if (stateValue !== newStateValue) {
+      console.log('call invoke');
       invokeOnStateChange(pieceOfState, props, state, newState);
     }
   }
@@ -168,10 +169,10 @@ export function invokeOnStateChange<
   state: ComponentState,
   newState: ComponentState
 ) {
-  const prop = capitalizeString(pieceOfState as string);
-  const stateChangeCallback = `on${pieceOfState}Change`;
+  const statePiece = capitalizeString(pieceOfState as string);
+  const stateChangeCallback = `on${statePiece}Change`;
   if (stateChangeCallback in props) {
-    props[stateChangeCallback](newState[pieceOfState]);
+    const test = props[stateChangeCallback](newState[pieceOfState]);
   }
 }
 

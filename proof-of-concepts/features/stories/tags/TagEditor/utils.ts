@@ -10,7 +10,18 @@ const props = {
 
 export const noop = () => {};
 
-export function fetchTags() {}
+export function fetchTags(tag: string) {
+  console.log('[FETCH TAGS]');
+  const url = `http://localhost:3000/tags?name_like=${tag}`;
+  return fetch(url, {
+    method: 'GET',
+    headers: {
+      'content-type': 'application/json'
+    }
+  })
+    .then((res) => res.json())
+    .catch((error) => Promise.reject(error));
+}
 
 export function getTagAttributes(target: HTMLElement) {
   return {

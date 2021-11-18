@@ -55,6 +55,7 @@ export default function useAsync<
 
   React.useEffect(() => {
     const promise = asyncCallback();
+    console.log('[USE_ASYNC] promise:', promise);
     if (!promise) {
       return;
     }

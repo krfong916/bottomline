@@ -215,7 +215,6 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   // onchange prop will let the user control when the state updates
   function getInputProps(props?: BL.ComboboxInputProps) {
     const inputKeyDownHandler = (e: React.KeyboardEvent) => {
-      console.log('[INPUT_KEYDOWN]');
       const keyEvt = normalizeKey(e);
       if (keyEvt.name in inputKeyDownHandlers) {
         inputKeyDownHandlers[keyEvt.name]();
@@ -232,7 +231,6 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
-      console.log('current target:', val);
       if (props?.controlDispatch) {
         const fn = () => {
           dispatch({

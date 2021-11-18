@@ -43,7 +43,6 @@ export default function useDebouncedCallback<T extends (...args: any[]) => any>(
    */
   const debounce = React.useMemo(() => {
     const func: DebouncedReturnFunction<T> = (...args: Parameters<T>) => {
-      console.log('args:', args);
       if (isLeading.current) {
         fnRef.current(...args);
       }

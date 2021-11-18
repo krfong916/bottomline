@@ -8,7 +8,8 @@ import {
   cleanText,
   isDuplicate,
   isEmpty,
-  noop
+  noop,
+  fetchTags
 } from './utils';
 import { useCombobox } from '../../combobox/hooks/useCombobox';
 import useDebouncedCallback from '../../useDebounce/src/hooks/useDebouncedCallback';
@@ -16,9 +17,8 @@ import useAsync from '../../useDebounce/src/hooks/useAsync';
 import { UseAsyncStatus } from '../../useDebounce/src/types';
 import { BL } from '../../combobox/hooks/types';
 import { BottomlineTag, BottomlineTags } from './types';
-import { GoQuestion } from 'react-icons/go';
+import { AiFillQuestionCircle } from 'react-icons/ai';
 import classNames from 'classnames';
-import './TagUseCase.scss';
 import './TagEditor.scss';
 
 /**
@@ -43,14 +43,6 @@ export const TagEditor = () => {
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>({});
   const [tagSuggestions, setTagSuggestions] = React.useState({ data: null });
   const [duplicateTagAlert, setDuplicateTagAlert] = React.useState('');
-  const debounce = useDebouncedCallback(
-    (dispatch) => {
-      console.log('dispatch:', dispatch);
-      dispatch();
-    },
-    2000,
-    { trailing: true }
-  );
 
   function stateReducer(
     state: BL.ComboboxState<BottomlineTag>,
@@ -95,35 +87,142 @@ export const TagEditor = () => {
     stateReducer
   });
 
-  React.useEffect(() => {
-    console.log('our input:', input);
-  }, [input]);
+  const debounce = useDebouncedCallback(
+    (dispatch) => {
+      console.log('dispatch:', dispatch);
+      dispatch();
+    },
+    2000,
+    { trailing: true }
+  );
 
-  // const { data: tags, status, error } = useAsync(
-  //   () => {
-  //     if (input && input !== '') {
-  //       return fetchTags(input);
-  //     }
-  //   },
-  //   { status: UseAsyncStatus.IDLE },
-  //   [input]
-  // );
+  const fetchTagResults = useAsync(
+    () => {
+      if (input && input !== '') {
+        return fetchTags(input);
+      }
+    },
+    { status: UseAsyncStatus.IDLE },
+    [input]
+  );
+
+  const { data: tags, error, status } = fetchTagResults;
+  if (status === UseAsyncStatus.IDLE) {
+    console.log('we are idle');
+  } else if (status === UseAsyncStatus.PENDING) {
+    console.log('we are pending');
+    // set the loader
+  } else if (status === UseAsyncStatus.RESOLVED) {
+    console.log('we are resolved');
+    console.log(tags);
+    // unset the loader
+    // no results found
+  } else {
+    console.log('we are rejected');
+    console.log(error);
+    // keep the loader don't do anything with the error
+  }
 
   return (
     <section className="tag-editor-section">
-      <span {...getLabelProps({ id: 'tagInputDescription' })}>
-        Add up to 5 (five) tags to describe what your question is about
-      </span>
-      <div>
-        <input
-          {...getInputProps({ controlDispatch: debounce })}
-          type="text"
-          autoComplete="off"
-          className="tag-editor-input"
-          aria-describedby="tagInputDescription"
-          ref={null}
-        />
+      <div className="tag-editor">
+        <div className="tag-header-container">
+          <span
+            className="tag-header-title"
+            {...getLabelProps({ id: 'tagInputDescription' })}
+          >
+            Add up to 5 (five) tags to describe what your question is about
+          </span>
+          <AiFillQuestionCircle size="1.25em" className="tag-header-description" />
+        </div>
+        <div className="selected-tags-container">
+          {selectedTags ? (
+            <ul className="selected-tags">
+              {Object.keys(selectedTags).map((tagName) => {
+                const tag = selectedTags[tagName];
+                return (
+                  <li className="selected-tag">
+                    <Tag size="small" type="outlined" text={tag.name}>
+                      <TagCloseButton />
+                    </Tag>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
         {duplicateTagAlert ? <p role="alert">{duplicateTagAlert}</p> : null}
+        <div className="tag-search-container">
+          <input
+            {...getInputProps({ controlDispatch: debounce })}
+            type="text"
+            autoComplete="off"
+            className="tag-search-input"
+            aria-describedby="tagInputDescription"
+            ref={null}
+          />
+          <span className="tag-search-loader">loader</span>
+        </div>
+        <div className="tag-results-container">
+          <ul className="tag-results">
+            <li className="tag-result">
+              <div className="tag-result-info">
+                <span className="tag-result-header">
+                  <Tag className="tag-name" size="small" text="material-analysis" />
+                  <span className="tag-result-count">{5}</span>
+                  <AiFillQuestionCircle size="1rem" className="tag-result-details" />
+                </span>
+              </div>
+              <p className="tag-result-excerpt">
+                Lorem ipsum dolor sit, amet consectetur, adipisicing elit. Qui
+              </p>
+            </li>
+            <li className="tag-result">
+              <div className="tag-result-info">
+                <span className="tag-result-header">
+                  <Tag className="tag-result" size="small" text="material-max" />
+                  <span className="tag-result-count">{5}</span>
+                  <AiFillQuestionCircle size="1rem" className="tag-result-details" />
+                </span>
+              </div>
+              <p className="tag-result-excerpt">
+                Lorem ipsum dolor sit, amet consectetur, adipisicing elit. Qui
+                expedita ratione,
+              </p>
+            </li>
+            <li className="tag-result">
+              <span className="tag-result-header">
+                <Tag className="tag-result" size="small" text="analysis" />
+                <span className="tag-result-count">{5}</span>
+                <AiFillQuestionCircle size="1rem" className="tag-result-details" />
+              </span>
+
+              <p className="tag-result-excerpt">
+                Lorem ipsum dolor sit, amet consectetur, adipisicing elit. Qui
+                expedita ratione, consectetur sint quibusdam placeat, beatae iusto
+                ipsum perspiciatis consequuntur cupiditate omnis voluptatibus
+                mollitia, fuga odio porro id praesentium. Dolore! Esse sunt,
+                recusandae architecto praesentium consequuntur. Iusto quas odit
+                pariatur fugiat ducimus itaque ad, natus dolore necessitatibus placeat
+                corporis, sint voluptas ea impedit. Sit quasi, voluptas, blanditiis
+                ullam fuga expedita? Accusamus distinctio praesentium deleniti saepe
+                eum magnam et aperiam, dolorum voluptatem voluptates. Voluptate
+                excepturi ipsa laudantium fugiat ex repellat magnam dolorum in.
+                Dolores veritatis molestias saepe, nemo non molestiae repudiandae.
+              </p>
+            </li>
+            <li className="tag-result">
+              <div className="tag-result-info">
+                <span className="tag-result-header">
+                  <Tag className="tag-result" size="small" text="material" />
+                  <span className="tag-result-count">{5}</span>
+                  <AiFillQuestionCircle size="1rem" className="tag-result-details" />
+                </span>
+              </div>
+              <p className="tag-result-excerpt">Lorem</p>
+            </li>
+          </ul>
+        </div>
       </div>
     </section>
   );
@@ -136,136 +235,3 @@ export const TagEditor = () => {
  *
  * *******************
  */
-
-// /**
-//  * *******************
-//  *
-//  *     Focusing
-//  *
-//  * *******************
-//  *
-//  * If leaving focus from text, convert the current text into a tag, apply TagCreation
-//  *
-//  */
-
-// /**
-//  * *******************
-//  *
-//  *     Update
-//  *
-//  * *******************
-//  *
-//  * Update an existing tag for a click event
-//  * If a user click's on a tag, convert the tag into input an input
-//  *
-//  */
-// const editTag = (e: React.MouseEvent<React.ReactNode>) => {
-//   console.log('[EDIT_TAG]');
-//   const { name, index, tagContainer } = getTagAttributes();
-// };
-
-// /**
-//  * *******************
-//  *
-//  *     Deletion
-//  *
-//  * *******************
-//  * There are two ways to delete a tag
-//  * - remove the tag via its close button
-//  * - edit and delete existing tags text
-//  *
-//  */
-// const removeTag = (e: React.MouseEvent<HTMLButtonElement>) => {
-//   // prevents other click handlers on the Tag component from firing
-//   e.stopPropagation();
-// };
-
-// /**
-//  * *******************
-//  *
-//  *     Create
-//  *
-//  * *******************
-//  */
-// const createTag = (userInput: string) => {
-//   // strip text from characters not allowed
-//   let text = cleanText(userInput);
-
-//   // if the text contained bad characters, then return
-//   if (text === '') return;
-
-//   // check if we have a duplicate tag entry
-//   if (isDuplicate(text, state)) {
-//     setDuplicateTagAlert(getDuplicateTagAlert(text));
-
-//     // create the tag
-//   } else {
-//     // create a fresh piece of state to modify
-//     let newState = { ...state };
-
-//     let newTag = {
-//       name: text
-//     } as EditorTag;
-
-//     // insert the tag into our dictionary of tags
-//     newState.tags.set(text, newTag);
-
-//     // refresh the value of the input
-//     newState.inputValue = '';
-
-//     // update state
-//     setState(newState);
-//   }
-// };
-
-// const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//   if (e.charCode === SPACEBAR && isEmpty(state.inputValue) == false) {
-//   }
-// };
-
-// const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//   console.log('[HANDLE_ONCHANGE]: ', e.target.value);
-//   // console.log('[HANDLE_ONCHANGE]: ', e.charCode);
-
-//   const text = e.target.value;
-
-//   if (isWhitespace(text) === false) {
-//     // update the text value
-//     console.log({ ...state, ...{ inputValue: text } });
-//     setState({ ...state, ...{ inputValue: text } });
-
-//     // if the editor has a duplicate tag, we remove the duplicate flag in the onChange handler
-//     // because the user is signaling that they've decided to correct the duplicate
-//     if (duplicateTagAlert) {
-//       setDuplicateTagAlert('');
-//     }
-//   }
-// };
-
-// const handleOnPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-//   console.log('[ON_PASTE]');
-//   const text = event.clipboardData.getData('text');
-
-//   if (text.length > 1) {
-//     // create tags from the user's pasted text
-//     text.split(' ').forEach((pieceOfText) => createTag(pieceOfText));
-//   }
-// };
-// {tagSuggestions.data ? (
-//   <div className="tag-suggestions">
-//     <ul className="tag-suggestions__list">
-//       {tagSuggestions.suggestions.map((suggestion) => {
-//         const url = `thebottomlineapp.com/tags/${suggestion.name}/info`;
-//         return (
-//           <li className="tag-suggestions__list-item" tabIndex={0}>
-//             <div className="tag-suggestions__header">
-//               <Tag size="small" type="no-outline" text={suggestion.name} />
-//               <span className="tag-suggestions__count">{suggestion.count}</span>
-//               <a href={url}>
-//                 <GoQuestion className="tag-suggestions__info" />
-//               </a>
-//             </div>
-//             <span className="tag-suggestions__body">{suggestion.excerpt}</span>
-//           </li>
-//         );
-//       })}
