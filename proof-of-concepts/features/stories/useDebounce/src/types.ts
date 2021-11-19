@@ -1,3 +1,7 @@
+export interface UseAsyncProps {
+  initialState: UseAsyncState;
+}
+
 export enum UseAsyncStatus {
   IDLE = '[idle]',
   RESOLVED = '[resolved]',
@@ -8,6 +12,7 @@ export enum UseAsyncStatus {
 export type UseAsyncAction = {
   type: UseAsyncStatus;
   data?: any;
+  error?: any;
 };
 
 export type UseAsyncState = {
@@ -20,4 +25,5 @@ export type UseAsyncResponse = {
   status: UseAsyncStatus;
   data: any;
   error: any;
+  run: (promise: any) => any;
 };

@@ -1,0 +1,38 @@
+@use '../styles/colors.scss';
+@use '../styles/spacing.scss';
+
+.bottomline-search-loader {
+  display: inline-block;
+  margin: 2px;
+  width: spacing.$Size-0;
+  height: spacing.$Size-0;
+  border-radius: spacing.$Size-0;
+  background-color: colors.$Gray-6;
+
+  opacity: 0.33;
+  animation-name: loader;
+  animation-duration: 0.8s;
+  animation-iteration-count: infinite;
+}
+.bottomline-search-loader:nth-child(1) {
+}
+
+.bottomline-search-loader:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.bottomline-search-loader:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes loader {
+  0% {
+    opacity: 0.33;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.33;
+  }
+}

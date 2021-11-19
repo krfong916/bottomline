@@ -112,56 +112,67 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
    *
    * **************
    */
-  const inputKeyDownHandlers: { [eventHandler: string]: () => void } = {
-    Enter: () => {
+  const inputKeyDownHandlers: {
+    [eventHandler: string]: (e: React.KeyboardEvent) => void;
+  } = {
+    Enter: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_ENTER,
         getItemFromIndex
       });
     },
-    Escape: () => {
+    Escape: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_ESCAPE,
         getItemFromIndex
       });
     },
-    Delete: () => {
+    Delete: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_DELETE,
         getItemFromIndex
       });
     },
-    ArrowRight: () => {
+    ArrowRight: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT,
         getItemFromIndex
       });
     },
-    ArrowLeft: () => {
+    ArrowLeft: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT,
         getItemFromIndex
       });
     },
-    ArrowDown: () => {
+    ArrowDown: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN,
         getItemFromIndex
       });
     },
-    ArrowUp: () => {
+    ArrowUp: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP,
         getItemFromIndex
       });
     },
-    Home: () => {
+    Home: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_HOME,
         getItemFromIndex
       });
     },
-    End: () => {
+    End: (e: React.KeyboardEvent) => {
+      e.preventDefault();
       dispatch({
         type: BL.ComboboxActions.INPUT_KEYDOWN_END,
         getItemFromIndex
@@ -180,10 +191,16 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
    * https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-6
    *
    */
-  function getLabelProps() {
+
+  /**
+   * Use label props on the element that describes the combobox
+   */
+  function getLabelProps(props?: BL.ComboboxLabelGetterProps) {
+    const id = props?.id || elementIds.labelId;
+    const inputId = props?.inputId || elementIds.inputId;
     return {
-      id: elementIds.labelId,
-      htmlFor: elementIds.inputId
+      id,
+      htmlFor: inputId
     };
   }
 
@@ -193,18 +210,19 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
    *   if the user has defined a specific type of popup, then destructure
    *   otherwise, the user may have not passed any args, so default to an empty object
    */
-  function getComboboxProps(
-    { ariaPopup }: { ariaPopup?: BL.ComboboxAriaPopup } = {} as BL.ComboboxGetterProps
-  ) {
-    let ariaHasPopup = ariaPopup ? ariaPopup : ('grid' as BL.ComboboxAriaPopup);
+  function getComboboxProps(props?: BL.ComboboxGetterProps) {
+    const ariaHasPopup = props?.ariaPopup || ('grid' as BL.ComboboxAriaPopup);
+    const ariaLabelledBy = props?.ariaLabelledBy || elementIds.labelId;
+
     // Implement: if the combobox has a visible label, the element with role combobox has aria-labelledby
     // set to a value that refers to the labelling element.
     // Otherwise, the combobox element has a label provided by aria-label.
     return {
       role: 'combobox',
       'aria-expanded': isOpen ? true : false,
+      'aria-owns': elementIds.menuId,
       'aria-haspopup': ariaHasPopup,
-      'aria-labelledby': elementIds.labelId,
+      'aria-labelledby': ariaLabelledBy,
       onClick: setComboboxFocus
     };
   }
@@ -213,11 +231,11 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   // this is the entry point for handling the change event for the input value
   // I think that we can add a debounce function here as a prop
   // onchange prop will let the user control when the state updates
-  function getInputProps(props?: BL.ComboboxInputProps) {
+  function getInputProps(props?: BL.ComboboxInputGetterProps) {
     const inputKeyDownHandler = (e: React.KeyboardEvent) => {
       const keyEvt = normalizeKey(e);
       if (keyEvt.name in inputKeyDownHandlers) {
-        inputKeyDownHandlers[keyEvt.name]();
+        inputKeyDownHandlers[keyEvt.name](e);
       }
     };
 
@@ -256,6 +274,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
       onChange: inputChangeHandler,
       onBlur: inputBlurHandler,
       role: 'textbox',
+      'aria-labelledby': elementIds.labelId,
       'aria-controls': elementIds.menuId,
       'aria-multiline': false,
       'aria-autocomplete': 'list' as BL.ComboboxAriaAutoComplete,
@@ -305,7 +324,9 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   }
 
   function getGridPopupRowProps() {
-    return { role: 'row' };
+    return {
+      role: 'row'
+    };
   }
 
   return {

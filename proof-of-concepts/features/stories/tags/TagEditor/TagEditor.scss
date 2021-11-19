@@ -1,120 +1,170 @@
 @use '../../styles/colors.scss';
 @use '../../styles/fonts.scss';
+@use '../../styles/spacing.scss';
+
 .tag-editor-section {
   padding: 0;
 }
 
-.tag-editor-container {
-  border: 1px solid colors.$Gray-8;
-  border-radius: 4px;
+.tag-editor {
+  display: flex;
+  flex-direction: column;
 }
 
-.tag-editor-focused {
+.tag-header-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tag-header-title {
+  font-size: fonts.$Size-2;
+  flex: 1;
+}
+
+.tag-header-description {
+  height: 1.25rem;
+  width: 25%;
+  color: white;
+}
+
+.tag-header-description path {
+  fill: colors.$Blue-6;
+}
+
+.tag-search-container {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid colors.$Gray-8;
+  border-radius: 6px;
+}
+
+.tag-search-container:focus {
   border: 1px solid #0978d9;
   box-shadow: 0px 0px 0px 2px rgba(9, 120, 217, 0.3);
   outline: none;
 }
 
-.tag-editor-input {
-  outline: none;
+.tag-search-input {
+  margin: spacing.$Size-1;
+  font-size: fonts.$Size-1;
   border: none;
-  min-width: 1rem;
+  width: 90%;
 }
 
-.tag-suggestions {
-  box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
-  background-color: color;
-  width: 100%;
+.tag-search-input:focus-within {
+  outline: none;
 }
 
-.tag-suggestions__list {
+.tag-search-loader {
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.tag-results-container {
   display: flex;
-  // allow items to fill rows if it exceeds the width of the parent
-  flex-wrap: wrap;
-  flex-direction: row;
-  // just enough spacing to avoid overflow onto tag input container
-  margin-top: 3px;
+  box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
+}
+
+.tag-results {
   list-style-type: none;
   padding: 0;
+  margin: 0;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 150px 150px;
 }
 
-.tag-suggestions__list-item {
-  // we want three items per row
-  flex-basis: 29%;
-  // when there is enough space, the item should fill the remaining space, rather than the percentage we specify
-  flex-grow: 1;
-  max-height: 150px;
-  font-size: fonts.$Size-0;
-  // allows us to set flexbox props on item information
-  display: flex;
-  flex-direction: column;
-
-  padding: 1em;
-  cursor: pointer;
-  margin-bottom: 0px;
+.tag-result {
+  padding: spacing.$Size-1;
+  margin: 0;
   border-radius: 4px;
+  display: inline-flex;
+  flex-direction: column;
+  cursor: pointer;
 }
-.tag-suggestions__list-item:hover {
+
+.tag-result:hover {
   background-color: rgba(236, 238, 241, 0.7);
 }
-.tag-suggestions__list-item:focus {
+.tag-result--focused {
   outline: none;
   box-shadow: 0px 0px 0px 2px rgba(9, 120, 217, 0.3);
   background-color: colors.$Gray-1;
 }
 
-.tag-suggestions__header {
+.tag-result-info {
+}
+
+.tag-result-header {
   display: inline-grid;
+  width: 100%;
   grid-template-rows: 1fr;
   // tag should be allowed to have 100% of its content visible, the rest of the space is distributed equally
-  grid-template-columns: fit-content(100%) 1fr 1fr;
-  padding-bottom: 0.5rem;
+  grid-template-columns: max-content 1fr 1fr;
   align-items: center;
 }
 
-.tag-suggestions__count {
-  // if the count is high, abbreviate the overflow
-  // that's a sign that we're doing things right in this app
+.tag-result-count {
+  justify-self: start;
   overflow: hidden;
   max-width: 100%;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-left: 8px;
+  margin-left: 12px;
+  font-size: fonts.$Size-1;
 }
 
-.tag-suggestions__info {
-  // flex combined with margin-auto is translated as the following:
-  // margin-x: auto, push the element away from that direction
-  // source: https://css-tricks.com/the-peculiar-magic-of-flexbox-and-auto-margins/
-  display: inline-flex;
-  margin-left: auto;
+.tag-result-details {
+  justify-self: center;
+}
+.tag-result-details path {
+  fill: colors.$Gray-5;
 }
 
-.tag-suggestions__body {
-  // put ellipsis on text past n-lines long
+.tag-result-excerpt {
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: fonts.$Size-4;
+  margin: 0;
 }
 
-// on small screens, we should not display all the tag suggestion info
-@media screen and (max-width: 25em) {
-  .tag-suggestions__header {
+@media screen and (max-width: 450px) {
+  .tag-header-title {
+    font-size: fonts.$Size-1;
+  }
+  .tag-results {
+    display: inline;
+    padding: 0;
+  }
+  .tag-result {
+    display: inline-block;
+    padding: spacing.$Size-1;
+    margin: spacing.$Size-0;
+  }
+  .tag-result-header {
     // just want to show the tags, no other info so we only need 1 column
     grid-template-columns: 1fr;
   }
-  .tag-suggestions__list-item {
-    align-items: center;
-  }
-  .tag-suggestions__count {
+  .tag-result-details {
     display: none;
   }
-  .tag-suggestions__info {
+  .tag-result-excerpt {
     display: none;
   }
-  .tag-suggestions__body {
+}
+
+@media screen and (max-width: 535px) {
+  .tag-result-header {
+    grid-template-columns: 8fr 1fr;
+  }
+  .tag-result-details {
+    justify-self: end;
+  }
+  .tag-result-count {
     display: none;
   }
 }

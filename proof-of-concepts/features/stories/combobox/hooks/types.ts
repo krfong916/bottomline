@@ -32,12 +32,25 @@ export namespace BL {
   export type ItemsList = Record<string, any>;
 
   // Prop Getters
-  export interface ComboboxGetterProps {
-    ariaPopup?: ComboboxAriaPopup;
-  }
+
   export interface ComboboxInputProps {
     ariaAutoComplete?: ComboboxAriaAutoComplete;
   }
+
+  export interface ComboboxLabelGetterProps {
+    id?: string;
+    inputId?: string;
+  }
+
+  export interface ComboboxInputGetterProps {
+    controlDispatch?: (...args: any[]) => any;
+  }
+
+  export interface ComboboxGetterProps {
+    ariaLabelledBy?: string;
+    ariaPopup?: ComboboxAriaPopup;
+  }
+
   export type ComboboxAriaAutoComplete = 'none' | 'list' | 'both';
   export type ComboboxAriaPopup =
     | boolean
@@ -86,9 +99,5 @@ export namespace BL {
     index?: number;
     text?: string;
     props?: ComboboxProps<Item>;
-  }
-
-  export interface ComboboxInputProps {
-    controlDispatch?: (...args: any[]) => any;
   }
 }

@@ -14,7 +14,8 @@ import {
 import { useCombobox } from '../../combobox/hooks/useCombobox';
 import useDebouncedCallback from '../../useDebounce/src/hooks/useDebouncedCallback';
 import useAsync from '../../useDebounce/src/hooks/useAsync';
-import { UseAsyncStatus } from '../../useDebounce/src/types';
+import { SearchLoader } from '../../loader/SearchLoader';
+import { UseAsyncStatus, UseAsyncState } from '../../useDebounce/src/types';
 import { BL } from '../../combobox/hooks/types';
 import { BottomlineTag, BottomlineTags } from './types';
 import { AiFillQuestionCircle } from 'react-icons/ai';
@@ -41,8 +42,41 @@ import './TagEditor.scss';
 export const TagEditor = () => {
   const [input, setInput] = React.useState('');
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>({});
-  const [tagSuggestions, setTagSuggestions] = React.useState({ data: null });
-  const [duplicateTagAlert, setDuplicateTagAlert] = React.useState('');
+  const [tagSuggestions, setTagSuggestions] = React.useState<
+    BottomlineTag[] | undefined
+  >(undefined);
+  let derivedLoaderState = false;
+
+  const debounce = useDebouncedCallback(
+    (dispatch) => {
+      dispatch();
+    },
+    2000,
+    { trailing: true }
+  );
+
+  const { data: tags, error, status, run } = useAsync({
+    initialState: {
+      status: UseAsyncStatus.IDLE
+    } as UseAsyncState
+  });
+
+  React.useEffect(() => {
+    if (!input || input === '') return;
+    run(fetchTags(input));
+  }, [input, run]);
+
+  if (status === UseAsyncStatus.PENDING) {
+    console.log('[TAG_EDITOR_PENDING]');
+    derivedLoaderState = true;
+  }
+
+  React.useEffect(() => {
+    if (tags) {
+      console.log('Use Effect, Setting Tags');
+      setTagSuggestions(tags);
+    }
+  }, [tags]);
 
   function stateReducer(
     state: BL.ComboboxState<BottomlineTag>,
@@ -84,55 +118,18 @@ export const TagEditor = () => {
       // set our own input value change
       setInput(changes as string);
     },
-    stateReducer
+    stateReducer,
+    items: tagSuggestions,
+    initialIsOpen: tagSuggestions ? true : false
   });
-
-  const debounce = useDebouncedCallback(
-    (dispatch) => {
-      console.log('dispatch:', dispatch);
-      dispatch();
-    },
-    2000,
-    { trailing: true }
-  );
-
-  const fetchTagResults = useAsync(
-    () => {
-      if (input && input !== '') {
-        return fetchTags(input);
-      }
-    },
-    { status: UseAsyncStatus.IDLE },
-    [input]
-  );
-
-  const { data: tags, error, status } = fetchTagResults;
-  if (status === UseAsyncStatus.IDLE) {
-    console.log('we are idle');
-  } else if (status === UseAsyncStatus.PENDING) {
-    console.log('we are pending');
-    // set the loader
-  } else if (status === UseAsyncStatus.RESOLVED) {
-    console.log('we are resolved');
-    console.log(tags);
-    // unset the loader
-    // no results found
-  } else {
-    console.log('we are rejected');
-    console.log(error);
-    // keep the loader don't do anything with the error
-  }
 
   return (
     <section className="tag-editor-section">
       <div className="tag-editor">
         <div className="tag-header-container">
-          <span
-            className="tag-header-title"
-            {...getLabelProps({ id: 'tagInputDescription' })}
-          >
+          <label className="tag-header-title" {...getLabelProps()}>
             Add up to 5 (five) tags to describe what your question is about
-          </span>
+          </label>
           <AiFillQuestionCircle size="1.25em" className="tag-header-description" />
         </div>
         <div className="selected-tags-container">
@@ -151,77 +148,46 @@ export const TagEditor = () => {
             </ul>
           ) : null}
         </div>
-        {duplicateTagAlert ? <p role="alert">{duplicateTagAlert}</p> : null}
-        <div className="tag-search-container">
+        {/*{duplicateTagAlert ? <p role="alert">{duplicateTagAlert}</p> : null}*/}
+        <div className="tag-search-container" {...getComboboxProps()}>
           <input
             {...getInputProps({ controlDispatch: debounce })}
             type="text"
             autoComplete="off"
             className="tag-search-input"
-            aria-describedby="tagInputDescription"
             ref={null}
           />
-          <span className="tag-search-loader">loader</span>
+          {derivedLoaderState ? (
+            <span className="tag-search-loader">
+              <SearchLoader />
+            </span>
+          ) : null}
         </div>
-        <div className="tag-results-container">
-          <ul className="tag-results">
-            <li className="tag-result">
-              <div className="tag-result-info">
-                <span className="tag-result-header">
-                  <Tag className="tag-name" size="small" text="material-analysis" />
-                  <span className="tag-result-count">{5}</span>
-                  <AiFillQuestionCircle size="1rem" className="tag-result-details" />
-                </span>
-              </div>
-              <p className="tag-result-excerpt">
-                Lorem ipsum dolor sit, amet consectetur, adipisicing elit. Qui
-              </p>
-            </li>
-            <li className="tag-result">
-              <div className="tag-result-info">
-                <span className="tag-result-header">
-                  <Tag className="tag-result" size="small" text="material-max" />
-                  <span className="tag-result-count">{5}</span>
-                  <AiFillQuestionCircle size="1rem" className="tag-result-details" />
-                </span>
-              </div>
-              <p className="tag-result-excerpt">
-                Lorem ipsum dolor sit, amet consectetur, adipisicing elit. Qui
-                expedita ratione,
-              </p>
-            </li>
-            <li className="tag-result">
-              <span className="tag-result-header">
-                <Tag className="tag-result" size="small" text="analysis" />
-                <span className="tag-result-count">{5}</span>
-                <AiFillQuestionCircle size="1rem" className="tag-result-details" />
-              </span>
-
-              <p className="tag-result-excerpt">
-                Lorem ipsum dolor sit, amet consectetur, adipisicing elit. Qui
-                expedita ratione, consectetur sint quibusdam placeat, beatae iusto
-                ipsum perspiciatis consequuntur cupiditate omnis voluptatibus
-                mollitia, fuga odio porro id praesentium. Dolore! Esse sunt,
-                recusandae architecto praesentium consequuntur. Iusto quas odit
-                pariatur fugiat ducimus itaque ad, natus dolore necessitatibus placeat
-                corporis, sint voluptas ea impedit. Sit quasi, voluptas, blanditiis
-                ullam fuga expedita? Accusamus distinctio praesentium deleniti saepe
-                eum magnam et aperiam, dolorum voluptatem voluptates. Voluptate
-                excepturi ipsa laudantium fugiat ex repellat magnam dolorum in.
-                Dolores veritatis molestias saepe, nemo non molestiae repudiandae.
-              </p>
-            </li>
-            <li className="tag-result">
-              <div className="tag-result-info">
-                <span className="tag-result-header">
-                  <Tag className="tag-result" size="small" text="material" />
-                  <span className="tag-result-count">{5}</span>
-                  <AiFillQuestionCircle size="1rem" className="tag-result-details" />
-                </span>
-              </div>
-              <p className="tag-result-excerpt">Lorem</p>
-            </li>
-          </ul>
+        <div className="tag-results-container" {...getPopupProps()}>
+          {isOpen && tagSuggestions ? (
+            <ul className="tag-results">
+              {tagSuggestions.map((tag, index: number) => (
+                <li
+                  className={
+                    highlightedIndex === index ? 'tag-result--focused' : 'tag-result'
+                  }
+                  {...getItemProps(index)}
+                >
+                  <div className="tag-result-info">
+                    <span className="tag-result-header">
+                      <Tag className="tag-name" size="small" text={tag.name} />
+                      <span className="tag-result-count">{tag.count}</span>
+                      <AiFillQuestionCircle
+                        size="1rem"
+                        className="tag-result-details"
+                      />
+                    </span>
+                  </div>
+                  <p className="tag-result-excerpt">{tag.excerpt}</p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       </div>
     </section>

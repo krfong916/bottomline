@@ -72,6 +72,7 @@ export default function bottomlineComboboxReducer<Item>(
       if (newState.highlightedIndex === -1 && text) {
         newState.inputValue = text;
       }
+      newState.isOpen = true;
 
       return newState;
     }

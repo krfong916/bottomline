@@ -154,7 +154,6 @@ export function onStateChange<ComponentProps, ComponentState>(
     const stateValue = state[pieceOfState];
     const newStateValue = newState[pieceOfState];
     if (stateValue !== newStateValue) {
-      console.log('call invoke');
       invokeOnStateChange(pieceOfState, props, state, newState);
     }
   }

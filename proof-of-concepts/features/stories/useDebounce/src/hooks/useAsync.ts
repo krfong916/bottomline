@@ -3,40 +3,30 @@ import {
   UseAsyncStatus,
   UseAsyncResponse,
   UseAsyncState,
-  UseAsyncAction
+  UseAsyncAction,
+  UseAsyncProps
 } from '../types';
 
 function asyncReducer(state: UseAsyncState, action: UseAsyncAction) {
   const newState = { ...state };
   switch (action.type) {
-    case UseAsyncStatus.IDLE: {
-      console.log('[IDLE]');
-      console.log('action:', action);
-      console.log('state:', newState);
-      newState.status = action.type;
-      return newState;
-    }
     case UseAsyncStatus.PENDING: {
-      console.log('[PENDING]');
+      console.log('[USE_ASYNC_STATUS_PENDING]');
       console.log('action:', action);
       console.log('state:', newState);
-      newState.status = action.type;
-      return newState;
+      return { status: UseAsyncStatus.PENDING, data: null, error: null };
     }
     case UseAsyncStatus.RESOLVED: {
-      console.log('[RESOLVED]');
+      console.log('[USE_ASYNC_STATUS_RESOLVED]');
       console.log('action:', action);
       console.log('state:', newState);
-      newState.status = action.type;
-      newState.data = action.data;
-      return newState;
+      return { status: UseAsyncStatus.RESOLVED, data: action.data, error: null };
     }
     case UseAsyncStatus.REJECTED: {
-      console.log('[REJECTED]');
+      console.log('[USE_ASYNC_STATUS_REJECTED]');
       console.log('action:', action);
       console.log('state:', newState);
-      newState.status = action.type;
-      return newState;
+      return { status: UseAsyncStatus.REJECTED, data: null, error: action.error };
     }
     default: {
       throw new TypeError(`Unhandled Action Type. Received ${action.type}`);
@@ -46,34 +36,32 @@ function asyncReducer(state: UseAsyncState, action: UseAsyncAction) {
 
 export default function useAsync<
   T extends (...args: any[]) => Promise<any> | undefined
->(
-  asyncCallback: T,
-  initialState: UseAsyncState,
-  dependencies: any[]
-): UseAsyncResponse {
-  const [state, dispatch] = React.useReducer(asyncReducer, initialState);
+>(props: UseAsyncProps): UseAsyncResponse {
+  const [state, dispatch] = React.useReducer(asyncReducer, {
+    status: UseAsyncStatus.PENDING,
+    data: null,
+    error: null,
+    ...props.initialState
+  });
 
-  React.useEffect(() => {
-    const promise = asyncCallback();
-    console.log('[USE_ASYNC] promise:', promise);
-    if (!promise) {
-      return;
-    }
+  const { status, data, error } = state;
+
+  const run = React.useCallback((promise) => {
     dispatch({ type: UseAsyncStatus.PENDING });
     promise.then(
       (onFulfilled: any) => {
-        console.log(onFulfilled);
         dispatch({ type: UseAsyncStatus.RESOLVED, data: onFulfilled });
       },
       (onRejected: any) => {
-        dispatch({ type: UseAsyncStatus.REJECTED, data: onRejected });
+        dispatch({ type: UseAsyncStatus.REJECTED, error: onRejected });
       }
     );
-  }, dependencies);
+  }, []);
 
   return {
-    data: state.data,
-    status: state.status,
-    error: state.error
+    data,
+    status,
+    error,
+    run
   };
 }
