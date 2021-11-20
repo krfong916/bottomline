@@ -6,6 +6,7 @@ import {
   useControlledReducer,
   computeInitialState
 } from './utils';
+import { mergeRefs, callAllEventHandlers, noop } from '../../utils';
 import { BL } from './types';
 
 export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
@@ -92,7 +93,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
    *
    */
   React.useEffect(() => {
-    if (inputRef.current && isOpen) {
+    if (inputRef.current && (isOpen || props.initialIsOpen)) {
       inputRef.current.focus();
     }
   }, [isOpen]);
@@ -231,7 +232,11 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   // this is the entry point for handling the change event for the input value
   // I think that we can add a debounce function here as a prop
   // onchange prop will let the user control when the state updates
-  function getInputProps(props?: BL.ComboboxInputGetterProps) {
+  function getInputProps<T>({
+    onBlur = noop,
+    onFocus = noop,
+    controlDispatch
+  }: BL.ComboboxInputGetterProps<T> = {}) {
     const inputKeyDownHandler = (e: React.KeyboardEvent) => {
       const keyEvt = normalizeKey(e);
       if (keyEvt.name in inputKeyDownHandlers) {
@@ -241,7 +246,6 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
 
     const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
       e.preventDefault();
-      console.log('[INPUT_BLUR]');
       dispatch({
         type: BL.ComboboxActions.INPUT_BLUR
       });
@@ -249,14 +253,14 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
-      if (props?.controlDispatch) {
+      if (controlDispatch) {
         const fn = () => {
           dispatch({
             type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
             text: val
           });
         };
-        props.controlDispatch(fn);
+        controlDispatch(fn);
       } else {
         dispatch({
           type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
@@ -265,14 +269,15 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
       }
     };
 
-    const eventHandlers = {
-      onKeyDown: inputKeyDownHandler
+    let eventHandlers = {
+      onKeyDown: inputKeyDownHandler,
+      onChange: inputChangeHandler,
+      onBlur: callAllEventHandlers(inputBlurHandler, onBlur),
+      onFocus
     };
 
     return {
-      ref: inputRef,
-      onChange: inputChangeHandler,
-      onBlur: inputBlurHandler,
+      ref: props.ref,
       role: 'textbox',
       'aria-labelledby': elementIds.labelId,
       'aria-controls': elementIds.menuId,

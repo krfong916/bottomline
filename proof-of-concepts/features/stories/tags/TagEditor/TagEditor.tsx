@@ -44,7 +44,13 @@ export const TagEditor = () => {
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>({});
   const [tagSuggestions, setTagSuggestions] = React.useState<
     BottomlineTag[] | undefined
-  >(undefined);
+  >();
+
+  // we define state and change handler callbacks instead of a ref because we don't need to handle
+  // we need the "appearance" of focus handling for the container when the input element is focused
+  const [inputFocused, setInputFocused] = React.useState(false);
+  const inputOnFocus = () => setInputFocused(true);
+  const inputOnBlur = () => setInputFocused(false);
   let derivedLoaderState = false;
 
   const debounce = useDebouncedCallback(
@@ -66,16 +72,10 @@ export const TagEditor = () => {
     run(fetchTags(input));
   }, [input, run]);
 
-  if (status === UseAsyncStatus.PENDING) {
-    console.log('[TAG_EDITOR_PENDING]');
-    derivedLoaderState = true;
-  }
+  if (status === UseAsyncStatus.PENDING) derivedLoaderState = true;
 
   React.useEffect(() => {
-    if (tags) {
-      console.log('Use Effect, Setting Tags');
-      setTagSuggestions(tags);
-    }
+    if (tags) setTagSuggestions(tags);
   }, [tags]);
 
   function stateReducer(
@@ -123,6 +123,10 @@ export const TagEditor = () => {
     initialIsOpen: tagSuggestions ? true : false
   });
 
+  // place our own ref on the input
+  // we use a useeffect to detect when the input ref is focused
+  // when the input ref is focused, then we focus the div
+
   return (
     <section className="tag-editor-section">
       <div className="tag-editor">
@@ -149,9 +153,20 @@ export const TagEditor = () => {
           ) : null}
         </div>
         {/*{duplicateTagAlert ? <p role="alert">{duplicateTagAlert}</p> : null}*/}
-        <div className="tag-search-container" {...getComboboxProps()}>
+        <div
+          className={
+            inputFocused
+              ? 'tag-search-container tag-search-container--focused'
+              : 'tag-search-container'
+          }
+          {...getComboboxProps()}
+        >
           <input
-            {...getInputProps({ controlDispatch: debounce })}
+            {...getInputProps<HTMLInputElement | undefined>({
+              controlDispatch: debounce,
+              onFocus: inputOnFocus,
+              onBlur: inputOnBlur
+            })}
             type="text"
             autoComplete="off"
             className="tag-search-input"
@@ -169,7 +184,9 @@ export const TagEditor = () => {
               {tagSuggestions.map((tag, index: number) => (
                 <li
                   className={
-                    highlightedIndex === index ? 'tag-result--focused' : 'tag-result'
+                    highlightedIndex === index
+                      ? 'tag-result tag-result--focused'
+                      : 'tag-result'
                   }
                   {...getItemProps(index)}
                 >

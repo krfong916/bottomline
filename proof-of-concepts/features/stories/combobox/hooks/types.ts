@@ -32,18 +32,16 @@ export namespace BL {
   export type ItemsList = Record<string, any>;
 
   // Prop Getters
-
-  export interface ComboboxInputProps {
-    ariaAutoComplete?: ComboboxAriaAutoComplete;
-  }
-
   export interface ComboboxLabelGetterProps {
     id?: string;
     inputId?: string;
   }
 
-  export interface ComboboxInputGetterProps {
+  export interface ComboboxInputGetterProps<T> {
     controlDispatch?: (...args: any[]) => any;
+    ref?: React.MutableRefObject<T>;
+    onFocus?: (...args: any[]) => any;
+    onBlur?: (...args: any[]) => any;
   }
 
   export interface ComboboxGetterProps {
