@@ -1,4 +1,121 @@
 import React from 'react';
+import { ComponentProps } from './types';
+
+export function useControlledReducer<
+  ComponentReducer extends React.Reducer<any, any>,
+  ComponentState extends React.ReducerState<ComponentReducer>,
+  Props extends ComponentProps<ComponentState, any>,
+  StateChangeType,
+  ActionAndChanges
+>(
+  reducer: ComponentReducer,
+  initialState: ComponentState,
+  props: Props
+): [
+  React.ReducerState<ComponentReducer>,
+  React.Dispatch<React.ReducerAction<ComponentReducer>>
+] {
+  // store and track dispatched actions
+  const actionRef = React.useRef<StateChangeType>();
+
+  // store and track the "previous" state, as a ref. updating as a side-effect
+  // allows us to choose when to update this ref
+  const prevStateRef = React.useRef<ComponentState>();
+
+  // const propsRef = React.useRef<Props>(props);
+
+  // return either the internal changes based on our state reducer,
+  // or the internal changes based on the user's recommendations
+  const controlledReducer = React.useCallback(
+    (state: ComponentState, action) => {
+      actionRef.current = action;
+      const internalChanges = reducer(state, action);
+      if (props && props.stateReducer) {
+        const userRecommendedChanges = props.stateReducer(state, ({
+          action,
+          changes: internalChanges
+        } as unknown) as ActionAndChanges);
+        console.log('[USER_RECOMMENDED_CHANGES]:', userRecommendedChanges);
+        return userRecommendedChanges;
+      }
+      return internalChanges;
+    },
+    [props, reducer]
+  );
+
+  const [state, dispatch] = React.useReducer(controlledReducer, initialState);
+
+  // our component calls this dispatch function with props added as a convenience
+  // this function saves us from having to declare props on every dispatch,
+  // if we declared useReducer within the component itself
+  const dispatchWithProps = React.useCallback(
+    ({ type, ...rest }: { type: StateChangeType }) => {
+      // dispatch({ type, props: propsRef.current });
+      dispatch({ type, props, ...rest });
+    },
+    [props]
+  );
+
+  // recall: useEffect runs after the render phase, therefore
+  // the reference of state is the most up-to-date state
+  // and prevStateRef references the state from the previous render
+  React.useEffect(() => {
+    if (actionRef.current && prevStateRef.current && prevStateRef.current !== state) {
+      onStateChange(props, prevStateRef.current, state);
+    }
+    prevStateRef.current = state;
+  }, [props, state]);
+
+  return [state, dispatchWithProps];
+}
+
+// Calls any callback the users' of our component have registered when a piece of state
+// has changed
+export function onStateChange<ComponentProps, ComponentState>(
+  props: ComponentProps,
+  state: ComponentState,
+  newState: ComponentState
+) {
+  for (let pieceOfState in state) {
+    const stateValue = state[pieceOfState];
+    const newStateValue = newState[pieceOfState];
+    if (stateValue !== newStateValue) {
+      invokeOnStateChange(pieceOfState, props, state, newState);
+    }
+  }
+}
+
+export function invokeOnStateChange<
+  ComponentProps extends Record<string, any>,
+  ComponentState
+>(
+  pieceOfState: keyof ComponentState,
+  props: ComponentProps,
+  state: ComponentState,
+  newState: ComponentState
+) {
+  const statePiece = capitalizeString(pieceOfState as string);
+  const stateChangeCallback = `on${statePiece}Change`;
+  if (stateChangeCallback in props) {
+    const test = props[stateChangeCallback](newState[pieceOfState]);
+  }
+}
+
+export function capitalizeString(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function generateId() {
+  return Math.floor(Math.random() * 1000);
+}
+
+export function normalizeKey(e: React.KeyboardEvent) {
+  return {
+    name: e.key,
+    code: e.charCode
+  };
+}
+
 export function mergeRefs(...refs: React.MutableRefObject<any>[]) {
   return function(node: React.ReactElement) {
     // iterate over every ref
