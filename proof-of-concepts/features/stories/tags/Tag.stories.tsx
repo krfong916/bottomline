@@ -68,7 +68,6 @@ const UseCaseTemplate: ComponentStory<typeof Tag> = (args) => {
   return (
     <div>
       <TagEditor />
-      <button>Review Your Question</button>
     </div>
   );
 };

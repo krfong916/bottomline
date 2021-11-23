@@ -95,7 +95,7 @@ export namespace BL {
     type: ComboBoxStateChangeTypes;
     getItemFromIndex?: (index: number) => any;
     index?: number;
-    text?: string;
+    inputValue?: string;
     props?: ComboboxProps<Item>;
   }
 }

@@ -28,3 +28,29 @@ export const noop = () => {};
 // well, we wait until all the elements are rendered on the page
 // then the ref is assigned that node
 // ref={fn()}
+
+// chooses a random delay time before sending a request
+export function delayRandomly() {
+  const timeout = sample([1000, 2000, 5000, 7000, 10000]);
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
+}
+
+export function throwRandomly() {
+  const shouldThrow = sample([true, false, false, false]);
+  if (shouldThrow) {
+    throw new Error('simulated async failure');
+  }
+}
+
+export function delayControlled() {
+  const timeout = sample([5000, 10000]);
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
+}
+
+function sample(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}

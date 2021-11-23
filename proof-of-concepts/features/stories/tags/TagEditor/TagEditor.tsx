@@ -12,6 +12,7 @@ import {
   fetchTags
 } from './utils';
 import { useCombobox } from '../../combobox/hooks/useCombobox';
+import { useAbortController } from '../../useAbortController/useAbortController';
 import useDebouncedCallback from '../../useDebounce/src/hooks/useDebouncedCallback';
 import useAsync from '../../useDebounce/src/hooks/useAsync';
 import { SearchLoader } from '../../loader/SearchLoader';
@@ -41,10 +42,54 @@ import './TagEditor.scss';
 
 export const TagEditor = () => {
   const [input, setInput] = React.useState('');
+  const prevInput = React.useRef('');
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>({});
   const [tagSuggestions, setTagSuggestions] = React.useState<
     BottomlineTag[] | undefined
-  >();
+  >([
+    {
+      id: 1,
+      name: 'material-analysis',
+      count: 5,
+      excerpt:
+        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    },
+    {
+      id: 2,
+      name: 'class-analysis',
+      count: 33,
+      excerpt:
+        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    },
+    {
+      id: 3,
+      name: 'materialism',
+      count: 12,
+      excerpt:
+        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    },
+    {
+      id: 4,
+      name: 'dialectical-materialism',
+      count: 9,
+      excerpt:
+        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    },
+    {
+      id: 5,
+      name: 'historical-materialism',
+      count: 345435345,
+      excerpt:
+        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    },
+    {
+      id: 6,
+      name: 'materialist-theory',
+      count: 2,
+      excerpt:
+        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    }
+  ]);
 
   // we define state and change handler callbacks instead of a ref because we don't need to handle
   // we need the "appearance" of focus handling for the container when the input element is focused
@@ -57,7 +102,7 @@ export const TagEditor = () => {
     (dispatch) => {
       dispatch();
     },
-    2000,
+    1000,
     { trailing: true }
   );
 
@@ -66,10 +111,15 @@ export const TagEditor = () => {
       status: UseAsyncStatus.IDLE
     } as UseAsyncState
   });
+  if (error) {
+    console.log('[APP] error:', error);
+  }
+
+  const { getSignal, forceAbort } = useAbortController();
 
   React.useEffect(() => {
-    if (!input || input === '') return;
-    run(fetchTags(input));
+    if (!input || (prevInput.current === '' && input === '')) return;
+    run(fetchTags(input, getSignal));
   }, [input, run]);
 
   if (status === UseAsyncStatus.PENDING) derivedLoaderState = true;
@@ -95,7 +145,16 @@ export const TagEditor = () => {
         return recommendations;
       }
       case BL.ComboboxActions.INPUT_BLUR: {
+        forceAbort();
         recommendations.inputValue = state.inputValue;
+        return recommendations;
+      }
+      case BL.ComboboxActions.INPUT_VALUE_CHANGE: {
+        if (action.inputValue === '' && changes.inputValue !== '') {
+          recommendations.isOpen = false;
+          setTagSuggestions(undefined);
+        }
+        recommendations.inputValue = action.inputValue;
         return recommendations;
       }
       default: {
@@ -116,6 +175,7 @@ export const TagEditor = () => {
     onInputValueChange: (changes: Partial<BL.ComboboxState<string>>) => {
       // piggy-back on the state change
       // set our own input value change
+      prevInput.current = input;
       setInput(changes as string);
     },
     stateReducer,
@@ -123,10 +183,11 @@ export const TagEditor = () => {
     initialIsOpen: tagSuggestions ? true : false
   });
 
-  // place our own ref on the input
-  // we use a useeffect to detect when the input ref is focused
-  // when the input ref is focused, then we focus the div
+  const noResultsFound = isOpen && tagSuggestions && tagSuggestions.length == 0;
+  const resultsFound = isOpen && tagSuggestions && tagSuggestions.length >= 1;
 
+  console.log('resultsFound:', resultsFound);
+  console.log('noResultsFound:', noResultsFound);
   return (
     <section className="tag-editor-section">
       <div className="tag-editor">
@@ -172,14 +233,19 @@ export const TagEditor = () => {
             className="tag-search-input"
             ref={null}
           />
-          {derivedLoaderState ? (
-            <span className="tag-search-loader">
-              <SearchLoader />
-            </span>
-          ) : null}
+          {/*{derivedLoaderState ? (*/}
+          <span className="tag-search-loader">
+            <SearchLoader />
+          </span>
+          {/*) : null}*/}
         </div>
         <div className="tag-results-container" {...getPopupProps()}>
-          {isOpen && tagSuggestions ? (
+          {noResultsFound ? (
+            <span className="tag-no-results">
+              <span>No results found</span>
+            </span>
+          ) : null}
+          {resultsFound ? (
             <ul className="tag-results">
               {tagSuggestions.map((tag, index: number) => (
                 <li

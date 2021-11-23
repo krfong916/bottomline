@@ -110,6 +110,7 @@ export function useControlledReducer<
           action,
           changes: internalChanges
         } as unknown) as ActionAndChanges);
+        console.log('[USER_RECOMMENDED_CHANGES]:', userRecommendedChanges);
         return userRecommendedChanges;
       }
       return internalChanges;

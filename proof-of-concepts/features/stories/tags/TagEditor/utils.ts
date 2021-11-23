@@ -1,6 +1,6 @@
 // debounce hook
 // useInteractOutside - to close the popup?
-
+import { delayRandomly, delayControlled, throwRandomly } from '../../utils';
 const props = {
   size: 'small',
   type: 'no-outline',
@@ -10,17 +10,24 @@ const props = {
 
 export const noop = () => {};
 
-export function fetchTags(tag: string) {
+export function fetchTags(tag: string, getSignal: () => AbortSignal) {
   console.log('[FETCH TAGS]');
   const url = `http://localhost:3000/tags?name_like=${tag}`;
   return fetch(url, {
+    signal: getSignal(),
     method: 'GET',
     headers: {
       'content-type': 'application/json'
     }
   })
-    .then((res) => res.json())
-    .catch((error) => Promise.reject(error));
+    .then(async (res) => {
+      await delayControlled();
+      throwRandomly();
+      return res.json();
+    })
+    .catch((error) => {
+      return Promise.reject(error);
+    });
 }
 
 export function getTagAttributes(target: HTMLElement) {

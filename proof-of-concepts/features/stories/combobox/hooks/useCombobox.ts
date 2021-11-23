@@ -30,10 +30,6 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   >(bottomlineComboboxReducer, computeInitialState<Item>(props), props);
   const { isOpen, highlightedIndex, inputValue } = state;
 
-  React.useEffect(() => {
-    console.log('combobox state:', state);
-  });
-
   /**
    * ******
    *
@@ -253,18 +249,19 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
+      console.log('[INPUT_HANDLER]:', val);
       if (controlDispatch) {
         const fn = () => {
           dispatch({
             type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
-            text: val
+            inputValue: val
           });
         };
         controlDispatch(fn);
       } else {
         dispatch({
           type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
-          text: e.currentTarget.value
+          inputValue: val
         });
       }
     };
