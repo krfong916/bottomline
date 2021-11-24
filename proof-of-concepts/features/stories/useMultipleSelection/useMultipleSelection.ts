@@ -15,10 +15,9 @@ import {
   MultipleSelectionStateChangeTypes,
   MultipleSelectionActionAndChanges
 } from './types';
+import { ItemsList } from '../types';
 
-export default function useMultipleSelection<Item>(
-  props: MultipleSelectionProps<Item>
-) {
+export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
   const [state, dispatch] = useControlledReducer<
     (
       state: MultipleSelectionState<Item>,
@@ -29,46 +28,75 @@ export default function useMultipleSelection<Item>(
     MultipleSelectionStateChangeTypes,
     MultipleSelectionActionAndChanges<Item>
   >(multipleSelectionReducer, computeInitialState<Item>(props), props);
+  const {
+    currentItems,
+    currentSelectedItem,
+    currentSelectedItemIndex,
+    hasSelectedItems
+  } = state;
 
-  const keydownHandlers = React.useCallback(
-    (e: React.KeyboardEvent) => ({
-      Enter: () => {
-        dispatch({
-          type: MultipleSelectionStateChangeTypes.KEYDOWN_ENTER
-        });
-      },
-      Spacebar: () => {
-        dispatch({
-          type: MultipleSelectionStateChangeTypes.KEYDOWN_SPACEBAR
-        });
-      },
-      ArrowDown: () => {
-        dispatch({
-          type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_DOWN
-        });
-      },
-      ArrowUp: () => {
-        dispatch({
-          type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_UP
-        });
-      },
-      ArrowLeft: () => {
-        dispatch({
-          type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_LEFT
-        });
-      },
-      ArrowRight: () => {
-        dispatch({
-          type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_RIGHT
-        });
+  const itemsList = React.useRef<ItemsList>({});
+  if (props.items) {
+    props.items.forEach((item) => itemsList.current[props.itemToString(item)]);
+  }
+
+  const keydownHandlers: {
+    [eventHandler: string]: (e: React.KeyboardEvent) => void;
+  } = {
+    Enter: (e: React.KeyboardEvent) => {
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.KEYDOWN_ENTER
+      });
+    },
+    Spacebar: (e: React.KeyboardEvent) => {
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.KEYDOWN_SPACEBAR
+      });
+    },
+    ArrowDown: (e: React.KeyboardEvent) => {
+      e.stopPropagation();
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_DOWN
+      });
+    },
+    ArrowUp: (e: React.KeyboardEvent) => {
+      e.stopPropagation();
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_UP
+      });
+    },
+    ArrowLeft: (e: React.KeyboardEvent) => {
+      e.stopPropagation();
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_LEFT
+      });
+    },
+    ArrowRight: (e: React.KeyboardEvent) => {
+      e.stopPropagation();
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_RIGHT
+      });
+    }
+  };
+
+  function getSelectedItemListProps() {
+    const handleKeydown = (e: React.KeyboardEvent) => {
+      const { name: keyName, code } = normalizeKey(e);
+      if (keyName in keydownHandlers) {
+        keydownHandlers[keyName](e);
       }
-    }),
-    [dispatch, state]
-  );
+    };
+    return {
+      onKeyDown: handleKeydown
+    };
+  }
 
-  function getSelectedItemProps() {}
-
-  function getMultiSelectionLabelProps() {}
+  function getSelectedItemProps(selectedItem: Item, index: number) {
+    let tabIndex = index === currentSelectedItemIndex ? 0 : -1;
+    return {
+      tabIndex: tabIndex
+    };
+  }
 
   function removeSelectedItem(item: Item) {
     dispatch({
@@ -86,9 +114,13 @@ export default function useMultipleSelection<Item>(
 
   return {
     getSelectedItemProps,
-    getMultiSelectionLabelProps,
+    getSelectedItemListProps,
     removeSelectedItem,
-    addSelectedItem
+    addSelectedItem,
+    currentItems,
+    currentSelectedItem,
+    currentSelectedItemIndex,
+    hasSelectedItems
   };
 }
 

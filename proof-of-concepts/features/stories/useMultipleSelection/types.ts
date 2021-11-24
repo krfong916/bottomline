@@ -1,8 +1,11 @@
 import { ComponentProps } from '../types';
 export type MultipleSelectionProps<Item> = {
-  initialItems?: Item[];
-  initialHighlightedIndex?: number;
-  initialCurrentItem?: Item;
+  items?: Item[];
+  itemToString: (item: Item) => string;
+  initialCurrentItems?: Item[];
+  initialCurrentSelectedItem?: Item;
+  initialCurrentSelectedItemIndex?: number;
+  initialHasSelectedItems?: boolean;
   onCurrentItemChange?: (item: Item) => {};
   onHighlightedIndexChange?: (index: number) => {};
   onRemoveSelectedItem?: (itemRemoved: Item) => {};
@@ -15,8 +18,8 @@ export type MultipleSelectionProps<Item> = {
 
 export type MultipleSelectionState<Item> = {
   currentItems: Item[];
-  currentItem: Item;
-  highlightedIndex: number;
+  currentSelectedItem: Item;
+  currentSelectedItemIndex: number;
   hasSelectedItems: boolean;
 };
 
