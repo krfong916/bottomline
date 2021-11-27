@@ -6,7 +6,7 @@ import {
 import { capitalizeString } from '../utils';
 
 export const initialState = {
-  currentItems: [],
+  items: [],
   currentSelectedItem: undefined,
   currentSelectedItemIndex: -1,
   hasSelectedItems: false
@@ -15,25 +15,21 @@ export const initialState = {
 export function computeInitialState<Item>(
   props: MultipleSelectionProps<Item>
 ): MultipleSelectionState<Item> {
-  const currentItems = getInitialValue(props, 'currentItems');
-  const currentSelectedItem = getInitialValue(props, 'currentSelectedItem');
-  const hasSelectedItems = getInitialValue(props, 'hasSelectedItems');
+  const items = getInitialValue(props, 'items');
+  let hasSelectedItems = getInitialValue(props, 'hasSelectedItems');
+  let currentSelectedItem = getInitialValue(props, 'currentSelectedItem');
   let currentSelectedItemIndex = getInitialValue(props, 'currentSelectedItemIndex');
 
-  // an ugly way of saying: hey, if the user has provided an empty list of items
-  // then the current selected item index can't be defined
-  // otherwise assign the correct index
-  currentSelectedItemIndex =
-    props.items && props.items.length > 0
-      ? currentSelectedItemIndex === -1
-        ? (0 as Partial<MultipleSelectionState<Item>>)
-        : currentSelectedItemIndex
-      : (initialState.currentSelectedItemIndex as Partial<
-          MultipleSelectionState<Item>
-        >);
+  currentSelectedItemIndex = computeSelectedIndex<Item>(
+    items,
+    currentSelectedItemIndex
+  ) as Partial<MultipleSelectionState<Item>>;
+  // index and item must be in sync
+  currentSelectedItem = items[currentSelectedItemIndex];
+  hasSelectedItems = items.length > 0 ? true : false;
 
   return {
-    currentItems,
+    items,
     currentSelectedItem,
     currentSelectedItemIndex,
     hasSelectedItems
@@ -68,6 +64,24 @@ export function getInitialValue<Item>(
   return initialState[propKey] as Partial<MultipleSelectionState<Item>>;
 }
 
+function computeSelectedIndex<Item>(items: Item[], index: number): number {
+  if (items && items.length > 0) {
+    if (index > 0 && index < items.length) return index;
+    return 0;
+  }
+
+  return initialState.currentSelectedItemIndex;
+}
+
+export function canNavigateToItems(): boolean {
+  const selection = window.getSelection();
+  if (selection && selection.isCollapsed && selection.anchorOffset === 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 export function getNextItemIndex<Item>(
   stateChangeType: MultipleSelectionStateChangeTypes,
   items: Item[],
@@ -75,20 +89,12 @@ export function getNextItemIndex<Item>(
 ): number {
   const end = items.length;
   switch (stateChangeType) {
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_UP: {
-      if (currentIndex == end - 1) return currentIndex;
+    case MultipleSelectionStateChangeTypes.NEXT_ITEM: {
+      if (currentIndex === end - 1) return currentIndex;
       return currentIndex + 1;
     }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_DOWN: {
-      if (currentIndex >= -1) return currentIndex;
-      return currentIndex - 1;
-    }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_LEFT: {
+    case MultipleSelectionStateChangeTypes.PREV_ITEM: {
       if (currentIndex == end - 1) return currentIndex;
-      return currentIndex + 1;
-    }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_RIGHT: {
-      if (currentIndex >= -1) return currentIndex;
       return currentIndex - 1;
     }
     default: {

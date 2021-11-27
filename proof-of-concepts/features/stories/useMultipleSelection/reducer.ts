@@ -11,37 +11,29 @@ export function multipleSelectionReducer<Item>(
 ) {
   const { type } = action;
   const newState = { ...state };
+  // console.log('state before update:', newState);
   switch (type) {
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_UP: {
+    case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
       newState.currentSelectedItemIndex = getNextItemIndex(
-        MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_UP,
-        newState.currentItems,
+        MultipleSelectionStateChangeTypes.NAVIGATION_NEXT,
+        newState.items,
         newState.currentSelectedItemIndex
       );
+      // console.log('[REDUCER] next:', newState);
       return newState;
     }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_DOWN: {
+    case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
       newState.currentSelectedItemIndex = getNextItemIndex(
-        MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_DOWN,
-        newState.currentItems,
+        MultipleSelectionStateChangeTypes.NAVIGATION_PREV,
+        newState.items,
         newState.currentSelectedItemIndex
       );
+      // console.log('[REDUCER] prev:', newState);
       return newState;
     }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_LEFT: {
-      newState.currentSelectedItemIndex = getNextItemIndex(
-        MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_LEFT,
-        newState.currentItems,
-        newState.currentSelectedItemIndex
-      );
-      return newState;
-    }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_RIGHT: {
-      newState.currentSelectedItemIndex = getNextItemIndex(
-        MultipleSelectionStateChangeTypes.KEYDOWN_ARROW_RIGHT,
-        newState.currentItems,
-        newState.currentSelectedItemIndex
-      );
+    case MultipleSelectionStateChangeTypes.DROPDOWN_NAVIGATION_TO_ITEMS: {
+      console.log('[REDUCER] navigating...');
+      newState.currentSelectedItemIndex = newState.items.length - 1;
       return newState;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_ENTER: {
@@ -50,7 +42,7 @@ export function multipleSelectionReducer<Item>(
     case MultipleSelectionStateChangeTypes.KEYDOWN_SPACEBAR: {
       return newState;
     }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_KEYDOWN_CLICK: {
+    case MultipleSelectionStateChangeTypes.KEYDOWN_CLICK: {
       return newState;
     }
     case MultipleSelectionStateChangeTypes.MULTIPLE_SELECTION_GROUP_BLUR: {
@@ -62,13 +54,13 @@ export function multipleSelectionReducer<Item>(
     case MultipleSelectionStateChangeTypes.FUNCTION_ADD_SELECTED_ITEM: {
       if (action.item) return newState;
       const { item } = action;
-      newState.currentItems.push(item);
+      newState.items.push(item);
       return newState;
     }
     case MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM: {
       if (action.item) return newState;
       const { item } = action;
-      newState.currentItems = newState.currentItems.filter(
+      newState.items = newState.items.filter(
         (current) => itemToString(current) !== itemToString(item)
       );
       return newState;

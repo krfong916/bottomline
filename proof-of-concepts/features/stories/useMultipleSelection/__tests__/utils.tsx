@@ -24,17 +24,15 @@ export function renderMultipleSelection<Item>(props: MultipleSelectionProps<Item
 
 function MultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
   const { items, itemToString } = props;
-
   const {
     getSelectedItemProps,
     getSelectedItemListProps,
-    currentSelectedItemIndex
-  } = useMultipleSelection<Item>({
-    items,
-    itemToString
-  });
+    currentSelectedItemIndex,
+    getDropdownProps
+  } = useMultipleSelection<Item>(props);
   return (
     <div>
+      <input tabIndex={0} data-testid={dataTestIds.input} {...getDropdownProps()} />
       <div data-testid={dataTestIds.selectedItems} {...getSelectedItemListProps()}>
         {items &&
           items.map((item, index) => {
@@ -54,7 +52,6 @@ function MultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
             );
           })}
       </div>
-      <input data-testid={dataTestIds.input} />
     </div>
   );
 }

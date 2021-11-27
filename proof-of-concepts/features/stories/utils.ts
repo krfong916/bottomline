@@ -116,12 +116,12 @@ export function normalizeKey(e: React.KeyboardEvent) {
   };
 }
 
-export function mergeRefs(...refs: React.MutableRefObject<any>[]) {
-  return function(node: React.ReactElement) {
+export function mergeRefs(...refs: (React.MutableRefObject<any> | undefined)[]) {
+  return function(node: React.ReactElement<any>) {
     // iterate over every ref
     // assign the node to the current ref
     refs.forEach((ref) => {
-      ref.current = node;
+      if (ref) ref.current = node;
     });
   };
 }

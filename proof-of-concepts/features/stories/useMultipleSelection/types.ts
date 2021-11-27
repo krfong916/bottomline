@@ -1,13 +1,13 @@
+import React from 'react';
 import { ComponentProps } from '../types';
 export type MultipleSelectionProps<Item> = {
   items?: Item[];
+  initialCurrentIndex?: number;
+  nextKey?: NavigationKeys;
+  prevKey?: NavigationKeys;
   itemToString: (item: Item) => string;
-  initialCurrentItems?: Item[];
-  initialCurrentSelectedItem?: Item;
-  initialCurrentSelectedItemIndex?: number;
-  initialHasSelectedItems?: boolean;
   onCurrentItemChange?: (item: Item) => {};
-  onHighlightedIndexChange?: (index: number) => {};
+  onCurrentIndexChange?: (index: number) => {};
   onRemoveSelectedItem?: (itemRemoved: Item) => {};
   onAddSelectedItem?: (itemAdded: Item) => {};
   onSelectedItemsEmpty?: () => {};
@@ -16,21 +16,31 @@ export type MultipleSelectionProps<Item> = {
   MultipleSelectionActionAndChanges<Item>
 >;
 
+export enum NavigationKeys {
+  ARROW_RIGHT = 'ArrowRight',
+  ARROW_LEFT = 'ArrowLeft',
+  ARROW_UP = 'ArrowUp',
+  ARROW_DOWN = 'ArrowDown'
+}
+
+export interface DropdownGetterProps {
+  ref?: React.MutableRefObject<any>;
+}
+
 export type MultipleSelectionState<Item> = {
-  currentItems: Item[];
+  items: Item[];
   currentSelectedItem: Item;
   currentSelectedItemIndex: number;
   hasSelectedItems: boolean;
 };
 
 export enum MultipleSelectionStateChangeTypes {
-  KEYDOWN_ARROW_UP = '[multiple_selection_arrow_up]',
-  KEYDOWN_ARROW_DOWN = '[multiple_selection_arrow_down]',
-  KEYDOWN_ARROW_LEFT = '[multiple_selection_arrow_left]',
-  KEYDOWN_ARROW_RIGHT = '[multiple_selection_arrow_right]',
+  NAVIGATION_NEXT = '[multiple_selection_next_item]',
+  NAVIGATION_PREV = '[multiple_selection_prev_item]',
+  DROPDOWN_NAVIGATION_TO_ITEMS = '[multiple_selection_navigate_to_items]',
   KEYDOWN_ENTER = '[multiple_selection_keydown_enter]',
   KEYDOWN_SPACEBAR = '[multiple_selection_keydown_spacebar]',
-  KEYDOWN_KEYDOWN_CLICK = '[multiple_selection_keydown_click]',
+  KEYDOWN_CLICK = '[multiple_selection_keydown_click]',
   MULTIPLE_SELECTION_GROUP_BLUR = '[multiple_selection_group_blur]',
   MULTIPLE_SELECTION_GROUP_FOCUS = '[multiple_selection_group_focus]',
   FUNCTION_ADD_SELECTED_ITEM = '[multiple_selection_function_add_seletected_item]',
