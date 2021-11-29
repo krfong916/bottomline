@@ -6,14 +6,16 @@ import {
   renderMultipleSelection,
   sampleSelectedItems,
   sampleItemToString,
-  SelectedItem
+  SelectedItem,
+  getItem,
+  getAllItems
 } from './utils';
 
 describe('useMultipleSelection hook', () => {
+  const lastItem = sampleSelectedItems.length - 1;
+
   test('we can transition focus from the textbox to the last item in the list of selected items', () => {
-    const { container, textbox, selectedItems } = renderMultipleSelection<
-      SelectedItem
-    >({
+    let { container, textbox } = renderMultipleSelection<SelectedItem>({
       items: sampleSelectedItems,
       itemToString: sampleItemToString,
       nextKey: NavigationKeys.ARROW_RIGHT,
@@ -26,77 +28,180 @@ describe('useMultipleSelection hook', () => {
       code: 'ArrowLeft',
       charCode: 37
     });
-    let currentSelectedItem = screen.getByTestId(
-      `item-testid-${sampleSelectedItems.length - 1}`
-    );
+    let currentSelectedItem = getItem(lastItem);
     expect(currentSelectedItem.classList).toContain(
       'current-selected-item-highlight'
     );
   });
-  // test('if we are at the start of the list, pressing the key to go to the prev element does nothing', () => {
-  //   const { container, selectedItems } = renderMultipleSelection<SelectedItem>({
-  //     items: sampleSelectedItems,
-  //     itemToString: sampleItemToString,
-  //     nextKey: NavigationKeys.ARROW_LEFT,
-  //     prevKey: NavigationKeys.ARROW_RIGHT
-  //   });
-  //   selectedItems.focus();
-  //   for (let i = 0; i < sampleSelectedItems.length; i++) {
-  //     fireEvent.keyDown(selectedItems, {
-  //       key: 'ArrowRight',
-  //       code: 'ArrowRight',
-  //       charCode: 39
-  //     });
-  //   }
-  //   fireEvent.keyDown(selectedItems, {
-  //     key: 'ArrowRight',
-  //     code: 'ArrowRight',
-  //     charCode: 39
-  //   });
-  //   let currentSelectedItem = screen.getByTestId(`item-testid-0`);
-  //   expect(currentSelectedItem.classList).toContain(
-  //     'current-selected-item-highlight'
-  //   );
-  // });
 
-  // test('if the current index === -1, we place focus back on the textbox', () => {
-  //   const { container, selectedItems, textbox } = renderMultipleSelection<
-  //     SelectedItem
-  //   >({
-  //     items: sampleSelectedItems,
-  //     itemToString: sampleItemToString,
-  //     nextKey: NavigationKeys.ARROW_LEFT,
-  //     prevKey: NavigationKeys.ARROW_RIGHT
-  //   });
-  //   textbox.focus();
-  //   fireEvent.keyDown(selectedItems, {
-  //     key: 'ArrowLeft',
-  //     code: 'ArrowLeft',
-  //     charCode: 37
-  //   });
-  //   let currentSelectedItem = screen.getByTestId(`item-testid-0`);
-  //   expect(currentSelectedItem.classList).toContain(
-  //     'current-selected-item-highlight'
-  //   );
-  //   fireEvent.keyDown(selectedItems, {
-  //     key: 'ArrowRight',
-  //     code: 'ArrowRight',
-  //     charCode: 39
-  //   });
-  //   expect(currentSelectedItem).not.toContain('current-selected-item-highlight');
-  //   screen.debug();
-  //   expect(textbox).toHaveFocus();
-  // });
+  test('if we are at the start of the list, pressing the key to go to the prev element does nothing', () => {
+    let { container, textbox, selectedItems } = renderMultipleSelection<SelectedItem>(
+      {
+        items: sampleSelectedItems,
+        itemToString: sampleItemToString,
+        nextKey: NavigationKeys.ARROW_RIGHT,
+        prevKey: NavigationKeys.ARROW_LEFT
+      }
+    );
 
-  // test('removing a currently active item places focus on the next item, or none if the list is now empty', () => {});
+    textbox.focus();
+    fireEvent.keyDown(textbox, {
+      key: 'ArrowLeft',
+      code: 'ArrowLeft',
+      charCode: 37
+    });
 
-  // test('adding a new element maintains focus on the current active item', () => {});
+    for (let i = 0; i < sampleSelectedItems.length; i++) {
+      fireEvent.keyDown(selectedItems, {
+        key: 'ArrowLeft',
+        code: 'ArrowLeft',
+        charCode: 37
+      });
+    }
+    fireEvent.keyDown(selectedItems, {
+      key: 'ArrowLeft',
+      code: 'ArrowLeft',
+      charCode: 37
+    });
+    let currentSelectedItem = getItem(0);
+    expect(currentSelectedItem.classList).toContain(
+      'current-selected-item-highlight'
+    );
+  });
 
-  // test('assigns -1 for non-active elements', () => {});
+  test('all items have a -1 tabindex when not highlighted', () => {
+    let { container, textbox } = renderMultipleSelection<SelectedItem>({
+      items: sampleSelectedItems,
+      itemToString: sampleItemToString,
+      nextKey: NavigationKeys.ARROW_RIGHT,
+      prevKey: NavigationKeys.ARROW_LEFT
+    });
 
-  // test('onclick places focus on the item', () => {});
+    const allItems = getAllItems();
+    allItems.forEach((item) => {
+      expect(item.getAttribute('tabindex')).toEqual('-1');
+    });
+  });
 
-  // test('backspace deletes the current item and moves the focus to the next element, if it exists', () => {});
+  test('if the current index === -1, we place focus back on the textbox and all items have -1 tabindex', () => {
+    let { container, textbox, selectedItems } = renderMultipleSelection<SelectedItem>(
+      {
+        items: sampleSelectedItems,
+        itemToString: sampleItemToString,
+        nextKey: NavigationKeys.ARROW_RIGHT,
+        prevKey: NavigationKeys.ARROW_LEFT
+      }
+    );
 
-  // test('we save the reference to the textbox so we can tab back to the textbox element when active index ===-1', () => {});
+    textbox.focus();
+    fireEvent.keyDown(textbox, {
+      key: 'ArrowLeft',
+      code: 'ArrowLeft',
+      charCode: 37
+    });
+
+    let currentSelectedItem = getItem(lastItem);
+    expect(currentSelectedItem.classList).toContain(
+      'current-selected-item-highlight'
+    );
+    fireEvent.keyDown(selectedItems, {
+      key: 'ArrowRight',
+      code: 'ArrowRight',
+      charCode: 39
+    });
+
+    expect(currentSelectedItem).not.toContain('current-selected-item-highlight');
+    userEvent.type(selectedItems, '{arrowright}');
+
+    textbox.focus();
+    expect(textbox).toHaveFocus();
+  });
+
+  test('removing a currently active item maintains focus on the item in the given index', () => {
+    let { container, textbox } = renderMultipleSelection<SelectedItem>({
+      items: sampleSelectedItems,
+      itemToString: sampleItemToString,
+      nextKey: NavigationKeys.ARROW_RIGHT,
+      prevKey: NavigationKeys.ARROW_LEFT
+    });
+
+    textbox.focus();
+    // place focus on a current item
+    fireEvent.keyDown(textbox, {
+      key: 'ArrowLeft',
+      code: 'ArrowLeft',
+      charCode: 37
+    });
+
+    // remove an item
+    const item = getItem(lastItem);
+    userEvent.click(item.querySelector('[aria-label="Close"]'));
+    expect(item).not.toBeInTheDocument();
+    expect(getItem(lastItem - 1)).toHaveClass('current-selected-item-highlight');
+  });
+
+  test('if we remove an item from the list of length === 1, then list is empty state change is dispatched so the user can do something with it', () => {
+    let numItems = sampleSelectedItems.length - 1;
+    const mockFn = jest.fn(() => true);
+    let { container, textbox } = renderMultipleSelection<SelectedItem>({
+      items: sampleSelectedItems,
+      itemToString: sampleItemToString,
+      nextKey: NavigationKeys.ARROW_RIGHT,
+      prevKey: NavigationKeys.ARROW_LEFT,
+      onHasSelectedItemsChange: mockFn
+    });
+
+    textbox.focus();
+    // place focus on a current item
+    fireEvent.keyDown(textbox, {
+      key: 'ArrowLeft',
+      code: 'ArrowLeft',
+      charCode: 37
+    });
+    while (numItems >= 0) {
+      const ithItem = numItems;
+      // remove an item
+      const item = getItem(ithItem);
+      userEvent.click(item.querySelector('[aria-label="Close"]'));
+      numItems--;
+    }
+    expect(mockFn).toHaveBeenCalled();
+  });
+
+  test('onclick places focus on the item', () => {
+    const { container, textbox } = renderMultipleSelection<SelectedItem>({
+      items: sampleSelectedItems,
+      itemToString: sampleItemToString,
+      nextKey: NavigationKeys.ARROW_RIGHT,
+      prevKey: NavigationKeys.ARROW_LEFT
+    });
+    const allItems = getAllItems();
+    const itemToClick = allItems[allItems.length / 2];
+    fireEvent.click(itemToClick);
+    expect(itemToClick.classList).toContain('current-selected-item-highlight');
+  });
+
+  test('adding a new element is inserted at the end of the list', () => {
+    renderMultipleSelection<SelectedItem>({
+      items: sampleSelectedItems,
+      itemToString: sampleItemToString
+    });
+
+    const addItem = screen.getByText(/add item/i);
+    fireEvent.click(addItem);
+    const allItems = getAllItems();
+    expect(allItems.length).toBe(sampleSelectedItems.length + 1);
+  });
+
+  test('backspace deletes the current item and moves the focus to the next element, if it exists', () => {
+    renderMultipleSelection<SelectedItem>({
+      items: sampleSelectedItems,
+      itemToString: sampleItemToString,
+      nextKey: NavigationKeys.ARROW_RIGHT,
+      prevKey: NavigationKeys.ARROW_LEFT
+    });
+    const item = getItem(lastItem);
+    fireEvent.keyDown(item, { key: 'Backspace', code: 'Backspace', charCode: 8 });
+    expect(getAllItems().length).toBe(sampleSelectedItems.length - 1);
+  });
 });

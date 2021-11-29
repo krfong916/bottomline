@@ -118,15 +118,26 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
   }
 
   function getSelectedItemProps(selectedItem: Item, index: number) {
-    let tabIndex = 0;
-
-    if (currentSelectedItemIndex === -1 && index === 0) {
-      tabIndex = 0;
-    } else if (index !== currentSelectedItemIndex) {
+    let tabIndex = -1;
+    if (index === currentSelectedItemIndex) {
       tabIndex = -1;
     }
 
-    const handleClick = () => {
+    const handleKeydown = (e: React.KeyboardEvent) => {
+      e.stopPropagation();
+      const { name: keyName, code } = normalizeKey(e);
+      if (keyName === 'Backspace') {
+        dispatch({
+          type: MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE,
+          item: selectedItem,
+          index,
+          itemToString: props.itemToString
+        });
+      }
+    };
+
+    const handleClick = (e: React.KeyboardEvent) => {
+      e.stopPropagation();
       dispatch({
         type: MultipleSelectionStateChangeTypes.KEYDOWN_CLICK,
         index
@@ -135,14 +146,16 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
 
     return {
       tabIndex: tabIndex,
-      onClick: handleClick
+      onClick: handleClick,
+      onKeyDown: handleKeydown
     };
   }
 
   function removeSelectedItem(item: Item) {
     dispatch({
       type: MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM,
-      item
+      item,
+      itemToString: props.itemToString
     });
   }
 

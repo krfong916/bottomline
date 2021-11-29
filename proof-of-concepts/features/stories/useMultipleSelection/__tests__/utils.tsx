@@ -1,6 +1,11 @@
 import React from 'react';
 import { useMultipleSelection } from '../useMultipleSelection';
-import { MultipleSelectionProps } from '../types';
+import {
+  MultipleSelectionProps,
+  MultipleSelectionState,
+  MultipleSelectionActionAndChanges,
+  MultipleSelectionStateChangeTypes
+} from '../types';
 import { render, screen, getAllByRole } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 
@@ -10,32 +15,82 @@ const dataTestIds = {
   input: 'input-testid'
 };
 
+export function getItem(itemNum: number) {
+  return screen.getByTestId(`item-testid-${itemNum}`);
+}
+
+export function getAllItems() {
+  return screen.getAllByTestId(/item-testid/);
+}
+
 export function renderMultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
   const container = render(<MultipleSelection {...props} />);
   const selectedItems = screen.getByTestId(dataTestIds.selectedItems);
   const textbox = screen.getByTestId(dataTestIds.input);
-  // const  = screen.getByRole();
   return {
     container,
     selectedItems,
     textbox
   };
 }
+const dummyItem = {
+  name: 'dummy-item',
+  count: -1,
+  contents: ''
+};
 
 function MultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
-  const { items, itemToString } = props;
+  const { items: initialItems, itemToString } = props;
+  const [selectedItems, setSelectedItems] = React.useState<Item>(initialItems);
+  function stateReducer(
+    state: MultipleSelectionState<Item>,
+    actionAndChanges: MultipleSelectionActionAndChanges<Item>
+  ) {
+    const { action, changes } = actionAndChanges;
+    const recommendations = { ...changes };
+    switch (action.type) {
+      case MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM: {
+        setSelectedItems([...recommendations.items]);
+        return recommendations;
+      }
+      case MultipleSelectionStateChangeTypes.FUNCTION_ADD_SELECTED_ITEM: {
+        setSelectedItems([...recommendations.items]);
+        return recommendations;
+      }
+      case MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE: {
+        setSelectedItems([...recommendations.items]);
+        return recommendations;
+      }
+      default: {
+        return recommendations;
+      }
+    }
+  }
+
   const {
     getSelectedItemProps,
     getSelectedItemListProps,
     currentSelectedItemIndex,
-    getDropdownProps
-  } = useMultipleSelection<Item>(props);
+    getDropdownProps,
+    removeSelectedItem,
+    addSelectedItem
+  } = useMultipleSelection<Item>({
+    ...props,
+    items: selectedItems,
+    stateReducer
+  });
+
+  const handleAddItem = (e) => {
+    e.stopPropagation();
+    addSelectedItem((dummyItem as unknown) as Item);
+  };
+
   return (
     <div>
       <input tabIndex={0} data-testid={dataTestIds.input} {...getDropdownProps()} />
       <div data-testid={dataTestIds.selectedItems} {...getSelectedItemListProps()}>
-        {items &&
-          items.map((item, index) => {
+        {selectedItems &&
+          selectedItems.map((item, index) => {
             return (
               <span
                 {...getSelectedItemProps(item, index)}
@@ -48,9 +103,19 @@ function MultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
                 }
               >
                 {itemToString(item)}
+                <button
+                  aria-label="Close"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeSelectedItem(item);
+                  }}
+                >
+                  X
+                </button>
               </span>
             );
           })}
+        <button onClick={handleAddItem}>Add Item</button>
       </div>
     </div>
   );

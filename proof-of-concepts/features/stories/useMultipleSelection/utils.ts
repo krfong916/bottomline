@@ -89,12 +89,12 @@ export function getNextItemIndex<Item>(
 ): number {
   const end = items.length;
   switch (stateChangeType) {
-    case MultipleSelectionStateChangeTypes.NEXT_ITEM: {
-      if (currentIndex === end - 1) return currentIndex;
+    case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
+      if (currentIndex === end - 1) return -1;
       return currentIndex + 1;
     }
-    case MultipleSelectionStateChangeTypes.PREV_ITEM: {
-      if (currentIndex == end - 1) return currentIndex;
+    case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
+      if (currentIndex === 0) return currentIndex;
       return currentIndex - 1;
     }
     default: {

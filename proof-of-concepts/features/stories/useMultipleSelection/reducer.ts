@@ -10,8 +10,7 @@ export function multipleSelectionReducer<Item>(
   action: MultipleSelectionAction<Item>
 ) {
   const { type } = action;
-  const newState = { ...state };
-  // console.log('state before update:', newState);
+  let newState = { ...state };
   switch (type) {
     case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
       newState.currentSelectedItemIndex = getNextItemIndex(
@@ -19,7 +18,6 @@ export function multipleSelectionReducer<Item>(
         newState.items,
         newState.currentSelectedItemIndex
       );
-      // console.log('[REDUCER] next:', newState);
       return newState;
     }
     case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
@@ -28,11 +26,9 @@ export function multipleSelectionReducer<Item>(
         newState.items,
         newState.currentSelectedItemIndex
       );
-      // console.log('[REDUCER] prev:', newState);
       return newState;
     }
     case MultipleSelectionStateChangeTypes.DROPDOWN_NAVIGATION_TO_ITEMS: {
-      console.log('[REDUCER] navigating...');
       newState.currentSelectedItemIndex = newState.items.length - 1;
       return newState;
     }
@@ -42,7 +38,22 @@ export function multipleSelectionReducer<Item>(
     case MultipleSelectionStateChangeTypes.KEYDOWN_SPACEBAR: {
       return newState;
     }
+    case MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE: {
+      const { index } = action;
+      newState.items = [
+        ...newState.items.slice(0, index),
+        ...newState.items.slice(index + 1)
+      ];
+
+      // check if items still exist
+      if (newState.items.length === 0) newState.hasSelectedItems = false;
+      // update index
+      newState.currentSelectedItemIndex -= 1;
+      return newState;
+    }
     case MultipleSelectionStateChangeTypes.KEYDOWN_CLICK: {
+      if (!action.index) return newState;
+      newState.currentSelectedItemIndex = action.index;
       return newState;
     }
     case MultipleSelectionStateChangeTypes.MULTIPLE_SELECTION_GROUP_BLUR: {
@@ -52,17 +63,25 @@ export function multipleSelectionReducer<Item>(
       return newState;
     }
     case MultipleSelectionStateChangeTypes.FUNCTION_ADD_SELECTED_ITEM: {
-      if (action.item) return newState;
+      if (!action.item) return newState;
       const { item } = action;
-      newState.items.push(item);
+      newState.items = [...newState.items, item];
+
       return newState;
     }
     case MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM: {
-      if (action.item) return newState;
-      const { item } = action;
+      const { item, itemToString } = action;
+      if (!item) return newState;
+      if (!itemToString) return newState;
+      // remove item
+      const itemToRemove = itemToString(item);
       newState.items = newState.items.filter(
-        (current) => itemToString(current) !== itemToString(item)
+        (current) => itemToString(current) !== itemToRemove
       );
+      // check if items still exist
+      if (newState.items.length === 0) newState.hasSelectedItems = false;
+      // update index
+      newState.currentSelectedItemIndex -= 1;
       return newState;
     }
     default: {

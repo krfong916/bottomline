@@ -6,11 +6,11 @@ export type MultipleSelectionProps<Item> = {
   nextKey?: NavigationKeys;
   prevKey?: NavigationKeys;
   itemToString: (item: Item) => string;
-  onCurrentItemChange?: (item: Item) => {};
-  onCurrentIndexChange?: (index: number) => {};
-  onRemoveSelectedItem?: (itemRemoved: Item) => {};
-  onAddSelectedItem?: (itemAdded: Item) => {};
-  onSelectedItemsEmpty?: () => {};
+  onCurrentItemChange?: (item: Item) => void;
+  onCurrentIndexChange?: (index: number) => void;
+  onRemoveSelectedItem?: (itemRemoved: Item) => void;
+  onAddSelectedItem?: (itemAdded: Item) => void;
+  onHasSelectedItemsChange?: () => void;
 } & ComponentProps<
   MultipleSelectionState<Item>,
   MultipleSelectionActionAndChanges<Item>
@@ -40,16 +40,19 @@ export enum MultipleSelectionStateChangeTypes {
   DROPDOWN_NAVIGATION_TO_ITEMS = '[multiple_selection_navigate_to_items]',
   KEYDOWN_ENTER = '[multiple_selection_keydown_enter]',
   KEYDOWN_SPACEBAR = '[multiple_selection_keydown_spacebar]',
+  KEYDOWN_BACKSPACE = '[multiple_selection_keydown_backspace]',
   KEYDOWN_CLICK = '[multiple_selection_keydown_click]',
   MULTIPLE_SELECTION_GROUP_BLUR = '[multiple_selection_group_blur]',
   MULTIPLE_SELECTION_GROUP_FOCUS = '[multiple_selection_group_focus]',
-  FUNCTION_ADD_SELECTED_ITEM = '[multiple_selection_function_add_seletected_item]',
-  FUNCTION_REMOVE_SELECTED_ITEM = '[multiple_selection_function_remove_seletected_item]'
+  FUNCTION_ADD_SELECTED_ITEM = '[multiple_selection_function_add_selected_item]',
+  FUNCTION_REMOVE_SELECTED_ITEM = '[multiple_selection_function_remove_selected_item]'
 }
 
 export type MultipleSelectionAction<Item> = {
   type: MultipleSelectionStateChangeTypes;
-  item?: Partial<MultipleSelectionState<Item>>;
+  index?: number;
+  item?: Item;
+  itemToString?: (item: Item) => string;
 };
 
 export type MultipleSelectionActionAndChanges<Item> = {

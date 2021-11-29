@@ -35,7 +35,6 @@ export function useControlledReducer<
           action,
           changes: internalChanges
         } as unknown) as ActionAndChanges);
-        console.log('[USER_RECOMMENDED_CHANGES]:', userRecommendedChanges);
         return userRecommendedChanges;
       }
       return internalChanges;
@@ -50,7 +49,6 @@ export function useControlledReducer<
   // if we declared useReducer within the component itself
   const dispatchWithProps = React.useCallback(
     ({ type, ...rest }: { type: StateChangeType }) => {
-      // dispatch({ type, props: propsRef.current });
       dispatch({ type, props, ...rest });
     },
     [props]
@@ -116,6 +114,13 @@ export function normalizeKey(e: React.KeyboardEvent) {
   };
 }
 
+// the ref property refers to?
+// ref is a property on a JSX element
+// react is a UI runtime that creates predictable UI
+// so how is a ref actually assigned?
+// well, we wait until all the elements are rendered on the page
+// then the ref is assigned that node
+// ref={fn()}
 export function mergeRefs(...refs: (React.MutableRefObject<any> | undefined)[]) {
   return function(node: React.ReactElement<any>) {
     // iterate over every ref
@@ -137,14 +142,6 @@ export function callAllEventHandlers(...fns: ((...args: any[]) => any)[]) {
 }
 
 export const noop = () => {};
-// the ref property refers to?
-
-// ref is a property on a JSX element
-// react is a UI runtime that creates predictable UI
-// so how is a ref actually assigned?
-// well, we wait until all the elements are rendered on the page
-// then the ref is assigned that node
-// ref={fn()}
 
 // chooses a random delay time before sending a request
 export function delayRandomly() {
