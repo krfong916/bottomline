@@ -17,7 +17,11 @@ import useDebouncedCallback from '../../useDebounce/src/hooks/useDebouncedCallba
 import useAsync from '../../useDebounce/src/hooks/useAsync';
 import { SearchLoader } from '../../loader/SearchLoader';
 import { UseAsyncStatus, UseAsyncState } from '../../useDebounce/src/types';
-import { BL } from '../../combobox/hooks/types';
+import {
+  ComboboxState,
+  ComboboxActionAndChanges,
+  ComboboxActions
+} from '../../combobox/hooks/types';
 import { BottomlineTag, BottomlineTags } from './types';
 import { AiFillQuestionCircle } from 'react-icons/ai';
 import classNames from 'classnames';
@@ -43,54 +47,54 @@ import './TagEditor.scss';
 export const TagEditor = () => {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
-  const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>({});
-  const [tagSuggestions, setTagSuggestions] = React.useState<
-    BottomlineTag[] | undefined
-  >([
-    {
-      id: 1,
+  const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>({
+    'material-analysis': {
+      id: '1',
       name: 'material-analysis',
       count: 5,
       excerpt:
         "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
     },
-    {
-      id: 2,
+    'class-analysis': {
+      id: '2',
       name: 'class-analysis',
       count: 33,
       excerpt:
         "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
     },
-    {
-      id: 3,
+    materialism: {
+      id: '3',
       name: 'materialism',
       count: 12,
       excerpt:
         "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
     },
-    {
-      id: 4,
+    'dialectical-materialism': {
+      id: '4',
       name: 'dialectical-materialism',
       count: 9,
       excerpt:
         "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
     },
-    {
-      id: 5,
+    'historical-materialism': {
+      id: '5',
       name: 'historical-materialism',
-      count: 345435345,
+      count: 5,
       excerpt:
         "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
     },
-    {
-      id: 6,
+    'materialist-theory': {
+      id: '6',
       name: 'materialist-theory',
       count: 2,
       excerpt:
         "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
     }
-  ]);
-
+  });
+  const [tagSuggestions, setTagSuggestions] = React.useState<
+    BottomlineTag[] | undefined
+  >();
+  console.log(selectedTags);
   // we define state and change handler callbacks instead of a ref because we don't need to handle
   // we need the "appearance" of focus handling for the container when the input element is focused
   const [inputFocused, setInputFocused] = React.useState(false);
@@ -129,13 +133,13 @@ export const TagEditor = () => {
   }, [tags]);
 
   function stateReducer(
-    state: BL.ComboboxState<BottomlineTag>,
-    actionAndChanges: BL.ComboboxActionAndChanges<BottomlineTag>
+    state: ComboboxState<BottomlineTag>,
+    actionAndChanges: ComboboxActionAndChanges<BottomlineTag>
   ) {
     const { action, changes } = actionAndChanges;
     const recommendations = { ...changes };
     switch (action.type) {
-      case BL.ComboboxActions.INPUT_ITEM_CLICK: {
+      case ComboboxActions.INPUT_ITEM_CLICK: {
         const newTags = { ...selectedTags };
         if (recommendations.selectedItem) {
           newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
@@ -144,12 +148,12 @@ export const TagEditor = () => {
         }
         return recommendations;
       }
-      case BL.ComboboxActions.INPUT_BLUR: {
+      case ComboboxActions.INPUT_BLUR: {
         forceAbort();
         recommendations.inputValue = state.inputValue;
         return recommendations;
       }
-      case BL.ComboboxActions.INPUT_VALUE_CHANGE: {
+      case ComboboxActions.INPUT_VALUE_CHANGE: {
         if (action.inputValue === '' && changes.inputValue !== '') {
           recommendations.isOpen = false;
           setTagSuggestions(undefined);
@@ -172,7 +176,7 @@ export const TagEditor = () => {
     getItemProps,
     getPopupProps
   } = useCombobox<BottomlineTag>({
-    onInputValueChange: (changes: Partial<BL.ComboboxState<string>>) => {
+    onInputValueChange: (changes: Partial<ComboboxState<string>>) => {
       // piggy-back on the state change
       // set our own input value change
       prevInput.current = input;
@@ -186,8 +190,6 @@ export const TagEditor = () => {
   const noResultsFound = isOpen && tagSuggestions && tagSuggestions.length == 0;
   const resultsFound = isOpen && tagSuggestions && tagSuggestions.length >= 1;
 
-  console.log('resultsFound:', resultsFound);
-  console.log('noResultsFound:', noResultsFound);
   return (
     <section className="tag-editor-section">
       <div className="tag-editor">
@@ -200,10 +202,11 @@ export const TagEditor = () => {
         <div className="selected-tags-container">
           {selectedTags ? (
             <ul className="selected-tags">
-              {Object.keys(selectedTags).map((tagName) => {
+              {Object.keys(selectedTags).map((tagName, index) => {
                 const tag = selectedTags[tagName];
+                const key = `${tagName} ${index}`;
                 return (
-                  <li className="selected-tag">
+                  <li className="selected-tag" key={key}>
                     <Tag size="small" type="outlined" text={tag.name}>
                       <TagCloseButton />
                     </Tag>
@@ -213,7 +216,6 @@ export const TagEditor = () => {
             </ul>
           ) : null}
         </div>
-        {/*{duplicateTagAlert ? <p role="alert">{duplicateTagAlert}</p> : null}*/}
         <div
           className={
             inputFocused
@@ -233,11 +235,11 @@ export const TagEditor = () => {
             className="tag-search-input"
             ref={null}
           />
-          {/*{derivedLoaderState ? (*/}
-          <span className="tag-search-loader">
-            <SearchLoader />
-          </span>
-          {/*) : null}*/}
+          {derivedLoaderState ? (
+            <span className="tag-search-loader">
+              <SearchLoader />
+            </span>
+          ) : null}
         </div>
         <div className="tag-results-container" {...getPopupProps()}>
           {noResultsFound ? (
@@ -247,28 +249,32 @@ export const TagEditor = () => {
           ) : null}
           {resultsFound ? (
             <ul className="tag-results">
-              {tagSuggestions.map((tag, index: number) => (
-                <li
-                  className={
-                    highlightedIndex === index
-                      ? 'tag-result tag-result--focused'
-                      : 'tag-result'
-                  }
-                  {...getItemProps(index)}
-                >
-                  <div className="tag-result-info">
-                    <span className="tag-result-header">
-                      <Tag className="tag-name" size="small" text={tag.name} />
-                      <span className="tag-result-count">{tag.count}</span>
-                      <AiFillQuestionCircle
-                        size="1rem"
-                        className="tag-result-details"
-                      />
-                    </span>
-                  </div>
-                  <p className="tag-result-excerpt">{tag.excerpt}</p>
-                </li>
-              ))}
+              {tagSuggestions.map((tag, index: number) => {
+                const key = `${tag.name} ${index}`;
+                return (
+                  <li
+                    key={key}
+                    className={
+                      highlightedIndex === index
+                        ? 'tag-result tag-result--focused'
+                        : 'tag-result'
+                    }
+                    {...getItemProps(index)}
+                  >
+                    <div className="tag-result-info">
+                      <span className="tag-result-header">
+                        <Tag className="tag-name" size="small" text={tag.name} />
+                        <span className="tag-result-count">{tag.count}</span>
+                        <AiFillQuestionCircle
+                          size="1rem"
+                          className="tag-result-details"
+                        />
+                      </span>
+                    </div>
+                    <p className="tag-result-excerpt">{tag.excerpt}</p>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </div>

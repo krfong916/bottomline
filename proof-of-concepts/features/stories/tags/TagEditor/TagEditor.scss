@@ -11,6 +11,14 @@
   flex-direction: column;
 }
 
+/**
+ * *******************
+ *
+ * Header
+ *
+ * *******************
+ */
+
 .tag-header-container {
   display: inline-flex;
   align-items: center;
@@ -30,6 +38,32 @@
 .tag-header-description path {
   fill: colors.$Blue-6;
 }
+
+/**
+ * *******************
+ *
+ * Selected Tags 
+ *
+ * *******************
+ */
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  list-style-type: none;
+  padding: 0;
+}
+
+.selected-tag {
+  padding: spacing.$Size-0;
+}
+/**
+ * *******************
+ *
+ * Search/input 
+ *
+ * *******************
+ */
 
 .tag-search-container {
   display: inline-flex;
@@ -61,6 +95,14 @@
   display: inline-block;
   margin-right: 4px;
 }
+
+/**
+ * *******************
+ *
+ * Results 
+ *
+ * *******************
+ */
 
 .tag-results-container {
   display: flex;

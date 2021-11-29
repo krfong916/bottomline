@@ -21,8 +21,8 @@ export function fetchTags(tag: string, getSignal: () => AbortSignal) {
     }
   })
     .then(async (res) => {
-      await delayControlled();
-      throwRandomly();
+      // await delayControlled();
+      // throwRandomly();
       return res.json();
     })
     .catch((error) => {

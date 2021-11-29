@@ -1,15 +1,30 @@
 import * as React from 'react';
 import bottomlineComboboxReducer from './reducer';
+import { useElementId, computeInitialState } from './utils';
 import {
-  useElementId,
   normalizeKey,
   useControlledReducer,
-  computeInitialState
-} from './utils';
-import { mergeRefs, callAllEventHandlers, noop } from '../../utils';
-import { BL } from './types';
+  mergeRefs,
+  callAllEventHandlers,
+  noop
+} from '../../utils';
+import {
+  ComboboxProps,
+  ComboboxState,
+  ComboboxAction,
+  ComboboxActions,
+  ComboBoxStateChangeTypes,
+  ComboboxActionAndChanges,
+  ComboboxLabelGetterProps,
+  ComboboxGetterProps,
+  ComboboxAriaPopup,
+  ComboboxInputGetterProps,
+  ComboboxAriaAutoComplete,
+  ComboboxPopupProps
+} from './types';
+import { ItemsList } from '../../types';
 
-export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
+export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
   /**
    * ****************
    *
@@ -19,14 +34,11 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
    *
    */
   const [state, dispatch] = useControlledReducer<
-    (
-      state: BL.ComboboxState<Item>,
-      action: BL.ComboboxAction<Item>
-    ) => BL.ComboboxState<Item>,
-    BL.ComboboxState<Item>,
-    BL.ComboboxProps<Item>,
-    BL.ComboBoxStateChangeTypes,
-    BL.ComboboxActionAndChanges<Item>
+    (state: ComboboxState<Item>, action: ComboboxAction<Item>) => ComboboxState<Item>,
+    ComboboxState<Item>,
+    ComboboxProps<Item>,
+    ComboBoxStateChangeTypes,
+    ComboboxActionAndChanges<Item>
   >(bottomlineComboboxReducer, computeInitialState<Item>(props), props);
   const { isOpen, highlightedIndex, inputValue } = state;
 
@@ -47,7 +59,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   // stores the DOM reference to the input element
   const inputRef = React.useRef<HTMLElement & HTMLInputElement>(null);
   // stores the DOM reference to the list of items
-  const itemsListRef = React.useRef<BL.ItemsList>({});
+  const itemsListRef = React.useRef<ItemsList>({});
 
   /**
    * *************************
@@ -115,63 +127,63 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
     Enter: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_ENTER,
+        type: ComboboxActions.INPUT_KEYDOWN_ENTER,
         getItemFromIndex
       });
     },
     Escape: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_ESCAPE,
+        type: ComboboxActions.INPUT_KEYDOWN_ESCAPE,
         getItemFromIndex
       });
     },
     Delete: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_DELETE,
+        type: ComboboxActions.INPUT_KEYDOWN_DELETE,
         getItemFromIndex
       });
     },
     ArrowRight: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT,
+        type: ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT,
         getItemFromIndex
       });
     },
     ArrowLeft: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT,
+        type: ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT,
         getItemFromIndex
       });
     },
     ArrowDown: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN,
+        type: ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN,
         getItemFromIndex
       });
     },
     ArrowUp: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_ARROW_UP,
+        type: ComboboxActions.INPUT_KEYDOWN_ARROW_UP,
         getItemFromIndex
       });
     },
     Home: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_HOME,
+        type: ComboboxActions.INPUT_KEYDOWN_HOME,
         getItemFromIndex
       });
     },
     End: (e: React.KeyboardEvent) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_KEYDOWN_END,
+        type: ComboboxActions.INPUT_KEYDOWN_END,
         getItemFromIndex
       });
     }
@@ -192,7 +204,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   /**
    * Use label props on the element that describes the combobox
    */
-  function getLabelProps(props?: BL.ComboboxLabelGetterProps) {
+  function getLabelProps(props?: ComboboxLabelGetterProps) {
     const id = props?.id || elementIds.labelId;
     const inputId = props?.inputId || elementIds.inputId;
     return {
@@ -207,8 +219,8 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
    *   if the user has defined a specific type of popup, then destructure
    *   otherwise, the user may have not passed any args, so default to an empty object
    */
-  function getComboboxProps(props?: BL.ComboboxGetterProps) {
-    const ariaHasPopup = props?.ariaPopup || ('grid' as BL.ComboboxAriaPopup);
+  function getComboboxProps(props?: ComboboxGetterProps) {
+    const ariaHasPopup = props?.ariaPopup || ('grid' as ComboboxAriaPopup);
     const ariaLabelledBy = props?.ariaLabelledBy || elementIds.labelId;
 
     // Implement: if the combobox has a visible label, the element with role combobox has aria-labelledby
@@ -232,7 +244,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
     onBlur = noop,
     onFocus = noop,
     controlDispatch
-  }: BL.ComboboxInputGetterProps<T> = {}) {
+  }: ComboboxInputGetterProps<T> = {}) {
     const inputKeyDownHandler = (e: React.KeyboardEvent) => {
       const keyEvt = normalizeKey(e);
       if (keyEvt.name in inputKeyDownHandlers) {
@@ -243,24 +255,23 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
     const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
       e.preventDefault();
       dispatch({
-        type: BL.ComboboxActions.INPUT_BLUR
+        type: ComboboxActions.INPUT_BLUR
       });
     };
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
-      console.log('[INPUT_HANDLER]:', val);
       if (controlDispatch) {
         const fn = () => {
           dispatch({
-            type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
+            type: ComboboxActions.INPUT_VALUE_CHANGE,
             inputValue: val
           });
         };
         controlDispatch(fn);
       } else {
         dispatch({
-          type: BL.ComboboxActions.INPUT_VALUE_CHANGE,
+          type: ComboboxActions.INPUT_VALUE_CHANGE,
           inputValue: val
         });
       }
@@ -279,7 +290,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
       'aria-labelledby': elementIds.labelId,
       'aria-controls': elementIds.menuId,
       'aria-multiline': false,
-      'aria-autocomplete': 'list' as BL.ComboboxAriaAutoComplete,
+      'aria-autocomplete': 'list' as ComboboxAriaAutoComplete,
       // fancy way of saying: assign the id of the item that is stored in the list of items
       // as the aria-activedescendant, otherwise, merge a "null" (false) value
       ...(isOpen &&
@@ -294,7 +305,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
     {
       role,
       ariaLabel
-    }: { ariaLabel?: string; role?: string } = {} as BL.ComboboxPopupProps
+    }: { ariaLabel?: string; role?: string } = {} as ComboboxPopupProps
   ) {
     let popupRole = 'grid';
     if (role) popupRole = role;
@@ -310,7 +321,7 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   function getItemProps(index: number) {
     const handleClick = () => {
       dispatch({
-        type: BL.ComboboxActions.INPUT_ITEM_CLICK,
+        type: ComboboxActions.INPUT_ITEM_CLICK,
         getItemFromIndex,
         index
       });
@@ -332,8 +343,10 @@ export function useCombobox<Item>(props: BL.ComboboxProps<Item> = {}) {
   }
 
   return {
+    // state
     isOpen,
     highlightedIndex,
+    inputValue,
     // combobox-specific prop getters
     getLabelProps,
     getComboboxProps,

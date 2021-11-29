@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useCombobox } from '../useCombobox';
-import { BL } from '../types';
+import { ComboboxProps } from '../types';
 import { render, screen, getAllByRole } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
-import { SampleItems } from './testingUtils';
 
 const dataTestIds = {
   input: 'input-testid',
@@ -12,14 +11,14 @@ const dataTestIds = {
   outside: 'outside-testid'
 };
 
-export function renderCombobox(props?: BL.ComboboxProps) {
+export function renderCombobox(props?: ComboboxProps) {
   const container = render(<ComboboxGrid {...props} />);
   const input = screen.getByTestId(dataTestIds.input);
   const popup = screen.getByTestId(dataTestIds.popup);
   const label = screen.getByTestId(dataTestIds.label);
   const outside = screen.getByTestId(dataTestIds.outside);
+  const combobox = screen.queryByRole('combobox');
 
-  const combobox = screen.getByRole('combobox');
   return {
     input,
     popup,
@@ -29,7 +28,7 @@ export function renderCombobox(props?: BL.ComboboxProps) {
   };
 }
 
-function ComboboxGrid(props: BL.ComboboxProps) {
+function ComboboxGrid(props: ComboboxProps) {
   const {
     isOpen,
     getLabelProps,
@@ -37,13 +36,18 @@ function ComboboxGrid(props: BL.ComboboxProps) {
     getInputProps,
     getPopupProps,
     getItemProps,
-    highlightedIndex
+    highlightedIndex,
+    inputValue
   } = useCombobox(props);
   return (
     <div>
       <label data-testid={dataTestIds.label} {...getLabelProps()}></label>
       <div {...getComboboxProps()}>
-        <input data-testid={dataTestIds.input} {...getInputProps()}></input>
+        <input
+          data-testid={dataTestIds.input}
+          {...getInputProps()}
+          value={inputValue}
+        ></input>
       </div>
       <div data-testid={dataTestIds.popup} {...getPopupProps()}>
         <ul>
@@ -79,3 +83,12 @@ function ComboboxGrid(props: BL.ComboboxProps) {
 export function renderUseCombobox() {
   return renderHook(() => useCombobox({ items: SampleItems }));
 }
+
+export const SampleItems = [
+  { name: 'material-analysis', count: 5, contents: '' },
+  { name: 'class-analysis', count: 33, contents: '' },
+  { name: 'materialism', count: 12, contents: '' },
+  { name: 'dialectical-materialism', count: 9, contents: '' },
+  { name: 'historical-materialism', count: 5, contents: '' },
+  { name: 'materialist-theory', count: 2, contents: '' }
+];

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
-import { renderCombobox, renderUseCombobox } from './utils';
+import { renderCombobox, SampleItems } from './utils';
 import {
   screen,
   render,
@@ -9,7 +9,6 @@ import {
   getByText
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { SampleItems } from './testingUtils';
 import '@testing-library/jest-dom/extend-expect';
 
 describe('useCombobox hook', () => {
@@ -21,8 +20,12 @@ describe('useCombobox hook', () => {
    * ****************
    */
   test('the popup is open when initial isOpen is true', () => {
-    const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
-    expect(input).toHaveFocus();
+    renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
+    const comboboxItems = screen.getAllByRole('gridcell');
+    expect(comboboxItems).toBeDefined();
   });
 
   /**
@@ -32,11 +35,12 @@ describe('useCombobox hook', () => {
    *
    * ****************
    */
-  test('when the popup is open, the escape keydown event closes the popup', () => {
+  test('when the popup is open, the escape keydown event closes the popup if open, and clears the textbox', () => {
     const { input } = renderCombobox({
       initialIsOpen: true,
       items: SampleItems
     });
+    userEvent.click(input);
     fireEvent.keyDown(input, { key: 'Escape', code: 'Escape', charCode: 27 });
     expect(input).toHaveFocus();
   });
@@ -82,16 +86,16 @@ describe('useCombobox hook', () => {
    *
    * ****************
    */
-  test('backspace on an open popup with highlight does nothing', () => {
-    const { combobox, input, popup } = renderCombobox({
-      initialIsOpen: false,
+  test('backspace on an open popup that has a cell highlighted doesnt close the popup, i.e. the input maintains focus', () => {
+    const { combobox, input, outside } = renderCombobox({
+      initialIsOpen: true,
       items: SampleItems
     });
     userEvent.click(input);
     userEvent.type(input, 'any-random-string');
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
     fireEvent.keyDown(input, { key: 'Backspace', code: 'Backspace', charCode: 8 });
-    expect(screen.getByDisplayValue('any-random-string')).toBeDefined();
+    expect(input).toHaveFocus();
   });
 
   test('only when the highlightedIndex is -1, can we change the input value popup', () => {
@@ -120,15 +124,14 @@ describe('useCombobox hook', () => {
       initialIsOpen: true,
       items: SampleItems
     });
+    userEvent.click(input);
     expect(input).toHaveFocus();
     expect(popup).toBeDefined();
     userEvent.click(outside);
 
-    const items = screen.queryByRole('gridcell');
-
     expect(input).not.toHaveFocus();
-    expect(items).not.toBeInTheDocument();
-    expect(outside).toHaveFocus();
+    // ok fine there is a little leak of abstraction, who cares, the rent is increasing
+    expect(screen.queryByRole('gridcell')).not.toBeInTheDocument();
   });
 
   /**
@@ -146,6 +149,7 @@ describe('useCombobox hook', () => {
     const items = getAllByRole(popup, 'gridcell');
     const firstItem = items[0];
     expect(firstItem.classList).not.toContain('current-item-highlight');
+    userEvent.click(input);
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
     expect(input).toHaveFocus();
     expect(firstItem.classList).toContain('current-item-highlight');
@@ -156,6 +160,7 @@ describe('useCombobox hook', () => {
       initialIsOpen: true,
       items: SampleItems
     });
+    userEvent.click(input);
     const items = getAllByRole(popup, 'gridcell');
     fireEvent.keyDown(input, { key: 'ArrowLeft', code: 'ArrowLeft', charCode: 37 });
     fireEvent.keyDown(input, { key: 'ArrowUp', code: 'ArrowUp', charCode: 38 });
@@ -173,6 +178,7 @@ describe('useCombobox hook', () => {
       initialIsOpen: true,
       items: SampleItems
     });
+    userEvent.click(input);
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
     fireEvent.keyDown(input, { key: 'ArrowUp', code: 'ArrowUp', charCode: 38 });
     const items = getAllByRole(popup, 'gridcell');
@@ -346,28 +352,36 @@ describe('combobox accessibility', () => {
   });
 
   test('when the popup is not visible, the combobox has aria-expanded == false', () => {
-    const { combobox } = renderCombobox({ initialIsOpen: false, items: SampleItems });
+    const { combobox } = renderCombobox({
+      initialIsOpen: false,
+      items: SampleItems
+    });
     expect(combobox.getAttribute('aria-expanded')).toBeDefined();
     expect(combobox.getAttribute('aria-expanded')).toBe('false');
   });
 
   test('when the popup is visible, the combobox has aria-expanded == true', () => {
-    const { combobox } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    const { combobox } = renderCombobox({
+      initialIsOpen: true,
+      items: SampleItems
+    });
     expect(combobox.getAttribute('aria-expanded')).toBeDefined();
     expect(combobox.getAttribute('aria-expanded')).toBe('true');
   });
 
   test('when the combobox recieves focus, the input is the default element with focus', () => {
-    const { combobox, input } = renderCombobox({
-      initialIsOpen: false,
+    const { input } = renderCombobox({
+      initialIsOpen: true,
       items: SampleItems
     });
-    fireEvent.click(combobox);
+    userEvent.click(input);
+    fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
     expect(input).toHaveFocus();
   });
 
   test('when a descendant (gridcell in our case) is highlighted, the input continues to have focus ', () => {
     const { input } = renderCombobox({ initialIsOpen: true, items: SampleItems });
+    userEvent.click(input);
     fireEvent.keyDown(input, { key: 'ArrowDown', code: 'ArrowDown', charCode: 40 });
     const item = screen.getByRole('gridcell', { selected: true });
     expect(item).toBeDefined();
