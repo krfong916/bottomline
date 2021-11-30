@@ -16,9 +16,12 @@ export function computeInitialState<Item>(
   props: MultipleSelectionProps<Item>
 ): MultipleSelectionState<Item> {
   const items = getInitialValue(props, 'items');
-  let hasSelectedItems = getInitialValue(props, 'hasSelectedItems');
+  const hasSelectedItems = items.length > 0 ? true : false;
   let currentSelectedItem = getInitialValue(props, 'currentSelectedItem');
   let currentSelectedItemIndex = getInitialValue(props, 'currentSelectedItemIndex');
+
+  if (currentSelectedItemIndex > -1)
+    currentSelectedItem = items[currentSelectedItemIndex];
 
   return {
     items,
@@ -35,7 +38,7 @@ export function computeInitialState<Item>(
 export function getInitialValue<Item>(
   props: MultipleSelectionProps<Item>,
   propKey: keyof MultipleSelectionState<Item>
-): Partial<MultipleSelectionState<Item>> {
+): any {
   if (propKey in props) {
     return props[propKey as keyof MultipleSelectionProps<Item>] as Partial<
       MultipleSelectionState<Item>

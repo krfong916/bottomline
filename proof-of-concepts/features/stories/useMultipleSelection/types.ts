@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentProps } from '../types';
 export type MultipleSelectionProps<Item> = {
   items?: Item[];
-  initialCurrentIndex?: number;
+  initialCurrentSelectedItemIndex?: number;
   nextKey?: NavigationKeys;
   prevKey?: NavigationKeys;
   itemToString: (item: Item) => string;

@@ -50,20 +50,24 @@ describe('useMultipleSelection hook', () => {
       code: 'ArrowLeft',
       charCode: 37
     });
-
-    for (let i = 0; i < sampleSelectedItems.length; i++) {
-      fireEvent.keyDown(selectedItems, {
+    let currentSelectedItem;
+    let i = 0;
+    while (i < sampleSelectedItems.length) {
+      currentSelectedItem = getItem(i);
+      fireEvent.keyDown(currentSelectedItem, {
         key: 'ArrowLeft',
         code: 'ArrowLeft',
         charCode: 37
       });
+      i++;
     }
-    fireEvent.keyDown(selectedItems, {
+    fireEvent.keyDown(currentSelectedItem, {
       key: 'ArrowLeft',
       code: 'ArrowLeft',
       charCode: 37
     });
-    let currentSelectedItem = getItem(0);
+
+    currentSelectedItem = getItem(0);
     expect(currentSelectedItem.classList).toContain(
       'current-selected-item-highlight'
     );
@@ -83,7 +87,7 @@ describe('useMultipleSelection hook', () => {
     });
   });
 
-  test('if the current index === -1, we place focus back on the textbox and all items have -1 tabindex', () => {
+  test('if the current index === -1, we place focus back on the textbox', () => {
     let { container, textbox, selectedItems } = renderMultipleSelection<SelectedItem>(
       {
         items: sampleSelectedItems,
@@ -140,7 +144,7 @@ describe('useMultipleSelection hook', () => {
     expect(getItem(lastItem - 1)).toHaveClass('current-selected-item-highlight');
   });
 
-  test('if we remove an item from the list of length === 1, then list is empty state change is dispatched so the user can do something with it', () => {
+  test('if we remove all items from the list, then list is empty state change is dispatched so the user can do something with it', () => {
     let numItems = sampleSelectedItems.length - 1;
     const mockFn = jest.fn(() => true);
     let { container, textbox } = renderMultipleSelection<SelectedItem>({

@@ -1,13 +1,7 @@
 import React from 'react';
 import { multipleSelectionReducer } from './reducer';
 import { computeInitialState, canNavigateToItems } from './utils';
-import {
-  normalizeKey,
-  useControlledReducer,
-  mergeRefs,
-  callAllEventHandlers,
-  noop
-} from '../utils';
+import { normalizeKey, useControlledReducer, mergeRefs } from '../utils';
 import {
   MultipleSelectionProps,
   MultipleSelectionState,
@@ -30,6 +24,7 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     MultipleSelectionStateChangeTypes,
     MultipleSelectionActionAndChanges<Item>
   >(multipleSelectionReducer, computeInitialState<Item>(props), props);
+  console.log('[MULTI_SELECTION_STATE]', state);
   const {
     items,
     currentSelectedItem,
@@ -41,19 +36,13 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     prevKey = NavigationKeys.ARROW_RIGHT
   } = props;
   const dropdownRef = React.useRef<HTMLElement & HTMLInputElement>();
-  const currentSelectedItemRef = React.useRef<HTMLElement>();
+  const currentSelectedItemsRef = React.useRef<HTMLElement[]>([]);
 
   React.useEffect(() => {
-    console.log('dropdownRef.current:', dropdownRef.current);
     if (currentSelectedItemIndex === -1 && dropdownRef.current) {
-      console.log('[CALLED FOCUS]');
       dropdownRef.current.focus();
-    }
-  }, [currentSelectedItemIndex]);
-
-  React.useEffect(() => {
-    if (currentSelectedItemIndex >= 0 && currentSelectedItemRef.current) {
-      currentSelectedItemRef.current.focus();
+    } else if (currentSelectedItemIndex >= 0 && currentSelectedItemsRef.current) {
+      currentSelectedItemsRef.current[currentSelectedItemIndex].focus();
     }
   }, [currentSelectedItemIndex]);
 
@@ -98,7 +87,6 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
   } = {
     [prevKey]: (e: React.KeyboardEvent) => {
       // e.stopPropagation();
-
       if (canNavigateToItems()) {
         dispatch({
           type: MultipleSelectionStateChangeTypes.DROPDOWN_NAVIGATION_TO_ITEMS
@@ -109,9 +97,8 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
 
   function getDropdownProps({ ref = null, ...rest }: DropdownGetterProps) {
     const handleKeydown = (e: React.KeyboardEvent) => {
-      const { name: keyName, code } = normalizeKey(e);
+      const { name: keyName } = normalizeKey(e);
       if (keyName in dropdownKeydownHandlers) {
-        console.log('[DROPDOWN_PROPS] ', keyName);
         dropdownKeydownHandlers[keyName](e);
       }
     };
@@ -123,17 +110,12 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
   }
 
   function getSelectedItemProps(selectedItem: Item, index: number) {
-    let tabIndex = 0;
-    let ref = null;
-    if (index === currentSelectedItemIndex) {
-      tabIndex = 1;
-      ref = mergeRefs(currentSelectedItemRef);
-    }
+    let tabIndex = -1;
+    if (index === currentSelectedItemIndex) tabIndex = 0;
 
     const handleKeydown = (e: React.KeyboardEvent) => {
-      const { name: keyName, code } = normalizeKey(e);
+      const { name: keyName } = normalizeKey(e);
       if (keyName in itemKeydownHandlers) {
-        console.log('[SELECTED_ITEM_PROPS]', keyName);
         itemKeydownHandlers[keyName](e, index);
       }
     };
@@ -150,7 +132,9 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
       tabIndex: tabIndex,
       onClick: handleClick,
       onKeyDown: handleKeydown,
-      ref
+      ref: mergeRefs((node) => {
+        if (node) currentSelectedItemsRef.current.push(node);
+      })
     };
   }
 

@@ -107,8 +107,6 @@ export const TagEditor = () => {
     if (tags) setTagSuggestions(tags);
   }, [tags]);
 
-  const selectedItemToString = (item: BottomlineTag) => item.name;
-
   const {
     getSelectedItemProps,
     removeSelectedItem,
@@ -118,10 +116,14 @@ export const TagEditor = () => {
     items
   } = useMultipleSelection<BottomlineTag>({
     items: presetSelectedItems,
-    itemToString: selectedItemToString,
+    initialCurrentSelectedItemIndex: 0,
+    itemToString: (item: BottomlineTag) => item.name,
     nextKey: NavigationKeys.ARROW_RIGHT,
     prevKey: NavigationKeys.ARROW_LEFT
   });
+
+  const handleRemove = (item: BottomlineTag) => removeSelectedItem(item);
+
   console.log('[TAG_EDITOR] currentSelectedItemIndex:', currentSelectedItemIndex);
   function stateReducer(
     state: ComboboxState<BottomlineTag>,
@@ -208,7 +210,7 @@ export const TagEditor = () => {
                       type={active ? 'solid' : 'outlined'}
                       text={tag.name}
                     >
-                      <TagCloseButton />
+                      <TagCloseButton onClose={() => handleRemove(tag)} />
                     </Tag>
                   </li>
                 );

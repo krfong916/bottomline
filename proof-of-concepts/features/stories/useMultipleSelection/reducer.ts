@@ -18,7 +18,6 @@ export function multipleSelectionReducer<Item>(
         newState.items,
         newState.currentSelectedItemIndex
       );
-      console.log('[REDUCER] NAVIGATION_NEXT', newState);
       return newState;
     }
     case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
@@ -27,18 +26,10 @@ export function multipleSelectionReducer<Item>(
         newState.items,
         newState.currentSelectedItemIndex
       );
-      console.log('[REDUCER] NAVIGATION_PREV', newState);
       return newState;
     }
     case MultipleSelectionStateChangeTypes.DROPDOWN_NAVIGATION_TO_ITEMS: {
-      console.log('[DROPDOWN_NAVIGATION_TO_ITEMS]');
       newState.currentSelectedItemIndex = newState.items.length - 1;
-      return newState;
-    }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_ENTER: {
-      return newState;
-    }
-    case MultipleSelectionStateChangeTypes.KEYDOWN_SPACEBAR: {
       return newState;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE: {
@@ -55,14 +46,7 @@ export function multipleSelectionReducer<Item>(
       return newState;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_CLICK: {
-      console.log('KEY_DOWN CLICK:', action.index);
       newState.currentSelectedItemIndex = action.index;
-      return newState;
-    }
-    case MultipleSelectionStateChangeTypes.MULTIPLE_SELECTION_GROUP_BLUR: {
-      return newState;
-    }
-    case MultipleSelectionStateChangeTypes.MULTIPLE_SELECTION_GROUP_FOCUS: {
       return newState;
     }
     case MultipleSelectionStateChangeTypes.FUNCTION_ADD_SELECTED_ITEM: {
@@ -82,8 +66,21 @@ export function multipleSelectionReducer<Item>(
       );
       // check if items still exist
       if (newState.items.length === 0) newState.hasSelectedItems = false;
+      // if (newState.currentSelectedItemIndex ===)
       // update index
       newState.currentSelectedItemIndex -= 1;
+      return newState;
+    }
+    case MultipleSelectionStateChangeTypes.KEYDOWN_ENTER: {
+      return newState;
+    }
+    case MultipleSelectionStateChangeTypes.KEYDOWN_SPACEBAR: {
+      return newState;
+    }
+    case MultipleSelectionStateChangeTypes.MULTIPLE_SELECTION_GROUP_BLUR: {
+      return newState;
+    }
+    case MultipleSelectionStateChangeTypes.MULTIPLE_SELECTION_GROUP_FOCUS: {
       return newState;
     }
     default: {
