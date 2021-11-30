@@ -69,7 +69,6 @@ function MultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
 
   const {
     getSelectedItemProps,
-    getSelectedItemListProps,
     currentSelectedItemIndex,
     getDropdownProps,
     removeSelectedItem,
@@ -87,8 +86,8 @@ function MultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
 
   return (
     <div>
-      <input tabIndex={0} data-testid={dataTestIds.input} {...getDropdownProps()} />
-      <div data-testid={dataTestIds.selectedItems} {...getSelectedItemListProps()}>
+      <input tabIndex={0} data-testid={dataTestIds.input} {...getDropdownProps({})} />
+      <div data-testid={dataTestIds.selectedItems}>
         {selectedItems &&
           selectedItems.map((item, index) => {
             return (

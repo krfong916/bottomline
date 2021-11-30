@@ -36,6 +36,7 @@ export interface ComboboxInputGetterProps<T> {
   ref?: React.MutableRefObject<T>;
   onFocus?: (...args: any[]) => any;
   onBlur?: (...args: any[]) => any;
+  onKeyDown?: (...args: any[]) => any;
 }
 
 export interface ComboboxGetterProps {

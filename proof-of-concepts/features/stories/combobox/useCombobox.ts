@@ -7,7 +7,7 @@ import {
   mergeRefs,
   callAllEventHandlers,
   noop
-} from '../../utils';
+} from '../utils';
 import {
   ComboboxProps,
   ComboboxState,
@@ -22,7 +22,7 @@ import {
   ComboboxAriaAutoComplete,
   ComboboxPopupProps
 } from './types';
-import { ItemsList } from '../../types';
+import { ItemsList } from '../types';
 
 export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
   /**
@@ -58,7 +58,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
    */
   // stores the DOM reference to the input element
   const inputRef = React.useRef<HTMLElement & HTMLInputElement>(null);
-  // stores the DOM reference to the list of items
+  // stores the reference to the list of items
   const itemsListRef = React.useRef<ItemsList>({});
 
   /**
@@ -243,7 +243,9 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
   function getInputProps<T>({
     onBlur = noop,
     onFocus = noop,
-    controlDispatch
+    controlDispatch,
+    onKeyDown = noop,
+    ...rest
   }: ComboboxInputGetterProps<T> = {}) {
     const inputKeyDownHandler = (e: React.KeyboardEvent) => {
       const keyEvt = normalizeKey(e);
@@ -278,14 +280,14 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
     };
 
     let eventHandlers = {
-      onKeyDown: inputKeyDownHandler,
+      onKeyDown: callAllEventHandlers(inputKeyDownHandler, onKeyDown),
       onChange: inputChangeHandler,
       onBlur: callAllEventHandlers(inputBlurHandler, onBlur),
       onFocus
     };
 
     return {
-      ref: props.ref,
+      ref: mergeRefs(props.ref, rest.ref),
       role: 'textbox',
       'aria-labelledby': elementIds.labelId,
       'aria-controls': elementIds.menuId,

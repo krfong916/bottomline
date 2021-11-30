@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComboboxProps, ComboboxState, ComboboxActions } from './types';
-import { ComponentProps } from '../../types';
-import { capitalizeString, generateId } from '../../utils';
+import { ComponentProps } from '../types';
+import { capitalizeString, generateId } from '../utils';
 export const initialState = {
   selectedItem: null,
   isOpen: false,

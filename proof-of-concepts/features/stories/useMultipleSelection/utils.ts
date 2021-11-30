@@ -20,14 +20,6 @@ export function computeInitialState<Item>(
   let currentSelectedItem = getInitialValue(props, 'currentSelectedItem');
   let currentSelectedItemIndex = getInitialValue(props, 'currentSelectedItemIndex');
 
-  currentSelectedItemIndex = computeSelectedIndex<Item>(
-    items,
-    currentSelectedItemIndex
-  ) as Partial<MultipleSelectionState<Item>>;
-  // index and item must be in sync
-  currentSelectedItem = items[currentSelectedItemIndex];
-  hasSelectedItems = items.length > 0 ? true : false;
-
   return {
     items,
     currentSelectedItem,
@@ -64,15 +56,6 @@ export function getInitialValue<Item>(
   return initialState[propKey] as Partial<MultipleSelectionState<Item>>;
 }
 
-function computeSelectedIndex<Item>(items: Item[], index: number): number {
-  if (items && items.length > 0) {
-    if (index > 0 && index < items.length) return index;
-    return 0;
-  }
-
-  return initialState.currentSelectedItemIndex;
-}
-
 export function canNavigateToItems(): boolean {
   const selection = window.getSelection();
   if (selection && selection.isCollapsed && selection.anchorOffset === 0) {
@@ -90,10 +73,12 @@ export function getNextItemIndex<Item>(
   const end = items.length;
   switch (stateChangeType) {
     case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
+      // console.log('[NAVIGATION_NEXT] currentIndex: ', currentIndex);
       if (currentIndex === end - 1) return -1;
       return currentIndex + 1;
     }
     case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
+      // console.log('[NAVIGATION_PREV] currentIndex:', currentIndex);
       if (currentIndex === 0) return currentIndex;
       return currentIndex - 1;
     }

@@ -11,17 +11,19 @@ import {
   noop,
   fetchTags
 } from './utils';
-import { useCombobox } from '../../combobox/hooks/useCombobox';
+import { useCombobox } from '../../combobox/useCombobox';
+import { useMultipleSelection } from '../../useMultipleSelection/useMultipleSelection';
 import { useAbortController } from '../../useAbortController/useAbortController';
 import useDebouncedCallback from '../../useDebounce/src/hooks/useDebouncedCallback';
 import useAsync from '../../useDebounce/src/hooks/useAsync';
 import { SearchLoader } from '../../loader/SearchLoader';
 import { UseAsyncStatus, UseAsyncState } from '../../useDebounce/src/types';
+import { NavigationKeys } from '../../useMultipleSelection/types';
 import {
   ComboboxState,
   ComboboxActionAndChanges,
   ComboboxActions
-} from '../../combobox/hooks/types';
+} from '../../combobox/types';
 import { BottomlineTag, BottomlineTags } from './types';
 import { AiFillQuestionCircle } from 'react-icons/ai';
 import classNames from 'classnames';
@@ -44,57 +46,30 @@ import './TagEditor.scss';
  * See: https://github.com/krfong916/bottomline/issues/6 for a formal spec on the use case
  */
 
+const presetSelectedItems = [
+  ({
+    id: '1',
+    name: 'material-analysis',
+    count: 5,
+    excerpt:
+      "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+  } as unknown) as BottomlineTag,
+  ({
+    id: '2',
+    name: 'class-analysis',
+    count: 33,
+    excerpt:
+      "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+  } as unknown) as BottomlineTag
+] as BottomlineTag[];
+
 export const TagEditor = () => {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
-  const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>({
-    'material-analysis': {
-      id: '1',
-      name: 'material-analysis',
-      count: 5,
-      excerpt:
-        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-    },
-    'class-analysis': {
-      id: '2',
-      name: 'class-analysis',
-      count: 33,
-      excerpt:
-        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-    },
-    materialism: {
-      id: '3',
-      name: 'materialism',
-      count: 12,
-      excerpt:
-        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-    },
-    'dialectical-materialism': {
-      id: '4',
-      name: 'dialectical-materialism',
-      count: 9,
-      excerpt:
-        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-    },
-    'historical-materialism': {
-      id: '5',
-      name: 'historical-materialism',
-      count: 5,
-      excerpt:
-        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-    },
-    'materialist-theory': {
-      id: '6',
-      name: 'materialist-theory',
-      count: 2,
-      excerpt:
-        "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-    }
-  });
+  const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>();
   const [tagSuggestions, setTagSuggestions] = React.useState<
     BottomlineTag[] | undefined
   >();
-  console.log(selectedTags);
   // we define state and change handler callbacks instead of a ref because we don't need to handle
   // we need the "appearance" of focus handling for the container when the input element is focused
   const [inputFocused, setInputFocused] = React.useState(false);
@@ -132,6 +107,22 @@ export const TagEditor = () => {
     if (tags) setTagSuggestions(tags);
   }, [tags]);
 
+  const selectedItemToString = (item: BottomlineTag) => item.name;
+
+  const {
+    getSelectedItemProps,
+    removeSelectedItem,
+    addSelectedItem,
+    getDropdownProps,
+    currentSelectedItemIndex,
+    items
+  } = useMultipleSelection<BottomlineTag>({
+    items: presetSelectedItems,
+    itemToString: selectedItemToString,
+    nextKey: NavigationKeys.ARROW_RIGHT,
+    prevKey: NavigationKeys.ARROW_LEFT
+  });
+  console.log('[TAG_EDITOR] currentSelectedItemIndex:', currentSelectedItemIndex);
   function stateReducer(
     state: ComboboxState<BottomlineTag>,
     actionAndChanges: ComboboxActionAndChanges<BottomlineTag>
@@ -144,7 +135,7 @@ export const TagEditor = () => {
         if (recommendations.selectedItem) {
           newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
             recommendations.selectedItem;
-          setSelectedTags(newTags);
+          addSelectedItem(recommendations.selectedItem);
         }
         return recommendations;
       }
@@ -200,14 +191,23 @@ export const TagEditor = () => {
           <AiFillQuestionCircle size="1.25em" className="tag-header-description" />
         </div>
         <div className="selected-tags-container">
-          {selectedTags ? (
+          {items ? (
             <ul className="selected-tags">
-              {Object.keys(selectedTags).map((tagName, index) => {
-                const tag = selectedTags[tagName];
-                const key = `${tagName} ${index}`;
+              {Object.keys(items).map((tagIndex, index) => {
+                const tag = items[tagIndex];
+                const key = `${tag.name} ${index}`;
+                const active = currentSelectedItemIndex === index ? true : false;
                 return (
-                  <li className="selected-tag" key={key}>
-                    <Tag size="small" type="outlined" text={tag.name}>
+                  <li
+                    className="selected-tag"
+                    key={key}
+                    {...getSelectedItemProps(tag, index)}
+                  >
+                    <Tag
+                      size="small"
+                      type={active ? 'solid' : 'outlined'}
+                      text={tag.name}
+                    >
                       <TagCloseButton />
                     </Tag>
                   </li>
@@ -228,12 +228,12 @@ export const TagEditor = () => {
             {...getInputProps<HTMLInputElement | undefined>({
               controlDispatch: debounce,
               onFocus: inputOnFocus,
-              onBlur: inputOnBlur
+              onBlur: inputOnBlur,
+              ...getDropdownProps({})
             })}
             type="text"
             autoComplete="off"
             className="tag-search-input"
-            ref={null}
           />
           {derivedLoaderState ? (
             <span className="tag-search-loader">

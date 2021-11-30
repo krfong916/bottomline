@@ -41,12 +41,21 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     prevKey = NavigationKeys.ARROW_RIGHT
   } = props;
   const dropdownRef = React.useRef<HTMLElement & HTMLInputElement>();
+  const currentSelectedItemRef = React.useRef<HTMLElement>();
 
   React.useEffect(() => {
+    console.log('dropdownRef.current:', dropdownRef.current);
     if (currentSelectedItemIndex === -1 && dropdownRef.current) {
+      console.log('[CALLED FOCUS]');
       dropdownRef.current.focus();
     }
-  });
+  }, [currentSelectedItemIndex]);
+
+  React.useEffect(() => {
+    if (currentSelectedItemIndex >= 0 && currentSelectedItemRef.current) {
+      currentSelectedItemRef.current.focus();
+    }
+  }, [currentSelectedItemIndex]);
 
   const itemsList = React.useRef<ItemsList>({});
   if (props.items) {
@@ -54,7 +63,7 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
   }
 
   const itemKeydownHandlers: {
-    [eventHandler: string]: (e: React.KeyboardEvent) => void;
+    [eventHandler: string]: (e: React.KeyboardEvent, index: number) => void;
   } = {
     [nextKey]: () => {
       dispatch({
@@ -75,6 +84,12 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
       dispatch({
         type: MultipleSelectionStateChangeTypes.KEYDOWN_SPACEBAR
       });
+    },
+    Backspace: (e: React.KeyboardEvent, index: number) => {
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE,
+        index
+      });
     }
   };
 
@@ -82,7 +97,7 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     [eventHandler: string]: (e: React.KeyboardEvent) => void;
   } = {
     [prevKey]: (e: React.KeyboardEvent) => {
-      e.stopPropagation();
+      // e.stopPropagation();
 
       if (canNavigateToItems()) {
         dispatch({
@@ -92,47 +107,34 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     }
   };
 
-  function getSelectedItemListProps() {
-    const handleKeydown = (e: React.KeyboardEvent) => {
-      const { name: keyName, code } = normalizeKey(e);
-      if (keyName in itemKeydownHandlers) {
-        itemKeydownHandlers[keyName](e);
-      }
-    };
-    return {
-      onKeyDown: handleKeydown
-    };
-  }
-
-  function getDropdownProps(props: DropdownGetterProps = {}) {
+  function getDropdownProps({ ref = null, ...rest }: DropdownGetterProps) {
     const handleKeydown = (e: React.KeyboardEvent) => {
       const { name: keyName, code } = normalizeKey(e);
       if (keyName in dropdownKeydownHandlers) {
+        console.log('[DROPDOWN_PROPS] ', keyName);
         dropdownKeydownHandlers[keyName](e);
       }
     };
     return {
-      ref: mergeRefs(props.ref, dropdownRef),
-      onKeyDown: handleKeydown
+      ref: mergeRefs(ref, dropdownRef),
+      onKeyDown: handleKeydown,
+      ...rest
     };
   }
 
   function getSelectedItemProps(selectedItem: Item, index: number) {
-    let tabIndex = -1;
+    let tabIndex = 0;
+    let ref = null;
     if (index === currentSelectedItemIndex) {
-      tabIndex = -1;
+      tabIndex = 1;
+      ref = mergeRefs(currentSelectedItemRef);
     }
 
     const handleKeydown = (e: React.KeyboardEvent) => {
-      e.stopPropagation();
       const { name: keyName, code } = normalizeKey(e);
-      if (keyName === 'Backspace') {
-        dispatch({
-          type: MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE,
-          item: selectedItem,
-          index,
-          itemToString: props.itemToString
-        });
+      if (keyName in itemKeydownHandlers) {
+        console.log('[SELECTED_ITEM_PROPS]', keyName);
+        itemKeydownHandlers[keyName](e, index);
       }
     };
 
@@ -147,7 +149,8 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     return {
       tabIndex: tabIndex,
       onClick: handleClick,
-      onKeyDown: handleKeydown
+      onKeyDown: handleKeydown,
+      ref
     };
   }
 
@@ -168,7 +171,6 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
 
   return {
     getSelectedItemProps,
-    getSelectedItemListProps,
     removeSelectedItem,
     addSelectedItem,
     getDropdownProps,
