@@ -303,6 +303,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
       ...eventHandlers
     };
   }
+
   function getPopupProps(
     {
       role,

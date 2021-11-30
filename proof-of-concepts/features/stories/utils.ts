@@ -125,7 +125,6 @@ export function mergeRefs(...refs: (React.MutableRefObject<any> | undefined)[]) 
   return function(node: React.ReactElement<any>) {
     // iterate over every ref
     // assign the node to the current ref
-    console.log('node', node);
     refs.forEach((ref) => {
       if (typeof ref === 'function') {
         ref(node);

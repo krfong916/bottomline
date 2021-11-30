@@ -24,7 +24,6 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     MultipleSelectionStateChangeTypes,
     MultipleSelectionActionAndChanges<Item>
   >(multipleSelectionReducer, computeInitialState<Item>(props), props);
-  console.log('[MULTI_SELECTION_STATE]', state);
   const {
     items,
     currentSelectedItem,
@@ -36,7 +35,9 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     prevKey = NavigationKeys.ARROW_RIGHT
   } = props;
   const dropdownRef = React.useRef<HTMLElement & HTMLInputElement>();
-  const currentSelectedItemsRef = React.useRef<HTMLElement[]>([]);
+  const currentSelectedItemsRef = React.useRef<HTMLElement[]>();
+  // must reinitialize array on every re-render
+  currentSelectedItemsRef.current = [];
 
   React.useEffect(() => {
     if (currentSelectedItemIndex === -1 && dropdownRef.current) {
@@ -44,7 +45,7 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     } else if (currentSelectedItemIndex >= 0 && currentSelectedItemsRef.current) {
       currentSelectedItemsRef.current[currentSelectedItemIndex].focus();
     }
-  }, [currentSelectedItemIndex]);
+  }, [currentSelectedItemIndex, currentSelectedItem]);
 
   const itemsList = React.useRef<ItemsList>({});
   if (props.items) {
@@ -138,11 +139,12 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     };
   }
 
-  function removeSelectedItem(item: Item) {
+  function removeSelectedItem(item: Item, index: number) {
     dispatch({
       type: MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM,
       item,
-      itemToString: props.itemToString
+      itemToString: props.itemToString,
+      index
     });
   }
 

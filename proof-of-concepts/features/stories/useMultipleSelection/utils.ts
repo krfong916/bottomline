@@ -70,23 +70,87 @@ export function canNavigateToItems(): boolean {
 
 export function getNextItemIndex<Item>(
   stateChangeType: MultipleSelectionStateChangeTypes,
-  items: Item[],
-  currentIndex: number
+  currentSelectedItemIndex: number,
+  currentItems: Item[],
+  newItems?: Item[],
+  index?: number
 ): number {
-  const end = items.length;
+  const end = currentItems.length;
   switch (stateChangeType) {
     case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
-      // console.log('[NAVIGATION_NEXT] currentIndex: ', currentIndex);
-      if (currentIndex === end - 1) return -1;
-      return currentIndex + 1;
+      // console.log('[NAVIGATION_NEXT] currentSelectedItemIndex: ', currentSelectedItemIndex);
+      if (currentSelectedItemIndex === end - 1) return -1;
+      return currentSelectedItemIndex + 1;
     }
     case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
-      // console.log('[NAVIGATION_PREV] currentIndex:', currentIndex);
-      if (currentIndex === 0) return currentIndex;
-      return currentIndex - 1;
+      // console.log('[NAVIGATION_PREV] currentSelectedItemIndex:', currentSelectedItemIndex);
+      if (currentSelectedItemIndex === 0) return currentSelectedItemIndex;
+      return currentSelectedItemIndex - 1;
+    }
+    case MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE: {
+      // if we are removing the head of the list and there are elements remaining
+      if (currentSelectedItemIndex === 0 && index === 0 && newItems.length > 0) {
+        return 0;
+      }
+      // if we are removing the head of the list and the list is empty
+      else if (
+        currentSelectedItemIndex === 0 &&
+        index === 0 &&
+        newItems.length === 0
+      ) {
+        return -1;
+      }
+
+      // if we are removing the tail of the list and there are elements remaining
+      if (
+        currentSelectedItemIndex === currentItems.length - 1 &&
+        newItems.length > 0
+      ) {
+        return newItems.length - 1;
+      }
+      // if we are removing the tail of the list and the list is empty
+      else if (
+        currentSelectedItemIndex === currentItems.length - 1 &&
+        newItems.length === 0
+      ) {
+        return -1;
+      }
+      return currentSelectedItemIndex - 1;
+    }
+    case MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM: {
+      // if we are removing the head of the list and there are elements remaining
+      if (currentSelectedItemIndex === 0 && index === 0 && newItems.length > 0) {
+        return 0;
+      }
+      // if we are removing the head of the list and the list is empty
+      else if (
+        currentSelectedItemIndex === 0 &&
+        index === 0 &&
+        newItems.length === 0
+      ) {
+        return -1;
+      }
+
+      // if we are removing the tail of the list and there are elements remaining
+      if (
+        currentSelectedItemIndex === currentItems.length - 1 &&
+        index === currentItems.length - 1 &&
+        newItems.length > 0
+      ) {
+        return newItems.length - 1;
+      }
+      // if we are removing the tail of the list and the list is empty
+      else if (
+        currentSelectedItemIndex === currentItems.length - 1 &&
+        index === currentItems.length - 1 &&
+        newItems.length === 0
+      ) {
+        return -1;
+      }
+      return currentSelectedItemIndex - 1;
     }
     default: {
-      return currentIndex;
+      return currentSelectedItemIndex;
     }
   }
 }
