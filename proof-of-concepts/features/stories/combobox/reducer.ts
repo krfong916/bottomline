@@ -58,6 +58,8 @@ export default function bottomlineComboboxReducer<Item>(
     }
     case ComboboxActions.INPUT_KEYDOWN_ENTER: {
       // select the item with the highlighted index
+      console.log('[COMBOBOX_ACTION] state:', state);
+      console.log('[COMBOBOX_ACTION] action:', action);
       if (!props || !props.items) return state;
       const newState = { ...state };
       if (newState.highlightedIndex !== -1) {
@@ -68,6 +70,7 @@ export default function bottomlineComboboxReducer<Item>(
     case ComboboxActions.INPUT_VALUE_CHANGE: {
       // does nothing, does not move the input cursor, only when the highlightedIndex is -1
       // combobox can be open
+      console.log('[INPUT_VALUE_CHANGE]');
       const newState = { ...state };
       if (newState.highlightedIndex === -1 && inputValue) {
         newState.inputValue = inputValue;

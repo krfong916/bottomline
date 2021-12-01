@@ -1,5 +1,7 @@
 import React from 'react';
-import { Tag, TagIcon, TagCloseButton, TagProps } from '../Tag';
+import { render, screen, getAllByRole } from '@testing-library/react';
+import { renderHook } from '@testing-library/react-hooks';
+import { Tag, TagIcon, TagCloseButton, TagProps } from '../../Tag';
 import {
   getTagAttributes,
   getDuplicateTagAlert,
@@ -10,88 +12,59 @@ import {
   isEmpty,
   noop,
   fetchTags
-} from './utils';
-import { useCombobox } from '../../combobox/useCombobox';
-import { useMultipleSelection } from '../../useMultipleSelection/useMultipleSelection';
-import { useAbortController } from '../../useAbortController/useAbortController';
-import useDebouncedCallback from '../../useDebounce/src/hooks/useDebouncedCallback';
-import useAsync from '../../useDebounce/src/hooks/useAsync';
-import { SearchLoader } from '../../loader/SearchLoader';
-import { UseAsyncStatus, UseAsyncState } from '../../useDebounce/src/types';
-import { NavigationKeys } from '../../useMultipleSelection/types';
+} from '../utils';
+import { useCombobox } from '../../../combobox/useCombobox';
+import { useMultipleSelection } from '../../../useMultipleSelection/useMultipleSelection';
+import { useAbortController } from '../../../useAbortController/useAbortController';
+import useDebouncedCallback from '../../../useDebounce/src/hooks/useDebouncedCallback';
+import useAsync from '../../../useDebounce/src/hooks/useAsync';
+import { SearchLoader } from '../../../loader/SearchLoader';
+import { UseAsyncStatus, UseAsyncState } from '../../../useDebounce/src/types';
+import { NavigationKeys } from '../../../useMultipleSelection/types';
 import {
   ComboboxState,
   ComboboxActionAndChanges,
   ComboboxActions
-} from '../../combobox/types';
-import { BottomlineTag, BottomlineTags } from './types';
+} from '../../../combobox/types';
+import { BottomlineTag, BottomlineTags, TagEditorProps } from '../types';
 import { AiFillQuestionCircle } from 'react-icons/ai';
-import classNames from 'classnames';
-import './TagEditor.scss';
 
-/**
- * *******************
- *
- *     Tag Editor
- *
- * *******************
- *
- * Use Case:
- * - user inputs text in input
- * - user confirms text via an event (click, keyboard)
- * - tag is created and inserted in the box of tags
- * - user can remove tags
- * - user has option to use the editor as an autocomplete
- *
- * See: https://github.com/krfong916/bottomline/issues/6 for a formal spec on the use case
- */
+const dataTestId = {
+  input: 'input-testid',
+  popup: 'popup-testid',
+  selectedItem: 'selected-item-testid',
+  suggestedItem: 'suggested-item-testid'
+};
 
-// const presetSelectedItems = [
-//   ({
-//     id: '1',
-//     name: 'material-analysis',
-//     count: 5,
-//     excerpt:
-//       "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-//   } as unknown) as BottomlineTag,
-//   ({
-//     id: '2',
-//     name: 'class-analysis',
-//     count: 33,
-//     excerpt:
-//       "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-//   } as unknown) as BottomlineTag,
-//   ({
-//     id: '3',
-//     name: 'materialism',
-//     count: 12,
-//     excerpt:
-//       "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-//   } as unknown) as BottomlineTag,
-//   ({
-//     id: '4',
-//     name: 'dialectical-materialism',
-//     count: 9,
-//     excerpt:
-//       "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-//   } as unknown) as BottomlineTag,
-//   ({
-//     id: '5',
-//     name: 'historical-materialism',
-//     count: 5,
-//     excerpt:
-//       "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-//   } as unknown) as BottomlineTag,
-//   ({
-//     id: '6',
-//     name: 'materialist-theory',
-//     count: 2,
-//     excerpt:
-//       "What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-//   } as unknown) as BottomlineTag
-// ] as BottomlineTag[];
+export function renderTagEditor() {
+  const onTagCreated = jest.fn(() => true);
+  const container = render(<TagEditor onTagCreated={onTagCreated} />);
+  const input = screen.getByTestId(dataTestId.input);
+  return {
+    container,
+    input
+  };
+}
 
-export const TagEditor = () => {
+export function getSelectedItem(index: number) {
+  const items = screen.getAllByTestId(dataTestId.selectedItem);
+  return items[index];
+}
+export function getAllSelectedItems() {
+  return screen.getAllByTestId(dataTestId.selectedItem);
+}
+export function getPopup() {
+  return screen.getByRole('grid');
+}
+export function getPopupItem(index: number) {
+  const items = screen.getAllByTestId(dataTestId.suggestedItem);
+  return items[index];
+}
+export function getPopupItems() {
+  return screen.getAllByTestId(dataTestId.suggestedItem);
+}
+
+function TagEditor(props: TagEditorProps) {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>();
@@ -105,13 +78,13 @@ export const TagEditor = () => {
   const inputOnBlur = () => setInputFocused(false);
   let derivedLoaderState = false;
   const inputRef = React.useRef<HTMLInputElement>();
-  const cancelRequestRef = React.useRef(false);
+  const cancelDebounceCallback = React.useRef(false);
   const debounce = useDebouncedCallback(
     (dispatch) => {
-      if (cancelRequestRef.current === false) {
+      if (cancelDebounceCallback.current === false) {
         dispatch();
       } else {
-        cancelRequestRef.current = false;
+        cancelDebounceCallback.current = false;
       }
     },
     1000,
@@ -170,6 +143,7 @@ export const TagEditor = () => {
           newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
             recommendations.selectedItem;
           addSelectedItem(recommendations.selectedItem);
+          setSelectedTags(newTags);
         }
         return recommendations;
       }
@@ -184,15 +158,20 @@ export const TagEditor = () => {
           setTagSuggestions(undefined);
         }
         recommendations.inputValue = action.inputValue;
+        console.log('recommendations', action.inputValue);
         return recommendations;
       }
       case ComboboxActions.INPUT_KEYDOWN_ENTER: {
-        cancelRequestRef.current = true;
+        cancelDebounceCallback.current = true;
         inputRef.current.value = '';
-
-        // newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
-        //   recommendations.selectedItem;
-        // addSelectedItem(recommendations.selectedItem);
+        const newTags = { ...selectedTags };
+        const value = inputRef.current.value;
+        const newSelectedItem = {
+          name: value
+        };
+        newTags[newSelectedItem.name] = newSelectedItem;
+        addSelectedItem(newSelectedItem);
+        setSelectedTags(newTags);
         return recommendations;
       }
       default: {
@@ -213,6 +192,7 @@ export const TagEditor = () => {
     onInputValueChange: (changes: Partial<ComboboxState<string>>) => {
       // piggy-back on the state change
       // set our own input value change
+      console.log('changes');
       prevInput.current = input;
       setInput(changes as string);
     },
@@ -233,6 +213,7 @@ export const TagEditor = () => {
           </label>
           <AiFillQuestionCircle size="1.25em" className="tag-header-description" />
         </div>
+
         <div className="selected-tags-container">
           {items ? (
             <ul className="selected-tags">
@@ -242,6 +223,7 @@ export const TagEditor = () => {
                 const active = currentSelectedItemIndex === index ? true : false;
                 return (
                   <li
+                    data-testid={dataTestId.selectedItem}
                     className="selected-tag"
                     key={key}
                     {...getSelectedItemProps(tag, index)}
@@ -277,6 +259,7 @@ export const TagEditor = () => {
               onBlur: inputOnBlur,
               ...getDropdownProps({ ref: inputRef })
             })}
+            data-testid={dataTestId.input}
             type="text"
             autoComplete="off"
             className="tag-search-input"
@@ -287,7 +270,11 @@ export const TagEditor = () => {
             </span>
           ) : null}
         </div>
-        <div className="tag-results-container" {...getPopupProps()}>
+        <div
+          className="tag-results-container"
+          {...getPopupProps()}
+          data-testid={dataTestId.popup}
+        >
           {noResultsFound ? (
             <span className="tag-no-results">
               <span>No results found</span>
@@ -299,6 +286,7 @@ export const TagEditor = () => {
                 const key = `${tag.name} ${index}`;
                 return (
                   <li
+                    data-testid={dataTestId.suggestedItem}
                     key={key}
                     className={
                       highlightedIndex === index
@@ -327,12 +315,4 @@ export const TagEditor = () => {
       </div>
     </section>
   );
-};
-
-/**
- * *******************
- *
- *     Screen Reader Dialogue and Form Errors
- *
- * *******************
- */
+}

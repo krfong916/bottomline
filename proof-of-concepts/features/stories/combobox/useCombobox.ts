@@ -263,7 +263,9 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
+      console.log(val);
       if (controlDispatch) {
+        console.log('controlled');
         const fn = () => {
           dispatch({
             type: ComboboxActions.INPUT_VALUE_CHANGE,
@@ -272,6 +274,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
         };
         controlDispatch(fn);
       } else {
+        console.log('uncontrolled');
         dispatch({
           type: ComboboxActions.INPUT_VALUE_CHANGE,
           inputValue: val
