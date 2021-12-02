@@ -94,8 +94,9 @@ export function invokeOnStateChange<
 ) {
   const statePiece = capitalizeString(pieceOfState as string);
   const stateChangeCallback = `on${statePiece}Change`;
+  console.log('[STATE_CHANGE_CALLBACK]', stateChangeCallback);
   if (stateChangeCallback in props) {
-    const test = props[stateChangeCallback](newState[pieceOfState]);
+    props[stateChangeCallback](newState[pieceOfState]);
   }
 }
 

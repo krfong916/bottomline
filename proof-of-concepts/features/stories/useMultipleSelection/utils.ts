@@ -129,6 +129,8 @@ export function getNextItemIndex<Item>(
         newItems.length === 0
       ) {
         return -1;
+      } else if (currentSelectedItemIndex === -1) {
+        return -1;
       }
 
       // if we are removing the tail of the list and there are elements remaining

@@ -96,11 +96,13 @@ export default function bottomlineComboboxReducer<Item>(
     }
     case ComboboxActions.ITEM_CLICK: {
       // select an item, selected item onchange event and highlight index on change
+      console.log('[COMBOBOX_REDUCER]');
+      console.log('action', action);
+      console.log('state', state);
+
       const newState = { ...state };
-      if (index && getItemFromIndex) {
-        newState.highlightedIndex = index;
-        newState.selectedItem = getItemFromIndex(index);
-      }
+      newState.highlightedIndex = index;
+      newState.selectedItem = getItemFromIndex(index);
       return newState;
     }
     case ComboboxActions.INPUT_BLUR: {

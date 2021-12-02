@@ -12,7 +12,7 @@ export function multipleSelectionReducer<Item>(
   const { type } = action;
   const newState = { ...state };
   const currState = { ...state };
-
+  console.log(type);
   switch (type) {
     case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
       newState.currentSelectedItemIndex = getNextItemIndex(
@@ -67,6 +67,9 @@ export function multipleSelectionReducer<Item>(
       return newState;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_CLICK: {
+      console.log('[USE_MULTIPLE_SELECTION_REDUCER] keydown click');
+      console.log('state', state);
+      console.log('action', action);
       newState.currentSelectedItemIndex = action.index;
       return newState;
     }
@@ -98,7 +101,7 @@ export function multipleSelectionReducer<Item>(
 
       newState.currentSelectedItem =
         newState.items[newState.currentSelectedItemIndex];
-
+      console.log('[USE_MULTIPLE_SELECTION_REDUCER] remove item', newState);
       return newState;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_ENTER: {

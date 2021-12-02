@@ -20,7 +20,12 @@ import useDebouncedCallback from '../../../useDebounce/src/hooks/useDebouncedCal
 import useAsync from '../../../useDebounce/src/hooks/useAsync';
 import { SearchLoader } from '../../../loader/SearchLoader';
 import { UseAsyncStatus, UseAsyncState } from '../../../useDebounce/src/types';
-import { NavigationKeys } from '../../../useMultipleSelection/types';
+import {
+  NavigationKeys,
+  MultipleSelectionAction,
+  MultipleSelectionActionAndChanges,
+  MultipleSelectionStateChangeTypes
+} from '../../../useMultipleSelection/types';
 import {
   ComboboxState,
   ComboboxActionAndChanges,
@@ -37,17 +42,24 @@ const dataTestId = {
 };
 
 export function renderTagEditor() {
-  const onTagCreated = jest.fn(() => true);
-  const container = render(<TagEditor onTagCreated={onTagCreated} />);
-  const input = screen.getByTestId(dataTestId.input);
+  const onTagsChanged = jest.fn(() => true);
+  // on paste shouldn't be passed as a prop, but for testing purposes we need it
+  // additionally, jsdom doesn't implement the clipboardEvent API so we need to mock the onPaste event
+  const onPaste = jest.fn(() => true);
+  const container = render(
+    <TagEditor onTagsChanged={onTagsChanged} onPaste={onPaste} />
+  );
+  const input = screen.getByRole('textbox');
   return {
     container,
-    input
+    input,
+    onTagsChanged,
+    onPaste
   };
 }
 
 export function getSelectedItem(index: number) {
-  const items = screen.getAllByTestId(dataTestId.selectedItem);
+  const items = screen.queryAllByTestId(dataTestId.selectedItem);
   return items[index];
 }
 export function getAllSelectedItems() {
@@ -124,7 +136,10 @@ function TagEditor(props: TagEditorProps) {
     // items: presetSelectedItems,
     itemToString: (item: BottomlineTag) => item.name,
     nextKey: NavigationKeys.ARROW_RIGHT,
-    prevKey: NavigationKeys.ARROW_LEFT
+    prevKey: NavigationKeys.ARROW_LEFT,
+    onItemsChange: (items: Item[]) => {
+      props.onTagsChanged(items);
+    }
   });
 
   const handleRemove = (item: BottomlineTag, index: number) =>
@@ -138,16 +153,17 @@ function TagEditor(props: TagEditorProps) {
     const recommendations = { ...changes };
     switch (action.type) {
       case ComboboxActions.ITEM_CLICK: {
-        console.log('[CUSTOM_REDUCER] item click');
-        console.log('recommendations', recommendations);
-        console.log('actionAndChanges', actionAndChanges);
         inputRef.current.value = '';
         const newTags = { ...selectedTags };
         if (recommendations.selectedItem) {
-          newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
-            recommendations.selectedItem;
-          addSelectedItem(recommendations.selectedItem);
-          setSelectedTags(newTags);
+          if (!newTags[recommendations.selectedItem.name]) {
+            newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
+              recommendations.selectedItem;
+            addSelectedItem(recommendations.selectedItem);
+            setSelectedTags(newTags);
+            // issue a warning, item already selected
+          }
+          recommendations.isOpen = false;
         }
         return recommendations;
       }
@@ -172,9 +188,12 @@ function TagEditor(props: TagEditorProps) {
         const newSelectedItem = {
           name: value
         };
-        newTags[newSelectedItem.name] = newSelectedItem;
-        addSelectedItem(newSelectedItem);
-        setSelectedTags(newTags);
+        if (!newTags[newSelectedItem.name]) {
+          newTags[newSelectedItem.name] = newSelectedItem;
+          addSelectedItem(newSelectedItem);
+          setSelectedTags(newTags);
+        }
+        recommendations.isOpen = false;
         return recommendations;
       }
       default: {
@@ -206,6 +225,8 @@ function TagEditor(props: TagEditorProps) {
   const noResultsFound = isOpen && tagSuggestions && tagSuggestions.length == 0;
   const resultsFound = isOpen && tagSuggestions && tagSuggestions.length >= 1;
 
+  const handleOnPaste = () => props.onPaste();
+
   return (
     <section className="tag-editor-section">
       <div className="tag-editor">
@@ -222,6 +243,7 @@ function TagEditor(props: TagEditorProps) {
               {Object.keys(items).map((tagIndex, index) => {
                 const tag = items[tagIndex];
                 const key = `${tag.name} ${index}`;
+                const removeLabel = `remove ${tag.name}`;
                 const active = currentSelectedItemIndex === index ? true : false;
                 return (
                   <li
@@ -236,7 +258,7 @@ function TagEditor(props: TagEditorProps) {
                       text={tag.name}
                     >
                       <TagCloseButton
-                        ariaLabel={`remove ${tag.name}`}
+                        ariaLabel={removeLabel}
                         onClose={() => handleRemove(tag, index)}
                       />
                     </Tag>
@@ -261,6 +283,7 @@ function TagEditor(props: TagEditorProps) {
               onBlur: inputOnBlur,
               ...getDropdownProps({ ref: inputRef })
             })}
+            onPaste={handleOnPaste}
             data-testid={dataTestId.input}
             type="text"
             autoComplete="off"

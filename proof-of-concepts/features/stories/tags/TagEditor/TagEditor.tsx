@@ -129,6 +129,7 @@ export const TagEditor = () => {
           newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
             recommendations.selectedItem;
           addSelectedItem(recommendations.selectedItem);
+          recommendations.isOpen = false;
         }
         return recommendations;
       }
@@ -187,6 +188,20 @@ export const TagEditor = () => {
 
   const noResultsFound = isOpen && tagSuggestions && tagSuggestions.length == 0;
   const resultsFound = isOpen && tagSuggestions && tagSuggestions.length >= 1;
+
+  const handleOnPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    console.log('[ON_PASTE]');
+    console.log(e);
+    let pastedText = e.clipboardData.getData('text');
+    console.log(pastedText);
+    cancelRequestRef.current = true;
+
+    if (pastedText.length > 1) {
+      // create tags from the user's pasted text
+      pastedText.split(' ').forEach((pieceOfText) => addSelectedItem(pieceOfText));
+      inputRef.current.value = '';
+    }
+  };
 
   return (
     <section className="tag-editor-section">

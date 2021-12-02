@@ -6,10 +6,9 @@ export type MultipleSelectionProps<Item> = {
   nextKey?: NavigationKeys;
   prevKey?: NavigationKeys;
   itemToString: (item: Item) => string;
-  onCurrentItemChange?: (item: Item) => void;
-  onCurrentIndexChange?: (index: number) => void;
-  onRemoveSelectedItem?: (itemRemoved: Item) => void;
-  onAddSelectedItem?: (itemAdded: Item) => void;
+  onCurrentSelectedItemIndexChange?: (index: number) => void;
+  onCurrentSelectedItemChange?: (item: Item) => void;
+  onItemsChange?: (items: Item[]) => void;
   onHasSelectedItemsChange?: () => void;
 } & ComponentProps<
   MultipleSelectionState<Item>,

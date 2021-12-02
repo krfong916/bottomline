@@ -42,7 +42,13 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
   React.useEffect(() => {
     if (currentSelectedItemIndex === -1 && dropdownRef.current) {
       dropdownRef.current.focus();
-    } else if (currentSelectedItemIndex >= 0 && currentSelectedItemsRef.current) {
+    } else if (
+      currentSelectedItemIndex >= 0 &&
+      currentSelectedItemsRef.current &&
+      currentSelectedItemsRef.current[currentSelectedItemIndex]
+    ) {
+      console.log(state);
+      console.log(currentSelectedItemsRef.current);
       currentSelectedItemsRef.current[currentSelectedItemIndex].focus();
     }
   }, [currentSelectedItemIndex, currentSelectedItem]);
