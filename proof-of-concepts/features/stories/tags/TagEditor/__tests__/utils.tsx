@@ -87,7 +87,7 @@ function TagEditor(props: TagEditorProps) {
         cancelDebounceCallback.current = false;
       }
     },
-    1000,
+    200,
     { trailing: true }
   );
 
@@ -137,7 +137,11 @@ function TagEditor(props: TagEditorProps) {
     const { action, changes } = actionAndChanges;
     const recommendations = { ...changes };
     switch (action.type) {
-      case ComboboxActions.INPUT_ITEM_CLICK: {
+      case ComboboxActions.ITEM_CLICK: {
+        console.log('[CUSTOM_REDUCER] item click');
+        console.log('recommendations', recommendations);
+        console.log('actionAndChanges', actionAndChanges);
+        inputRef.current.value = '';
         const newTags = { ...selectedTags };
         if (recommendations.selectedItem) {
           newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
@@ -148,8 +152,8 @@ function TagEditor(props: TagEditorProps) {
         return recommendations;
       }
       case ComboboxActions.INPUT_BLUR: {
-        forceAbort();
-        recommendations.inputValue = state.inputValue;
+        // forceAbort();
+        // recommendations.inputValue = state.inputValue;
         return recommendations;
       }
       case ComboboxActions.INPUT_VALUE_CHANGE: {
@@ -158,7 +162,6 @@ function TagEditor(props: TagEditorProps) {
           setTagSuggestions(undefined);
         }
         recommendations.inputValue = action.inputValue;
-        console.log('recommendations', action.inputValue);
         return recommendations;
       }
       case ComboboxActions.INPUT_KEYDOWN_ENTER: {
@@ -192,7 +195,6 @@ function TagEditor(props: TagEditorProps) {
     onInputValueChange: (changes: Partial<ComboboxState<string>>) => {
       // piggy-back on the state change
       // set our own input value change
-      console.log('changes');
       prevInput.current = input;
       setInput(changes as string);
     },

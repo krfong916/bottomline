@@ -11,7 +11,7 @@ const props = {
 export const noop = () => {};
 
 export function fetchTags(tag: string, getSignal: () => AbortSignal) {
-  console.log('[FETCH TAGS]');
+  // console.log('[FETCH TAGS]');
   const url = `http://localhost:3000/tags?name_like=${tag}`;
   return fetch(url, {
     signal: getSignal(),

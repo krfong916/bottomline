@@ -145,6 +145,76 @@ export function callAllEventHandlers(...fns: ((...args: any[]) => any)[]) {
   };
 }
 
+/**
+ * Credits to Downshift
+ * https://github.com/downshift-js/downshift/blob/26c93a539dad09e41adba69ddc3a7d7ecccfc8bb/src/hooks/utils.js#L316
+ */
+export function useMouseAndTracker(
+  isOpen: boolean,
+  refs: React.MutableRefObject[],
+  handleBlur: (...args: any) => any
+) {
+  const mouseAndTrackerRef = React.useRef({
+    isMouseDown: false,
+    isTouchMove: false
+  });
+
+  React.useEffect(() => {
+    const onMouseDown = () => {
+      mouseAndTrackerRef.current.isMouseDown = true;
+    };
+    const onMouseUp = (e: React.SyntheticEvent) => {
+      mouseAndTrackerRef.current.isMouseDown = false;
+      if (isOpen && !isWithinBottomline(refs, e)) {
+        console.log('[USE_MOUSE_TRACKER_BLUR]');
+        handleBlur();
+      }
+    };
+    const onTouchStart = () => {
+      mouseAndTrackerRef.current.isTouchMove = true;
+    };
+
+    const onTouchMove = () => {
+      mouseAndTrackerRef.current.isTouchMove = true;
+    };
+
+    const onTouchEnd = (e: React.SyntheticEvent) => {
+      mouseAndTrackerRef.current.isTouchMove = false;
+      if (isOpen && !isWithinBottomline(refs, e)) {
+        handleBlur();
+      }
+    };
+
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchstart', onTouchStart);
+    window.addEventListener('touchmove', onTouchMove);
+    window.addEventListener('touchend', onTouchEnd);
+
+    return function() {
+      window.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isOpen]);
+  return mouseAndTrackerRef;
+}
+
+export function isWithinBottomline(
+  refs: React.MutableRefObject[],
+  event: React.SyntheticEvent<any>
+) {
+  return refs.some((ref) => {
+    if (ref.current && event.target) {
+      return ref.current.contains(event.target);
+    } else {
+      return false;
+    }
+  });
+}
+
 export const noop = () => {};
 
 // chooses a random delay time before sending a request

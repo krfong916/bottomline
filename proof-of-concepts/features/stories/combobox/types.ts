@@ -54,9 +54,11 @@ export type ComboboxAriaPopup =
   | 'true'
   | 'listbox'
   | 'tree';
+
 export interface ComboboxPopupProps {
   ariaLabel?: string;
   role?: string;
+  ref?: React.MutableRefObject<any>;
 }
 
 // Combobox reducer
@@ -70,7 +72,7 @@ export enum ComboboxActions {
   INPUT_KEYDOWN_ENTER = '[input-keydown-enter]',
   INPUT_KEYDOWN_HOME = '[input-keydown-home]',
   INPUT_KEYDOWN_END = '[input-keydown-end]',
-  INPUT_ITEM_CLICK = '[input-item-click]',
+  ITEM_CLICK = '[item-click]',
   INPUT_BLUR = '[input-blur]',
   INPUT_VALUE_CHANGE = '[input-value-change]',
   FUNCTION_OPEN_POPUP = '[function-open-popup]',
@@ -92,4 +94,5 @@ export interface ComboboxAction<Item> {
   index?: number;
   inputValue?: string;
   props?: ComboboxProps<Item>;
+  selectedItem?: boolean;
 }

@@ -6,7 +6,8 @@ import {
   useControlledReducer,
   mergeRefs,
   callAllEventHandlers,
-  noop
+  noop,
+  useMouseAndTracker
 } from '../utils';
 import {
   ComboboxProps,
@@ -60,6 +61,8 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
   const inputRef = React.useRef<HTMLElement & HTMLInputElement>(null);
   // stores the reference to the list of items
   const itemsListRef = React.useRef<ItemsList>({});
+  // stores the DOM reference to the popup element
+  const popupRef = React.useRef<HTMLElement>();
 
   /**
    * *************************
@@ -100,18 +103,26 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
    *
    *
    */
+  const mouseTrackerRef = useMouseAndTracker(isOpen, [inputRef, popupRef], () => {
+    dispatch({
+      type: ComboboxActions.INPUT_BLUR
+    });
+  });
+
   React.useEffect(() => {
-    if (inputRef.current && (isOpen || props.initialIsOpen)) {
+    if (inputRef.current && isOpen) {
+      console.log('[USE_EFFECT] input focus');
       inputRef.current.focus();
     }
   }, [isOpen]);
 
   // Area of concern: when a combobox receives focus, DOM focus is placed on the textbox element
-  const setComboboxFocus = () => {
-    if (document.activeElement !== inputRef.current && inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
+  // const setComboboxFocus = () => {
+  //   console.log('[SET_COMBO_FOCUS] setComboboxFocus function');
+  //   if (document.activeElement !== inputRef.current && inputRef.current) {
+  //     inputRef.current.focus();
+  //   }
+  // };
   // implement: when an item of the popup is box focused, DOM focus remains on thextbox
 
   /**
@@ -231,8 +242,8 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
       'aria-expanded': isOpen ? true : false,
       'aria-owns': elementIds.menuId,
       'aria-haspopup': ariaHasPopup,
-      'aria-labelledby': ariaLabelledBy,
-      onClick: setComboboxFocus
+      'aria-labelledby': ariaLabelledBy
+      // onClick: setComboboxFocus
     };
   }
 
@@ -255,17 +266,18 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
     };
 
     const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
-      e.preventDefault();
-      dispatch({
-        type: ComboboxActions.INPUT_BLUR
-      });
+      if (isOpen && !mouseTrackerRef.current.isMouseDown) {
+        console.log('[GET_INPUT_PROPS] blur handler');
+        dispatch({
+          type: ComboboxActions.INPUT_BLUR,
+          selectedItem: true
+        });
+      }
     };
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
-      console.log(val);
       if (controlDispatch) {
-        console.log('controlled');
         const fn = () => {
           dispatch({
             type: ComboboxActions.INPUT_VALUE_CHANGE,
@@ -274,7 +286,6 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
         };
         controlDispatch(fn);
       } else {
-        console.log('uncontrolled');
         dispatch({
           type: ComboboxActions.INPUT_VALUE_CHANGE,
           inputValue: val
@@ -288,9 +299,8 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
       onBlur: callAllEventHandlers(inputBlurHandler, onBlur),
       onFocus
     };
-
     return {
-      ref: mergeRefs(props.ref, rest.ref),
+      ref: mergeRefs(rest.ref, inputRef),
       role: 'textbox',
       'aria-labelledby': elementIds.labelId,
       'aria-controls': elementIds.menuId,
@@ -310,13 +320,19 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
   function getPopupProps(
     {
       role,
-      ariaLabel
-    }: { ariaLabel?: string; role?: string } = {} as ComboboxPopupProps
+      ariaLabel,
+      ref
+    }: {
+      ariaLabel?: string;
+      role?: string;
+      ref?: React.MutableRefObject<any>;
+    } = {} as ComboboxPopupProps
   ) {
     let popupRole = 'grid';
     if (role) popupRole = role;
 
     return {
+      ref: mergeRefs(ref, popupRef),
       role: popupRole,
       id: elementIds.menuId,
       'aria-labelledby': elementIds.labelId
@@ -326,11 +342,17 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
   // items are excluded from the tab sequence
   function getItemProps(index: number) {
     const handleClick = () => {
+      console.log('[GET_ITEM_PROPS] handle click');
       dispatch({
-        type: ComboboxActions.INPUT_ITEM_CLICK,
+        type: ComboboxActions.ITEM_CLICK,
         getItemFromIndex,
-        index
+        index,
+        selectedItem: true
       });
+      if (inputRef.current) {
+        console.log('[GET_ITEM_PROPS] focus input');
+        inputRef.current.focus();
+      }
     };
 
     const selected = index === highlightedIndex;
