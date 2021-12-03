@@ -5,7 +5,7 @@ export default function bottomlineComboboxReducer<Item>(
   state: ComboboxState<Item>,
   action: ComboboxAction<Item>
 ): ComboboxState<Item> {
-  console.log('[STATE_REDUCER]', action.type);
+  // console.log('[STATE_REDUCER]', action.type);
   const { type, getItemFromIndex, props, index, inputValue } = action;
   const { isOpen, highlightedIndex } = state;
   switch (type) {
@@ -63,6 +63,7 @@ export default function bottomlineComboboxReducer<Item>(
       const newState = { ...state };
       if (newState.highlightedIndex !== -1) {
         newState.selectedItem = props.items[newState.highlightedIndex];
+        newState.inputValue = props.itemToString(newState.selectedItem);
       }
       return newState;
     }
@@ -96,9 +97,9 @@ export default function bottomlineComboboxReducer<Item>(
     }
     case ComboboxActions.ITEM_CLICK: {
       // select an item, selected item onchange event and highlight index on change
-      console.log('[COMBOBOX_REDUCER]');
-      console.log('action', action);
-      console.log('state', state);
+      // console.log('[COMBOBOX_REDUCER]');
+      // console.log('action', action);
+      // console.log('state', state);
 
       const newState = { ...state };
       newState.highlightedIndex = index;

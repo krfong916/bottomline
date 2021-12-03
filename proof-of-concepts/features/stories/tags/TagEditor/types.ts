@@ -1,5 +1,5 @@
 export type TagEditorProps = {
-  onTagCreated: (tag: BottomlineTag) => void;
+  onTagsChanged?: (tags: BottomlineTag[]) => void;
 };
 export type BottomlineTag = {
   id?: string;

@@ -38,7 +38,10 @@ function ComboboxGrid(props: ComboboxProps) {
     getItemProps,
     highlightedIndex,
     inputValue
-  } = useCombobox(props);
+  } = useCombobox({
+    itemToString: (item) => item.name,
+    ...props
+  });
   return (
     <div>
       <label data-testid={dataTestIds.label} {...getLabelProps()}></label>

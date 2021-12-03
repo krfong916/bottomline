@@ -24,7 +24,7 @@ import {
   ComboboxActionAndChanges,
   ComboboxActions
 } from '../../combobox/types';
-import { BottomlineTag, BottomlineTags } from './types';
+import { BottomlineTag, BottomlineTags, TagEditorProps } from './types';
 import { AiFillQuestionCircle } from 'react-icons/ai';
 import classNames from 'classnames';
 import './TagEditor.scss';
@@ -46,7 +46,7 @@ import './TagEditor.scss';
  * See: https://github.com/krfong916/bottomline/issues/6 for a formal spec on the use case
  */
 
-export const TagEditor = () => {
+export const TagEditor = ({ onTagsChanged = noop }: TagEditorProps) => {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>();
@@ -79,7 +79,7 @@ export const TagEditor = () => {
     } as UseAsyncState
   });
   if (error) {
-    console.log('[APP] error:', error);
+    // console.log('[APP] error:', error);
   }
 
   const { getSignal, forceAbort } = useAbortController();
@@ -103,10 +103,12 @@ export const TagEditor = () => {
     currentSelectedItemIndex,
     items
   } = useMultipleSelection<BottomlineTag>({
-    // items: presetSelectedItems,
     itemToString: (item: BottomlineTag) => item.name,
     nextKey: NavigationKeys.ARROW_RIGHT,
-    prevKey: NavigationKeys.ARROW_LEFT
+    prevKey: NavigationKeys.ARROW_LEFT,
+    onItemsChange: (tags: BottomlineTag[]) => {
+      onTagsChanged(tags);
+    }
   });
 
   const handleRemove = (item: BottomlineTag, index: number) =>
@@ -120,44 +122,62 @@ export const TagEditor = () => {
     const recommendations = { ...changes };
     switch (action.type) {
       case ComboboxActions.ITEM_CLICK: {
-        console.log('[CUSTOM_REDUCER] item click');
-        console.log('recommendations', recommendations);
-        console.log('actionAndChanges', actionAndChanges);
+        // console.log('[CUSTOM_REDUCER] item click');
+        // console.log('recommendations', recommendations);
+        // console.log('actionAndChanges', actionAndChanges);
         inputRef.current.value = '';
         const newTags = { ...selectedTags };
         if (recommendations.selectedItem) {
-          newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
-            recommendations.selectedItem;
-          addSelectedItem(recommendations.selectedItem);
+          if (!newTags[recommendations.selectedItem.name]) {
+            newTags[recommendations.selectedItem.name as keyof BottomlineTags] =
+              recommendations.selectedItem;
+            addSelectedItem(recommendations.selectedItem);
+            setSelectedTags(newTags);
+            // issue a warning, item already selected
+          }
           recommendations.isOpen = false;
         }
+
         return recommendations;
       }
       case ComboboxActions.INPUT_BLUR: {
-        console.log('[CUSTOM_REDUCER] input blur');
-        // forceAbort();
-        // recommendations.inputValue = state.inputValue;
+        // console.log('[CUSTOM_REDUCER] input blur');
+        forceAbort();
+        recommendations.inputValue = state.inputValue;
         return recommendations;
       }
       case ComboboxActions.INPUT_VALUE_CHANGE: {
+        // if we've deleted all text from the input, close the popup
         if (action.inputValue === '' && changes.inputValue !== '') {
           recommendations.isOpen = false;
           setTagSuggestions(undefined);
         }
+        // console.log('[CUSTOM_REDUCER] input value change');
+        // console.log('input', action.inputValue);
         recommendations.inputValue = action.inputValue;
         return recommendations;
       }
       case ComboboxActions.INPUT_KEYDOWN_ENTER: {
-        cancelRequestRef.current = true;
-        inputRef.current.value = '';
         const newTags = { ...selectedTags };
-        const value = inputRef.current.value;
-        const newSelectedItem = {
-          name: value
-        };
-        newTags[newSelectedItem.name] = newSelectedItem;
-        addSelectedItem(newSelectedItem);
-        setSelectedTags(newTags);
+        const textboxValue = inputRef.current.value;
+        let newSelectedItem;
+
+        inputRef.current.value = '';
+        cancelRequestRef.current = true;
+
+        if (changes.selectedItem) {
+          newSelectedItem = changes.selectedItem;
+        } else {
+          newSelectedItem = { name: textboxValue };
+        }
+
+        if (!newTags[newSelectedItem.name]) {
+          newTags[newSelectedItem.name] = newSelectedItem;
+          addSelectedItem(newSelectedItem);
+          setSelectedTags(newTags);
+        }
+
+        recommendations.isOpen = false;
         return recommendations;
       }
       default: {
@@ -178,9 +198,11 @@ export const TagEditor = () => {
     onInputValueChange: (changes: Partial<ComboboxState<string>>) => {
       // piggy-back on the state change
       // set our own input value change
-      prevInput.current = input;
+      // console.log('[ON_INPUT_VALUE_CHANGE_CALLBACK]', changes);
+      prevInput.current = changes;
       setInput(changes as string);
     },
+    itemToString: (tag: BottomlineTag) => tag.name,
     stateReducer,
     items: tagSuggestions,
     initialIsOpen: tagSuggestions ? true : false
@@ -193,14 +215,17 @@ export const TagEditor = () => {
     console.log('[ON_PASTE]');
     console.log(e);
     let pastedText = e.clipboardData.getData('text');
-    console.log(pastedText);
+    pastedText = cleanText(pastedText);
     cancelRequestRef.current = true;
 
     if (pastedText.length > 1) {
       // create tags from the user's pasted text
-      pastedText.split(' ').forEach((pieceOfText) => addSelectedItem(pieceOfText));
-      inputRef.current.value = '';
+      pastedText.split(' ').forEach((pieceOfText) => {
+        addSelectedItem({ name: pieceOfText });
+      });
     }
+    inputRef.current.value = '';
+    setInput('');
   };
 
   return (
@@ -218,7 +243,9 @@ export const TagEditor = () => {
               {Object.keys(items).map((tagIndex, index) => {
                 const tag = items[tagIndex];
                 const key = `${tag.name} ${index}`;
-                const active = currentSelectedItemIndex === index ? true : false;
+                {
+                  /*const active = currentSelectedItemIndex === index ? true : false;*/
+                }
                 return (
                   <li
                     className="selected-tag"
@@ -227,7 +254,8 @@ export const TagEditor = () => {
                   >
                     <Tag
                       size="small"
-                      type={active ? 'solid' : 'outlined'}
+                      type="outlined"
+                      // type={active ? 'solid' : 'outlined'}
                       text={tag.name}
                     >
                       <TagCloseButton
@@ -256,6 +284,7 @@ export const TagEditor = () => {
               onBlur: inputOnBlur,
               ...getDropdownProps({ ref: inputRef })
             })}
+            onPaste={handleOnPaste}
             type="text"
             autoComplete="off"
             className="tag-search-input"
@@ -307,11 +336,3 @@ export const TagEditor = () => {
     </section>
   );
 };
-
-/**
- * *******************
- *
- *     Screen Reader Dialogue and Form Errors
- *
- * *******************
- */

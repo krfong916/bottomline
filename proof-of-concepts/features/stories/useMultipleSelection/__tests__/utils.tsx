@@ -42,6 +42,7 @@ const dummyItem = {
 function MultipleSelection<Item>(props: MultipleSelectionProps<Item>) {
   const { items: initialItems, itemToString } = props;
   const [selectedItems, setSelectedItems] = React.useState<Item>(initialItems);
+
   function stateReducer(
     state: MultipleSelectionState<Item>,
     actionAndChanges: MultipleSelectionActionAndChanges<Item>

@@ -59,8 +59,12 @@ export function getInitialValue<Item>(
   return initialState[propKey] as Partial<MultipleSelectionState<Item>>;
 }
 
-export function canNavigateToItems(): boolean {
+export function canNavigateToItems(
+  e: React.KeyboardEvent<HTMLInputElement>
+): boolean {
   const selection = window.getSelection();
+  console.log('anchorOffset', selection.anchorOffset);
+
   if (selection && selection.isCollapsed && selection.anchorOffset === 0) {
     return true;
   } else {
@@ -70,7 +74,7 @@ export function canNavigateToItems(): boolean {
 
 export function getNextItemIndex<Item>(
   stateChangeType: MultipleSelectionStateChangeTypes,
-  currentSelectedItemIndex: number,
+  currItemIdx: number,
   currentItems: Item[],
   newItems?: Item[],
   index?: number
@@ -78,81 +82,67 @@ export function getNextItemIndex<Item>(
   const end = currentItems.length;
   switch (stateChangeType) {
     case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
-      // console.log('[NAVIGATION_NEXT] currentSelectedItemIndex: ', currentSelectedItemIndex);
-      if (currentSelectedItemIndex === end - 1) return -1;
-      return currentSelectedItemIndex + 1;
+      // console.log('[NAVIGATION_NEXT] currItemIdx: ', currItemIdx);
+      if (currItemIdx === end - 1) return -1;
+      return currItemIdx + 1;
     }
     case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
-      // console.log('[NAVIGATION_PREV] currentSelectedItemIndex:', currentSelectedItemIndex);
-      if (currentSelectedItemIndex === 0) return currentSelectedItemIndex;
-      return currentSelectedItemIndex - 1;
+      console.log('[NAVIGATION_PREV] currItemIdx:', currItemIdx);
+      if (currItemIdx === 0) return currItemIdx;
+      return currItemIdx - 1;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE: {
-      // if we are removing the head of the list and there are elements remaining
-      if (currentSelectedItemIndex === 0 && index === 0 && newItems.length > 0) {
+      if (isHead(currItemIdx, index) && !isEmpty(newItems)) {
         return 0;
-      }
-      // if we are removing the head of the list and the list is empty
-      else if (
-        currentSelectedItemIndex === 0 &&
-        index === 0 &&
-        newItems.length === 0
-      ) {
+      } else if (isHead(currItemIdx, index) && isEmpty(newItems)) {
         return -1;
       }
 
-      // if we are removing the tail of the list and there are elements remaining
-      if (
-        currentSelectedItemIndex === currentItems.length - 1 &&
-        newItems.length > 0
-      ) {
+      if (isTail(currItemIdx, currentItems) && !isEmpty(newItems)) {
         return newItems.length - 1;
-      }
-      // if we are removing the tail of the list and the list is empty
-      else if (
-        currentSelectedItemIndex === currentItems.length - 1 &&
-        newItems.length === 0
-      ) {
+      } else if (isTail(currItemIdx, currentItems) && isEmpty(newItems)) {
         return -1;
       }
-      return currentSelectedItemIndex - 1;
+
+      return currItemIdx - 1;
     }
     case MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM: {
-      // if we are removing the head of the list and there are elements remaining
-      if (currentSelectedItemIndex === 0 && index === 0 && newItems.length > 0) {
+      if (isHead(currItemIdx, index) && !isEmpty(newItems)) {
         return 0;
-      }
-      // if we are removing the head of the list and the list is empty
-      else if (
-        currentSelectedItemIndex === 0 &&
-        index === 0 &&
-        newItems.length === 0
-      ) {
+      } else if (isHead(currItemIdx, index) && isEmpty(newItems)) {
         return -1;
-      } else if (currentSelectedItemIndex === -1) {
+        // if the user is not currently focused on a selected item and deletes an item
+      } else if (currItemIdx === -1) {
         return -1;
       }
 
-      // if we are removing the tail of the list and there are elements remaining
       if (
-        currentSelectedItemIndex === currentItems.length - 1 &&
-        index === currentItems.length - 1 &&
-        newItems.length > 0
+        isTail(currItemIdx, currentItems) &&
+        isTail(index, currentItems) &&
+        !isEmpty(newItems)
       ) {
         return newItems.length - 1;
-      }
-      // if we are removing the tail of the list and the list is empty
-      else if (
-        currentSelectedItemIndex === currentItems.length - 1 &&
-        index === currentItems.length - 1 &&
-        newItems.length === 0
+      } else if (
+        isTail(currItemIdx, currentItems) &&
+        isTail(index, currentItems) &&
+        isEmpty(newItems)
       ) {
         return -1;
       }
-      return currentSelectedItemIndex - 1;
+      return currItemIdx - 1;
     }
     default: {
-      return currentSelectedItemIndex;
+      return currItemIdx;
     }
   }
+}
+
+function isHead(currItemIdx: number, index: number) {
+  return currItemIdx === 0 && index === 0;
+}
+function isTail(currentIndex: number, itemsList: any[]) {
+  return currentIndex === itemsList.length - 1;
+}
+function isEmpty(itemsList: any[]) {
+  return itemsList.length > 0;
 }

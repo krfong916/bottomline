@@ -111,7 +111,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
 
   React.useEffect(() => {
     if (inputRef.current && isOpen) {
-      console.log('[USE_EFFECT] input focus');
+      // console.log('[USE_EFFECT] input focus');
       inputRef.current.focus();
     }
   }, [isOpen]);
@@ -265,15 +265,14 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
       }
     };
 
-    const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
-      if (isOpen && !mouseTrackerRef.current.isMouseDown) {
-        console.log('[GET_INPUT_PROPS] blur handler');
-        dispatch({
-          type: ComboboxActions.INPUT_BLUR,
-          selectedItem: true
-        });
-      }
-    };
+    // const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
+    //   if (isOpen && !mouseTrackerRef.current.isMouseDown) {
+    //     dispatch({
+    //       type: ComboboxActions.INPUT_BLUR,
+    //       selectedItem: true
+    //     });
+    //   }
+    // };
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
@@ -296,7 +295,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
     let eventHandlers = {
       onKeyDown: callAllEventHandlers(inputKeyDownHandler, onKeyDown),
       onChange: inputChangeHandler,
-      onBlur: callAllEventHandlers(inputBlurHandler, onBlur),
+      onBlur: onBlur,
       onFocus
     };
     return {
@@ -342,7 +341,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
   // items are excluded from the tab sequence
   function getItemProps(index: number) {
     const handleClick = () => {
-      console.log('[GET_ITEM_PROPS] handle click');
+      // console.log('[GET_ITEM_PROPS] handle click');
       dispatch({
         type: ComboboxActions.ITEM_CLICK,
         getItemFromIndex,
@@ -350,7 +349,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
         selectedItem: true
       });
       if (inputRef.current) {
-        console.log('[GET_ITEM_PROPS] focus input');
+        // console.log('[GET_ITEM_PROPS] focus input');
         inputRef.current.focus();
       }
     };

@@ -94,7 +94,7 @@ export function invokeOnStateChange<
 ) {
   const statePiece = capitalizeString(pieceOfState as string);
   const stateChangeCallback = `on${statePiece}Change`;
-  console.log('[STATE_CHANGE_CALLBACK]', stateChangeCallback);
+  // console.log('[STATE_CHANGE_CALLBACK]', stateChangeCallback);
   if (stateChangeCallback in props) {
     props[stateChangeCallback](newState[pieceOfState]);
   }
@@ -167,7 +167,6 @@ export function useMouseAndTracker(
     const onMouseUp = (e: React.SyntheticEvent) => {
       mouseAndTrackerRef.current.isMouseDown = false;
       if (isOpen && !isWithinBottomline(refs, e)) {
-        console.log('[USE_MOUSE_TRACKER_BLUR]');
         handleBlur();
       }
     };

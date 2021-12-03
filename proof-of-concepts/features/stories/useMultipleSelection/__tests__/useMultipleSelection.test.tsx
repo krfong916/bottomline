@@ -50,6 +50,7 @@ describe('useMultipleSelection hook', () => {
       code: 'ArrowLeft',
       charCode: 37
     });
+
     let currentSelectedItem;
     let i = 0;
     while (i < sampleSelectedItems.length) {
@@ -68,6 +69,7 @@ describe('useMultipleSelection hook', () => {
     });
 
     currentSelectedItem = getItem(0);
+
     expect(currentSelectedItem.classList).toContain(
       'current-selected-item-highlight'
     );

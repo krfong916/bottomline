@@ -47,8 +47,8 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
       currentSelectedItemsRef.current &&
       currentSelectedItemsRef.current[currentSelectedItemIndex]
     ) {
-      console.log(state);
-      console.log(currentSelectedItemsRef.current);
+      // console.log(state);
+      // console.log(currentSelectedItemsRef.current);
       currentSelectedItemsRef.current[currentSelectedItemIndex].focus();
     }
   }, [currentSelectedItemIndex, currentSelectedItem]);
@@ -117,9 +117,6 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
   }
 
   function getSelectedItemProps(selectedItem: Item, index: number) {
-    let tabIndex = -1;
-    if (index === currentSelectedItemIndex) tabIndex = 0;
-
     const handleKeydown = (e: React.KeyboardEvent) => {
       const { name: keyName } = normalizeKey(e);
       if (keyName in itemKeydownHandlers) {
@@ -136,7 +133,7 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     };
 
     return {
-      tabIndex: tabIndex,
+      tabIndex: index === currentSelectedItemIndex ? 0 : -1,
       onClick: handleClick,
       onKeyDown: handleKeydown,
       ref: mergeRefs((node) => {
@@ -145,31 +142,42 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     };
   }
 
-  function removeSelectedItem(item: Item, index: number) {
+  const removeSelectedItem = React.useCallback((item: Item, index: number) => {
     dispatch({
       type: MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM,
       item,
       itemToString: props.itemToString,
       index
     });
-  }
+  }, []);
 
-  function addSelectedItem(item: Item) {
+  const addSelectedItem = React.useCallback((item: Item) => {
     dispatch({
       type: MultipleSelectionStateChangeTypes.FUNCTION_ADD_SELECTED_ITEM,
       item
     });
-  }
+  }, []);
+
+  const setCurrentIndex = React.useCallback((index: number) => {
+    dispatch({
+      type: MultipleSelectionStateChangeTypes.FUNCTION_SET_CURRENT_INDEX,
+      index
+    });
+  }, []);
 
   return {
-    getSelectedItemProps,
-    removeSelectedItem,
-    addSelectedItem,
-    getDropdownProps,
+    // state
     items,
     currentSelectedItem,
     currentSelectedItemIndex,
-    hasSelectedItems
+    hasSelectedItems,
+    // functions
+    removeSelectedItem,
+    addSelectedItem,
+    setCurrentIndex,
+    // prop-getters
+    getSelectedItemProps,
+    getDropdownProps
   };
 }
 

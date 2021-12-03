@@ -11,7 +11,7 @@ export type ComboboxProps<Item> = {
   initialHighlightedIndex?: number;
   selectedItem?: Item;
   items?: Item[];
-  itemToString?: (item: any) => string;
+  itemToString: (item: any) => string;
   onSelectedItemChange?: (changes: Partial<ComboboxState<Item>>) => void;
   onInputValueChange?: (changes: Partial<ComboboxState<string>>) => void;
   onHighightedIndexChange?: (changes: Partial<ComboboxState<number>>) => void;

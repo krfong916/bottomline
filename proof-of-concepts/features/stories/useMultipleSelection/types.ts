@@ -43,6 +43,7 @@ export enum MultipleSelectionStateChangeTypes {
   KEYDOWN_CLICK = '[multiple_selection_keydown_click]',
   MULTIPLE_SELECTION_GROUP_BLUR = '[multiple_selection_group_blur]',
   MULTIPLE_SELECTION_GROUP_FOCUS = '[multiple_selection_group_focus]',
+  FUNCTION_SET_CURRENT_INDEX = '[multiple_selection_set_current_index]',
   FUNCTION_ADD_SELECTED_ITEM = '[multiple_selection_function_add_selected_item]',
   FUNCTION_REMOVE_SELECTED_ITEM = '[multiple_selection_function_remove_selected_item]'
 }

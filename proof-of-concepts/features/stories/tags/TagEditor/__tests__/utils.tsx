@@ -20,12 +20,7 @@ import useDebouncedCallback from '../../../useDebounce/src/hooks/useDebouncedCal
 import useAsync from '../../../useDebounce/src/hooks/useAsync';
 import { SearchLoader } from '../../../loader/SearchLoader';
 import { UseAsyncStatus, UseAsyncState } from '../../../useDebounce/src/types';
-import {
-  NavigationKeys,
-  MultipleSelectionAction,
-  MultipleSelectionActionAndChanges,
-  MultipleSelectionStateChangeTypes
-} from '../../../useMultipleSelection/types';
+import { NavigationKeys } from '../../../useMultipleSelection/types';
 import {
   ComboboxState,
   ComboboxActionAndChanges,

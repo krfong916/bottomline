@@ -15,6 +15,8 @@ export function multipleSelectionReducer<Item>(
   console.log(type);
   switch (type) {
     case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
+      // console.log('action', action);
+      // console.log('state', state);
       newState.currentSelectedItemIndex = getNextItemIndex(
         MultipleSelectionStateChangeTypes.NAVIGATION_NEXT,
         currState.currentSelectedItemIndex,
@@ -35,10 +37,14 @@ export function multipleSelectionReducer<Item>(
 
       newState.currentSelectedItem =
         newState.items[newState.currentSelectedItemIndex];
-
+      console.log('action', action);
+      console.log('state', state);
+      console.log('newState', newState);
       return newState;
     }
     case MultipleSelectionStateChangeTypes.DROPDOWN_NAVIGATION_TO_ITEMS: {
+      console.log('action', action);
+      console.log('state', state);
       newState.currentSelectedItemIndex = currState.items.length - 1;
       return newState;
     }
@@ -67,9 +73,9 @@ export function multipleSelectionReducer<Item>(
       return newState;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_CLICK: {
-      console.log('[USE_MULTIPLE_SELECTION_REDUCER] keydown click');
-      console.log('state', state);
-      console.log('action', action);
+      // console.log('[USE_MULTIPLE_SELECTION_REDUCER] keydown click');
+      // console.log('state', state);
+      // console.log('action', action);
       newState.currentSelectedItemIndex = action.index;
       return newState;
     }
@@ -101,7 +107,13 @@ export function multipleSelectionReducer<Item>(
 
       newState.currentSelectedItem =
         newState.items[newState.currentSelectedItemIndex];
-      console.log('[USE_MULTIPLE_SELECTION_REDUCER] remove item', newState);
+      // console.log('[USE_MULTIPLE_SELECTION_REDUCER] remove item', newState);
+      return newState;
+    }
+    case MultipleSelectionStateChangeTypes.FUNCTION_SET_CURRENT_INDEX: {
+      newState.currentSelectedItemIndex = action.index;
+      newState.currentSelectedItem =
+        newState.items[newState.currentSelectedItemIndex];
       return newState;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_ENTER: {
