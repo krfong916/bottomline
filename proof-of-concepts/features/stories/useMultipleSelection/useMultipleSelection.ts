@@ -94,7 +94,7 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
   } = {
     [prevKey]: (e: React.KeyboardEvent) => {
       // e.stopPropagation();
-      if (canNavigateToItems()) {
+      if (canNavigateToItems(e)) {
         dispatch({
           type: MultipleSelectionStateChangeTypes.DROPDOWN_NAVIGATION_TO_ITEMS
         });

@@ -60,15 +60,20 @@ export function getInitialValue<Item>(
 }
 
 export function canNavigateToItems(
-  e: React.KeyboardEvent<HTMLInputElement>
+  e: React.SyntheticEvent<HTMLDivElement, Event>
 ): boolean {
-  const selection = window.getSelection();
-  console.log('anchorOffset', selection.anchorOffset);
+  const element = e.target as HTMLInputElement;
+  console.log('element', element);
+  console.log('element selectionStart', element.selectionStart);
+  console.log('element selectionEnd', element.selectionEnd);
 
-  if (selection && selection.isCollapsed && selection.anchorOffset === 0) {
-    return true;
-  } else {
+  if (
+    (element && element.value !== '') ||
+    (element.selectionStart !== 0 && element.selectionEnd !== 0)
+  ) {
     return false;
+  } else {
+    return true;
   }
 }
 

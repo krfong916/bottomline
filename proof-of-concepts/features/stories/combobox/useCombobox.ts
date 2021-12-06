@@ -157,28 +157,28 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
       });
     },
     ArrowRight: (e: React.KeyboardEvent) => {
-      e.preventDefault();
+      // e.preventDefault();
       dispatch({
         type: ComboboxActions.INPUT_KEYDOWN_ARROW_RIGHT,
         getItemFromIndex
       });
     },
     ArrowLeft: (e: React.KeyboardEvent) => {
-      e.preventDefault();
+      // e.preventDefault();
       dispatch({
         type: ComboboxActions.INPUT_KEYDOWN_ARROW_LEFT,
         getItemFromIndex
       });
     },
     ArrowDown: (e: React.KeyboardEvent) => {
-      e.preventDefault();
+      // e.preventDefault();
       dispatch({
         type: ComboboxActions.INPUT_KEYDOWN_ARROW_DOWN,
         getItemFromIndex
       });
     },
     ArrowUp: (e: React.KeyboardEvent) => {
-      e.preventDefault();
+      // e.preventDefault();
       dispatch({
         type: ComboboxActions.INPUT_KEYDOWN_ARROW_UP,
         getItemFromIndex
