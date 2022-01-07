@@ -146,34 +146,6 @@ describe('useMultipleSelection hook', () => {
     expect(getItem(lastItem - 1)).toHaveClass('current-selected-item-highlight');
   });
 
-  test('if we remove all items from the list, then list is empty state change is dispatched so the user can do something with it', () => {
-    let numItems = sampleSelectedItems.length - 1;
-    const mockFn = jest.fn(() => true);
-    let { container, textbox } = renderMultipleSelection<SelectedItem>({
-      items: sampleSelectedItems,
-      itemToString: sampleItemToString,
-      nextKey: NavigationKeys.ARROW_RIGHT,
-      prevKey: NavigationKeys.ARROW_LEFT,
-      onHasSelectedItemsChange: mockFn
-    });
-
-    textbox.focus();
-    // place focus on a current item
-    fireEvent.keyDown(textbox, {
-      key: 'ArrowLeft',
-      code: 'ArrowLeft',
-      charCode: 37
-    });
-    while (numItems >= 0) {
-      const ithItem = numItems;
-      // remove an item
-      const item = getItem(ithItem);
-      userEvent.click(item.querySelector('[aria-label="Close"]'));
-      numItems--;
-    }
-    expect(mockFn).toHaveBeenCalled();
-  });
-
   test('onclick places focus on the item', () => {
     const { container, textbox } = renderMultipleSelection<SelectedItem>({
       items: sampleSelectedItems,

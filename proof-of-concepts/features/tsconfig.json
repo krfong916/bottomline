@@ -13,8 +13,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": "."
+    
   },
-  "include": ["./jest-setup.ts"],
-  "exclude": ["node_modules"]
+  
 }

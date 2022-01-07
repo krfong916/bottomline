@@ -10,13 +10,6 @@ export type UseAsyncAction = {
   data?: any;
 };
 
-export interface UseAsyncProps {
-  asyncCallback: (...args: any) => Promise<any>;
-  initialState: any;
-  endpoint: string;
-  dependencies: any[];
-}
-
 export type UseAsyncState = {
   status: UseAsyncStatus;
   data?: any;

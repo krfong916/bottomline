@@ -8,15 +8,13 @@ import { capitalizeString } from '../utils';
 export const initialState = {
   items: [],
   currentSelectedItem: undefined,
-  currentSelectedItemIndex: -1,
-  hasSelectedItems: false
+  currentSelectedItemIndex: -1
 };
 
 export function computeInitialState<Item>(
   props: MultipleSelectionProps<Item>
 ): MultipleSelectionState<Item> {
   const items = getInitialValue(props, 'items');
-  const hasSelectedItems = items.length > 0 ? true : false;
   let currentSelectedItem = getInitialValue(props, 'currentSelectedItem');
   let currentSelectedItemIndex = getInitialValue(props, 'currentSelectedItemIndex');
 
@@ -26,8 +24,7 @@ export function computeInitialState<Item>(
   return {
     items,
     currentSelectedItem,
-    currentSelectedItemIndex,
-    hasSelectedItems
+    currentSelectedItemIndex
   } as MultipleSelectionState<Item>;
 }
 
@@ -64,6 +61,7 @@ export function canNavigateToItems(
 ): boolean {
   const element = e.target as HTMLInputElement;
   console.log('element', element);
+  console.log('element value', element.value);
   console.log('element selectionStart', element.selectionStart);
   console.log('element selectionEnd', element.selectionEnd);
 
@@ -87,19 +85,17 @@ export function getNextItemIndex<Item>(
   const end = currentItems.length;
   switch (stateChangeType) {
     case MultipleSelectionStateChangeTypes.NAVIGATION_NEXT: {
-      // console.log('[NAVIGATION_NEXT] currItemIdx: ', currItemIdx);
       if (currItemIdx === end - 1) return -1;
       return currItemIdx + 1;
     }
     case MultipleSelectionStateChangeTypes.NAVIGATION_PREV: {
-      console.log('[NAVIGATION_PREV] currItemIdx:', currItemIdx);
       if (currItemIdx === 0) return currItemIdx;
       return currItemIdx - 1;
     }
     case MultipleSelectionStateChangeTypes.KEYDOWN_BACKSPACE: {
-      if (isHead(currItemIdx, index) && !isEmpty(newItems)) {
+      if (isHead(index) && !isEmpty(newItems)) {
         return 0;
-      } else if (isHead(currItemIdx, index) && isEmpty(newItems)) {
+      } else if (isHead(index) && isEmpty(newItems)) {
         return -1;
       }
 
@@ -112,9 +108,9 @@ export function getNextItemIndex<Item>(
       return currItemIdx - 1;
     }
     case MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM: {
-      if (isHead(currItemIdx, index) && !isEmpty(newItems)) {
+      if (isHead(index) && !isEmpty(newItems)) {
         return 0;
-      } else if (isHead(currItemIdx, index) && isEmpty(newItems)) {
+      } else if (isHead(index) && isEmpty(newItems)) {
         return -1;
         // if the user is not currently focused on a selected item and deletes an item
       } else if (currItemIdx === -1) {
@@ -142,8 +138,8 @@ export function getNextItemIndex<Item>(
   }
 }
 
-function isHead(currItemIdx: number, index: number) {
-  return currItemIdx === 0 && index === 0;
+function isHead(index: number) {
+  return index === 0;
 }
 function isTail(currentIndex: number, itemsList: any[]) {
   return currentIndex === itemsList.length - 1;

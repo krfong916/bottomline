@@ -51,7 +51,7 @@ const sampleTags = [
     name: 'material-analysis'
   } as BottomlineTag
 ] as BottomlineTag[];
-export const TagEditor = ({ onTagsChanged = noop }: TagEditorProps) => {
+export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) => {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>(sampleTags);
@@ -62,7 +62,10 @@ export const TagEditor = ({ onTagsChanged = noop }: TagEditorProps) => {
   // we need the "appearance" of focus handling for the container when the input element is focused
   const [inputFocused, setInputFocused] = React.useState(false);
   const inputOnFocus = () => setInputFocused(true);
-  const inputOnBlur = () => setInputFocused(false);
+  const inputOnBlur = () => {
+    setInputFocused(false);
+    if (props.onBlur) props.onBlur();
+  };
   let derivedLoaderState = false;
   const inputRef = React.useRef<HTMLInputElement>();
   const cancelRequestRef = React.useRef(false);
@@ -113,7 +116,11 @@ export const TagEditor = ({ onTagsChanged = noop }: TagEditorProps) => {
     nextKey: NavigationKeys.ARROW_RIGHT,
     prevKey: NavigationKeys.ARROW_LEFT,
     onItemsChange: (tags: BottomlineTag[]) => {
+      if (props.onChange) {
+        props.onChange(tags);
+      }
       onTagsChanged(tags);
+      setSelectedTags(tags);
     }
   });
 

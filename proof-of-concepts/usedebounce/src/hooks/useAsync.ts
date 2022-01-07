@@ -1,8 +1,6 @@
 import React from 'react';
-import useDebounce from './useDebounce';
 import {
   UseAsyncStatus,
-  UseAsyncProps,
   UseAsyncResponse,
   UseAsyncState,
   UseAsyncAction
@@ -12,15 +10,32 @@ function asyncReducer(state: UseAsyncState, action: UseAsyncAction) {
   const newState = { ...state };
   switch (action.type) {
     case UseAsyncStatus.IDLE: {
+      console.log('[IDLE]');
+      console.log('action:', action);
+      console.log('state:', newState);
+      newState.status = action.type;
       return newState;
     }
     case UseAsyncStatus.PENDING: {
+      console.log('[PENDING]');
+      console.log('action:', action);
+      console.log('state:', newState);
+      newState.status = action.type;
       return newState;
     }
     case UseAsyncStatus.RESOLVED: {
+      console.log('[RESOLVED]');
+      console.log('action:', action);
+      console.log('state:', newState);
+      newState.status = action.type;
+      newState.data = action.data;
       return newState;
     }
     case UseAsyncStatus.REJECTED: {
+      console.log('[REJECTED]');
+      console.log('action:', action);
+      console.log('state:', newState);
+      newState.status = action.type;
       return newState;
     }
     default: {
@@ -29,8 +44,10 @@ function asyncReducer(state: UseAsyncState, action: UseAsyncAction) {
   }
 }
 
-export default function useAsync(
-  asyncCallback: () => Promise<any>,
+export default function useAsync<
+  T extends (...args: any[]) => Promise<any> | undefined
+>(
+  asyncCallback: T,
   initialState: UseAsyncState,
   dependencies: any[]
 ): UseAsyncResponse {
@@ -59,9 +76,3 @@ export default function useAsync(
     error: state.error
   };
 }
-/**
-debounce making a fetch request
-
-if there is a pending request when a new request is made
-  cancel the pending request
-*/

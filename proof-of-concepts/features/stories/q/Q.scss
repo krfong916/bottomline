@@ -1,0 +1,290 @@
+@use '../styles/fonts';
+@use '../styles/colors';
+.ask-question {
+  width: 610px;
+  background: white;
+  border: 1px solid colors.$Gray-3;
+  border-radius: 4px;
+  box-shadow: 0px 4px 6px rgba(17, 24, 39, 0.2);
+}
+
+.ask-question__section {
+  border-bottom: 1px solid colors.$Gray-3;
+  padding: 16px;
+}
+
+.ask-question__section-header {
+  display: flex;
+}
+
+.ask-question__section-heading {
+  display: flex;
+  flex-direction: column;
+  // padding-left: 12px;
+}
+
+.ask-question__section-title {
+  font-size: fonts.$Size-4;
+  font-weight: fonts.$Medium;
+}
+
+.ask-question__section-info {
+  font-size: fonts.$Size-1;
+}
+
+.ask-question__section-icon {
+  width: 30px;
+  height: 30px;
+  color: colors.$Blue-6;
+  margin: 0;
+}
+
+.ask-question__section-input {
+  margin-top: 8px;
+}
+
+/*************************
+ * Section: Create Title *
+ *************************/
+
+/* Change the white to any color */
+.ask-question__title-input {
+  // background-color: colors.$Gray-0 !important;
+  padding-inline-start: 8px !important;
+  padding-inline-end: 8px !important;
+}
+
+.ask-question__title-input[type='text']:focus,
+.ask-question__title-input[type='text']:active {
+  background-color: white !important;
+}
+
+/***********************************
+ * Section: Formatting Bar, Editor *
+ ***********************************/
+
+.editor {
+  border: 1px solid colors.$Gray-3;
+  border-radius: 4px;
+}
+
+.editor__formatting-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid colors.$Gray-3;
+  padding: 8px;
+  background-color: colors.$Gray-0;
+}
+
+.format-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  font-size: fonts.$Size-4;
+  margin-right: 8px;
+  cursor: pointer;
+  /* Color property is for styling the stroke of the Icons */
+  color: colors.$Gray-6;
+}
+
+.format-option-active,
+.format-option:active,
+.format-option:focus {
+  color: colors.$Gray-6;
+  background-color: colors.$Gray-2;
+  border: 1px solid colors.$Gray-5 !important;
+  border-radius: 4px;
+  outline: none;
+}
+
+.format-option:hover {
+  background-color: colors.$Gray-2;
+}
+
+// /*******************
+//  * Section: Editor *
+//  *******************/
+
+// div.DraftEditor-root {
+//   height: 200px;
+// }
+
+// div.DraftEditor-editorContainer,
+// div.public-DraftEditor-content {
+//   height: 100%;
+// }
+
+// div.public-DraftEditor-content {
+//   padding: 8px 16px;
+//   // background-color: colors.$Gray-0;
+//   // transition: 100ms background-color ease-in;
+// }
+
+// div.public-DraftEditor-content:active,
+// div.public-DraftEditor-content:focus {
+//   background-color: white;
+// }
+
+// div.DraftEditor-editorContainer:active > .editor {
+//   border: 1px solid colors.$Gray-9;
+//   transition: 100ms border ease-in;
+// }
+
+/****************
+ * Section: Tag *
+ ****************/
+.tags-header {
+  display: flex;
+  align-items: center;
+}
+
+.tags-help {
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+/*******************
+ * Section: Answer *
+ *******************/
+.answer-question {
+  display: flex;
+  align-items: center;
+}
+
+.answer-question__button {
+  height: 20px;
+  width: 20px;
+  margin-right: 4px;
+}
+
+.answer-question__button-icon {
+  vertical-align: text-top !important;
+}
+
+/*****************
+ * Section: Post *
+ *****************/
+.post-question {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.post-question__button {
+  position: static !important;
+  border: 1px solid colors.$Blue-5 !important;
+  color: colors.$Blue-5 !important;
+  height: 48px !important;
+  width: 198px !important;
+}
+
+.post-question__button:hover,
+.post-question__button:focus {
+  border: 1px solid colors.$Blue-6 !important;
+  color: colors.$Blue-6;
+}
+
+.unselectable {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+
+  /*
+     Introduced in Internet Explorer 10.
+     See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+   */
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
+ *
+ * This file provided by Facebook is for non-commercial testing and evaluation
+ * purposes only. Facebook reserves all rights not expressly granted.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * FACEBOOK BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+.RichEditor-root {
+  background: #fff;
+  border: 1px solid #ddd;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  font-size: 14px;
+  padding: 15px;
+}
+
+.RichEditor-editor {
+  cursor: text;
+  font-size: 16px;
+}
+
+.RichEditor-editor .public-DraftEditorPlaceholder-root,
+.RichEditor-editor .public-DraftEditor-content {
+  padding: 15px;
+}
+
+.RichEditor-editor .public-DraftEditor-content {
+  min-height: 18rem;
+}
+
+.RichEditor-hidePlaceholder .public-DraftEditorPlaceholder-root {
+  display: none;
+}
+
+.RichEditor-editor .RichEditor-blockquote {
+  border-left: 5px solid #eee;
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  font-style: italic;
+  margin: 16px 0;
+  padding: 10px 20px;
+}
+
+.RichEditor-editor .public-DraftStyleDefault-pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  font-family: 'Inconsolata', 'Menlo', 'Consolas', monospace;
+  font-size: 16px;
+  padding: 20px;
+}
+
+.RichEditor-controls {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  font-size: 14px;
+  margin-bottom: 5px;
+  user-select: none;
+}
+
+.RichEditor-styleButton {
+  color: #999;
+  cursor: pointer;
+  margin-right: 16px;
+  padding: 2px 0;
+  display: inline-block;
+}
+
+.RichEditor-activeButton {
+  color: #5890ff;
+}
+
+.bottomline-link {
+  font-family: system-ui;
+  text-decoration: underline;
+  font-size: 1rem;
+  color: #189afe;
+}
+
+.draft-text-highlight {
+  background-color: rgba(172, 206, 247, 0.8);
+}

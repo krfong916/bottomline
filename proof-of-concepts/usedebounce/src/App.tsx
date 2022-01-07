@@ -1,23 +1,26 @@
 import React from 'react';
-import useDebounce from './hooks/useDebouncedCallback';
+import useDebouncedCallback from './hooks/useDebouncedCallback';
 import useAsync from './hooks/useAsync';
-import { UseAsyncStatus, UseAsyncProps, UseAsyncResponse } from './types';
+import { UseAsyncStatus, UseAsyncResponse } from './types';
 import { fetchData } from './fetchData';
 const endpointAPI = 'http://localhost:3001/results';
 
 export default function App() {
   const [value, setValue] = React.useState('');
   const debounce = useDebouncedCallback(
-    (userValue: string) => {
-      setValue(userValue);
+    (value: string) => {
+      setValue(value);
     },
-    3000,
+    4000,
     { trailing: true }
   );
+  React.useEffect(() => {
+    console.log('useEffect');
+  });
 
   const fetchResults: UseAsyncResponse = useAsync(
     () => {
-      if (value) {
+      if (value && value !== '') {
         return fetchData(endpointAPI);
       }
     },
@@ -27,14 +30,18 @@ export default function App() {
 
   const { data: items, error, status } = fetchResults;
   if (status === UseAsyncStatus.IDLE) {
+    console.log('we are idle');
   } else if (status === UseAsyncStatus.PENDING) {
+    console.log('we are pending');
   } else if (status === UseAsyncStatus.RESOLVED) {
+    console.log('we are resolved');
+  } else {
+    console.log('we are rejected');
   }
 
   return (
     <div className="App">
       <input
-        value={value}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
           debounce(e.currentTarget.value)
         }

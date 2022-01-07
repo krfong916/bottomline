@@ -24,19 +24,15 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     MultipleSelectionStateChangeTypes,
     MultipleSelectionActionAndChanges<Item>
   >(multipleSelectionReducer, computeInitialState<Item>(props), props);
-  const {
-    items,
-    currentSelectedItem,
-    currentSelectedItemIndex,
-    hasSelectedItems
-  } = state;
+  const { items, currentSelectedItem, currentSelectedItemIndex } = state;
+  const hasSelectedItems = items.length > 0;
   const {
     nextKey = NavigationKeys.ARROW_LEFT,
     prevKey = NavigationKeys.ARROW_RIGHT
   } = props;
   const dropdownRef = React.useRef<HTMLElement & HTMLInputElement>();
   const currentSelectedItemsRef = React.useRef<HTMLElement[]>();
-  // must reinitialize array on every re-render
+  // reinitializes array on every re-render to "gc" unmounted components
   currentSelectedItemsRef.current = [];
 
   React.useEffect(() => {
@@ -47,8 +43,6 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
       currentSelectedItemsRef.current &&
       currentSelectedItemsRef.current[currentSelectedItemIndex]
     ) {
-      // console.log(state);
-      // console.log(currentSelectedItemsRef.current);
       currentSelectedItemsRef.current[currentSelectedItemIndex].focus();
     }
   }, [currentSelectedItemIndex, currentSelectedItem]);
@@ -180,60 +174,3 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     getDropdownProps
   };
 }
-
-/* the internal data structure of selected items will function as a queue */
-
-/* Usage */
-// [] the user can assign interactions to the selected elements
-
-/* state */
-// [] we want to have state of all currently selected items: Items[]
-// [] we want to store the currently highlighted/active element: Item
-// [] we want to have state of whether or not we have selected items: boolean based on undefined or defined list
-// [] we want to store the index of the currently highlighted/active element: number
-
-/* props */
-// [x] when a new highlighted index occurs recommendations based on these state change types^
-
-/* state change types - what does the user need? */
-// [x] when the group is blurred
-// [x] when the group is active
-// [x] when an item is clicked
-// [x] when a keyboard left
-// [x] when a keyboard right
-// [x] when a keyboard up
-// [x] when a keyboard down happens
-// [x] when a keyboard enter
-// [x] when a keyboard spacebar
-
-/* UI */
-// [] selected items: list
-// [] selected item: list element
-
-/* UX */
-// [x] we want to have keyboard navigation
-// [] left up and down are the same
-// [x] we want to have keyboard interaction
-// [x] enter, spacebar
-
-/* functions.operations */
-// [x] getSelectedItemProps
-// [] getLabelProps - associates/describes what the group belongs to
-
-// [x] onHighlightedIndexChange
-// [x] onHasSelectedItems
-
-// [] remove a selected item
-// [] the user specifies when/where the removal happens
-// [] we just provide a callback for them to use/specify in their code
-// [] add item to selected items
-// [] the user specifies when/where the addition happens
-// [] we just provide a callback for them to use/specify in their code
-
-/* accessibility */
-// [] we want the currently active item to have a dialogue to let the user know what item is active, number of total items, and what group the selected items belong to
-// [] we want the selected item list to be associated with a parent/combobox
-// [] we want to tell the user how to interact with the item?
-
-/* questions */
-// [] how to remove elements?
