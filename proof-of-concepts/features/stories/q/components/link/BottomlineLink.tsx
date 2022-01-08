@@ -194,19 +194,18 @@ export interface LinkControlProps {
 
 export function LinkInlineControl(props: LinkControlProps) {
   return (
-    <WithHover label="Link" ariaLabel="Add a link" className="format-option">
-      <div
-        onMouseDown={(e) => {
-          !props.disabled && e.preventDefault();
-        }}
-        onClick={(e) => {
-          !props.disabled && e.preventDefault();
-          props.onClick(props.control);
-        }}
-      >
-        <LinkOutlinedIcon />
-      </div>
-    </WithHover>
+    <button
+      className="format-option"
+      onMouseDown={(e) => {
+        !props.disabled && e.preventDefault();
+      }}
+      onClick={(e) => {
+        !props.disabled && e.preventDefault();
+        props.onClick(props.control);
+      }}
+    >
+      <LinkOutlinedIcon />
+    </button>
   );
 }
 

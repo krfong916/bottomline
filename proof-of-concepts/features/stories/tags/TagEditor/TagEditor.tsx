@@ -46,15 +46,10 @@ import './TagEditor.scss';
  * See: https://github.com/krfong916/bottomline/issues/6 for a formal spec on the use case
  */
 
-const sampleTags = [
-  {
-    name: 'material-analysis'
-  } as BottomlineTag
-] as BottomlineTag[];
 export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) => {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
-  const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>(sampleTags);
+  const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>();
   const [tagSuggestions, setTagSuggestions] = React.useState<
     BottomlineTag[] | undefined
   >();
@@ -111,7 +106,7 @@ export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) =>
     currentSelectedItemIndex,
     items
   } = useMultipleSelection<BottomlineTag>({
-    items: sampleTags,
+    items: [],
     itemToString: (item: BottomlineTag) => item.name,
     nextKey: NavigationKeys.ARROW_RIGHT,
     prevKey: NavigationKeys.ARROW_LEFT,

@@ -1,8 +1,9 @@
 @use '../styles/fonts';
 @use '../styles/colors';
+@use '../styles/spacing';
+
 .ask-question {
   width: 610px;
-  background: white;
   border: 1px solid colors.$Gray-3;
   border-radius: 4px;
   box-shadow: 0px 4px 6px rgba(17, 24, 39, 0.2);
@@ -10,7 +11,11 @@
 
 .ask-question__section {
   border-bottom: 1px solid colors.$Gray-3;
-  padding: 16px;
+  padding: spacing.$Size-5 spacing.$Size-5 spacing.$Size-2 spacing.$Size-5;
+}
+
+.ask-question__section:not(:nth-child(1)) {
+  margin-top: spacing.$Size-1;
 }
 
 .ask-question__section-header {
@@ -20,16 +25,16 @@
 .ask-question__section-heading {
   display: flex;
   flex-direction: column;
-  // padding-left: 12px;
 }
 
 .ask-question__section-title {
-  font-size: fonts.$Size-4;
+  font-size: fonts.$Size-2;
   font-weight: fonts.$Medium;
 }
 
 .ask-question__section-info {
-  font-size: fonts.$Size-1;
+  font-size: fonts.$Size-0;
+  margin: 0;
 }
 
 .ask-question__section-icon {
@@ -49,32 +54,45 @@
 
 /* Change the white to any color */
 .ask-question__title-input {
-  // background-color: colors.$Gray-0 !important;
-  padding-inline-start: 8px !important;
-  padding-inline-end: 8px !important;
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: 4px;
+  padding: spacing.$Size-2 spacing.$Size-4 spacing.$Size-2 spacing.$Size-4;
+  border: 1px solid colors.$Gray-4;
+  font-size: fonts.$Size-2;
+}
+
+.ask-question__title-input:focus {
+  outline: none;
+  border: 1px solid #0978d9;
+  box-shadow: 0px 0px 0px 2px rgba(9, 120, 217, 0.3);
+}
+
+.ask-question__title-input::selection {
+  background: #b4d5ff;
 }
 
 .ask-question__title-input[type='text']:focus,
 .ask-question__title-input[type='text']:active {
-  background-color: white !important;
+  background-color: white;
 }
 
 /***********************************
  * Section: Formatting Bar, Editor *
  ***********************************/
 
-.editor {
-  border: 1px solid colors.$Gray-3;
-  border-radius: 4px;
-}
-
 .editor__formatting-bar {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   width: 100%;
-  border-bottom: 1px solid colors.$Gray-3;
+  border-top-right-radius: 4px;
+  border-top-left-radius: 4px;
+  border-top: 1px solid colors.$Gray-4;
+  border-left: 1px solid colors.$Gray-4;
+  border-right: 1px solid colors.$Gray-4;
+
   padding: 8px;
-  background-color: colors.$Gray-0;
 }
 
 .format-option {
@@ -84,67 +102,29 @@
   border-radius: 4px;
   width: 28px;
   height: 28px;
+  padding: 0 2px 0 2px;
   font-size: fonts.$Size-4;
-  margin-right: 8px;
+  margin-right: spacing.$Size-1;
   cursor: pointer;
   /* Color property is for styling the stroke of the Icons */
-  color: colors.$Gray-6;
+  color: colors.$Gray-5;
+  background-color: white;
+  border: none;
 }
 
-.format-option-active,
-.format-option:active,
 .format-option:focus {
-  color: colors.$Gray-6;
-  background-color: colors.$Gray-2;
-  border: 1px solid colors.$Gray-5 !important;
+  border: 1px solid #0978d9;
+  outline: none;
+}
+
+.format-option-active {
+  color: colors.$Gray-9;
   border-radius: 4px;
   outline: none;
 }
 
 .format-option:hover {
   background-color: colors.$Gray-2;
-}
-
-// /*******************
-//  * Section: Editor *
-//  *******************/
-
-// div.DraftEditor-root {
-//   height: 200px;
-// }
-
-// div.DraftEditor-editorContainer,
-// div.public-DraftEditor-content {
-//   height: 100%;
-// }
-
-// div.public-DraftEditor-content {
-//   padding: 8px 16px;
-//   // background-color: colors.$Gray-0;
-//   // transition: 100ms background-color ease-in;
-// }
-
-// div.public-DraftEditor-content:active,
-// div.public-DraftEditor-content:focus {
-//   background-color: white;
-// }
-
-// div.DraftEditor-editorContainer:active > .editor {
-//   border: 1px solid colors.$Gray-9;
-//   transition: 100ms border ease-in;
-// }
-
-/****************
- * Section: Tag *
- ****************/
-.tags-header {
-  display: flex;
-  align-items: center;
-}
-
-.tags-help {
-  margin-left: 8px;
-  cursor: pointer;
 }
 
 /*******************
@@ -155,14 +135,19 @@
   align-items: center;
 }
 
-.answer-question__button {
-  height: 20px;
-  width: 20px;
-  margin-right: 4px;
+.answer-question__flag {
+  margin-right: spacing.$Size-2;
+  cursor: pointer;
 }
 
 .answer-question__button-icon {
   vertical-align: text-top !important;
+}
+
+.answer-question__heading {
+  font-size: fonts.$Size-2;
+  font-weight: fonts.$Regular;
+  cursor: pointer;
 }
 
 /*****************
@@ -174,17 +159,20 @@
 }
 
 .post-question__button {
+  font-size: fonts.$Size-2;
   position: static !important;
-  border: 1px solid colors.$Blue-5 !important;
-  color: colors.$Blue-5 !important;
+  border: 1px solid colors.$Blue-5;
+  background-color: colors.$Blue-5;
+  color: white;
   height: 48px !important;
-  width: 198px !important;
+  width: 166px !important;
+  border-radius: 4px;
 }
 
 .post-question__button:hover,
 .post-question__button:focus {
-  border: 1px solid colors.$Blue-6 !important;
-  color: colors.$Blue-6;
+  background-color: colors.$Blue-6;
+  border: 1px solid colors.$Blue-6;
 }
 
 .unselectable {
@@ -200,7 +188,30 @@
   user-select: none;
 }
 
+/********************************
+ * Section: Field Error Message *
+ ********************************/
+.field-error {
+  display: flex;
+  align-items: center;
+  margin-top: spacing.$Size-1;
+}
+
+.field-error__icon {
+  color: colors.$Red-7;
+  padding-right: spacing.$Size-0;
+}
+
+.field-error__message {
+  color: colors.$Red-7;
+  font-size: fonts.$Size-1;
+}
+
 /**
+ * *********************************
+ * Draft JS Styling
+ * *********************************
+ * 
  * Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
  *
  * This file provided by Facebook is for non-commercial testing and evaluation
@@ -216,7 +227,6 @@
 
 .RichEditor-root {
   background: #fff;
-  border: 1px solid #ddd;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
     sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   font-size: 14px;
@@ -241,6 +251,17 @@
   display: none;
 }
 
+.public-DraftEditor-content {
+  border: 1px solid #9ca3af;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.public-DraftEditor-content:focus {
+  border: 1px solid #0978d9;
+  border-radius: 4px;
+  box-shadow: 0px 0px 0px 2px rgba(9, 120, 217, 0.3);
+}
 .RichEditor-editor .RichEditor-blockquote {
   border-left: 5px solid #eee;
   color: #666;
@@ -287,4 +308,10 @@
 
 .draft-text-highlight {
   background-color: rgba(172, 206, 247, 0.8);
+}
+
+@media only screen and (max-width: 420px) {
+  .ask-question {
+    width: 400px;
+  }
 }

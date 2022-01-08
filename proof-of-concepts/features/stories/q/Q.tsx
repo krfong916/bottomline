@@ -3,6 +3,7 @@ import { Editor, EditorState, CompositeDecorator, RichUtils } from 'draft-js';
 import { Input, Button, Tooltip, Box } from '@chakra-ui/react';
 import { TagEditor } from '../tags/TagEditor/TagEditor';
 import { AddIcon } from '@chakra-ui/icons';
+import { AiOutlineExclamationCircle } from 'react-icons/ai';
 import { BlockStyleControls, InlineStyleControls, styleMap } from './Editor';
 import { useLinkEditor } from './components/link/Link';
 import { findLinkEntities, cursorIsOnSingleBlock } from './components/link/utils';
@@ -30,9 +31,7 @@ const ReviewMessage = () => {
   } else {
     reviewMessage = `You have ${numErrors} errors`;
   }
-  return hasValidationErrors && submitFailed ? (
-    <span>{`${reviewMessage}`}</span>
-  ) : null;
+  return hasValidationErrors ? <span>{`${reviewMessage}`}</span> : null;
 };
 
 const Error = ({ name }: { name: string }) => {
@@ -40,7 +39,12 @@ const Error = ({ name }: { name: string }) => {
     subscription: { error: true, submitFailed: true, valid: true }
   });
   const { error, submitFailed, valid } = meta;
-  return error && submitFailed && !valid ? <span>{error}</span> : null;
+  return error && !valid ? (
+    <div className="field-error">
+      <AiOutlineExclamationCircle className="field-error__icon" />
+      <span className="field-error__message">{error}</span>
+    </div>
+  ) : null;
 };
 
 export default function Q() {
@@ -72,9 +76,11 @@ export default function Q() {
 
   const onChange = (editorState: EditorState) => setState(editorState);
   const toggleBlockType = (blockType: string) => {
+    console.log('blockType');
     onChange(RichUtils.toggleBlockType(state, blockType));
   };
   const toggleInlineStyle = (inlineStyle: string) => {
+    console.log('inlineStyle');
     onChange(RichUtils.toggleInlineStyle(state, inlineStyle));
   };
   const toggleLink = () => {
@@ -186,111 +192,121 @@ export default function Q() {
           <ReviewMessage />
           <form onSubmit={handleSubmit}>
             <div className="ask-question">
-              <div>
-                <section className="ask-question__section">
-                  <div className="ask-question__section-header">
-                    <div className="ask-question__section-heading">
-                      <h2 className="ask-question__section-title">Title</h2>
-                      <p className="ask-question__section-info">
-                        Be specific and try to imagine that you’re asking another
-                        person
-                      </p>
-                    </div>
+              <section className="ask-question__section">
+                <div className="ask-question__section-header">
+                  <div className="ask-question__section-heading">
+                    <h2 className="ask-question__section-title">Title</h2>
+                    <p className="ask-question__section-info">
+                      Be specific and try to imagine that you’re asking another person
+                    </p>
                   </div>
-                  <div className="ask-question__section-input">
-                    <Field name="title">
-                      {(props) => (
-                        <Input
-                          {...props.input}
-                          className="ask-question__title-input"
-                          type="text"
-                          placeholder="For example: What is Mutual Aid?"
-                        />
-                      )}
-                    </Field>
-                  </div>
-                  <Error name="title" />
-                </section>
-              </div>
-              <div>
-                <section className="ask-question__section">
-                  <div className="ask-question__section-header">
-                    <div className="ask-question__section-heading">
-                      <h2 className="ask-question__section-title">Body</h2>
-                      <p className="ask-question__section-info">
-                        Include all context and information one would need to answer
-                        your question.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="ask-question__section-input">
-                    <div className="editor">
-                      <div className="editor__formatting-bar">
-                        <InlineStyleControls editorState={state} />
-                        <LinkInlineControl
-                          disabled={disableLinkControl}
-                          active={linkShowDetails || linkShowEditor}
-                          editorState={state}
-                          onClick={openLinkEditor}
-                          control="EDITOR_CONTROL"
-                        />
-                        <BlockStyleControls editorState={state} />
-                      </div>
-                      <div className="RichEditor-editor">
-                        <Editor
-                          ref={editorRef}
-                          onBlur={onEditorBlur}
-                          onFocus={onEditorFocus}
-                          customStyleMap={styleMap}
-                          editorState={state}
-                          onChange={onChange}
-                        />
-                      </div>
-                      <LinkDetails
-                        coords={coords}
-                        url={url}
-                        shouldShow={linkShowDetails}
-                        removeLink={removeLink}
-                        onDetailsChange={openLinkEditor}
-                        control={'LINK_DETAILS'}
+                </div>
+                <div className="ask-question__section-input">
+                  <Field name="title">
+                    {(props) => (
+                      <Input
+                        {...props.input}
+                        className="ask-question__title-input"
+                        type="text"
+                        placeholder="For example: What is Mutual Aid?"
                       />
-                      <LinkEditor
-                        coords={coords}
-                        url={url}
-                        text={text}
-                        onBlur={closeLinkEditor}
-                        shouldShow={linkShowEditor}
-                        updateLink={updateLink}
-                        {...getLinkProps()}
+                    )}
+                  </Field>
+                </div>
+                <Error name="title" />
+              </section>
+
+              <section className="ask-question__section">
+                <div className="ask-question__section-header">
+                  <div className="ask-question__section-heading">
+                    <h2 className="ask-question__section-title">Body</h2>
+                    <p className="ask-question__section-info">
+                      Include all context and information one would need to answer
+                      your question.
+                    </p>
+                  </div>
+                </div>
+                <div className="ask-question__section-input">
+                  <div className="editor">
+                    <div className="editor__formatting-bar">
+                      <InlineStyleControls
+                        editorState={state}
+                        onToggle={toggleInlineStyle}
+                      />
+                      <LinkInlineControl
+                        disabled={disableLinkControl}
+                        active={linkShowDetails || linkShowEditor}
+                        editorState={state}
+                        onClick={openLinkEditor}
+                        control="EDITOR_CONTROL"
+                      />
+                      <BlockStyleControls
+                        editorState={state}
+                        onToggle={toggleBlockType}
                       />
                     </div>
+                    <div className="RichEditor-editor">
+                      <Editor
+                        ref={editorRef}
+                        onBlur={onEditorBlur}
+                        onFocus={onEditorFocus}
+                        customStyleMap={styleMap}
+                        editorState={state}
+                        onChange={onChange}
+                      />
+                    </div>
+                    <LinkDetails
+                      coords={coords}
+                      url={url}
+                      shouldShow={linkShowDetails}
+                      removeLink={removeLink}
+                      onDetailsChange={openLinkEditor}
+                      control={'LINK_DETAILS'}
+                    />
+                    <LinkEditor
+                      coords={coords}
+                      url={url}
+                      text={text}
+                      onBlur={closeLinkEditor}
+                      shouldShow={linkShowEditor}
+                      updateLink={updateLink}
+                      {...getLinkProps()}
+                    />
                   </div>
-                  <Error name="body" />
-                </section>
-              </div>
-              <div>
-                <section className="ask-question__section">
-                  <div className="ask-question__section-header">
-                    <div className="ask-question__section-heading">
-                      <div className="tags-header">
-                        <h2 className="ask-question__section-title">Tags</h2>
-                      </div>
+                </div>
+                <Error name="body" />
+              </section>
+
+              <section className="ask-question__section">
+                <div className="ask-question__section-header">
+                  <div className="ask-question__section-heading">
+                    <div className="tags-header">
+                      <h2 className="ask-question__section-title">Tags</h2>
                     </div>
                   </div>
-                  <div className="ask-question__section-input">
-                    <Field name="tags">
-                      {(props) => <TagEditor {...props.input} />}
-                    </Field>
-                  </div>
-                  <Error name="tags" />
-                </section>
-              </div>
+                </div>
+                <div className="ask-question__section-input">
+                  <Field name="tags">
+                    {(props) => <TagEditor {...props.input} />}
+                  </Field>
+                </div>
+                <Error name="tags" />
+              </section>
+
               <section className="ask-question__section">
                 <div className="answer-question">
-                  <button className="answer-question__button">
-                    {/*<AddIcon className="answer-question__button-icon" />*/}
-                  </button>
-                  <h2>Answer your own question</h2>
+                  <input
+                    type="checkbox"
+                    id="answer-question"
+                    className="answer-question__flag"
+                    name="answer-question"
+                  />
+                  <label
+                    className="answer-question__heading"
+                    htmlFor="answer-question"
+                  >
+                    Answer your own question
+                  </label>
                 </div>
               </section>
               <section className="ask-question__section">

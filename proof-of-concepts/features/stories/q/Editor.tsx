@@ -9,7 +9,6 @@ import {
   OrderedListOutlinedIcon,
   UnorderedListOutlinedIcon,
   DoubleQuotes,
-  CodeOutlinedIcon,
   TableOutlinedIcon,
   FileImageOutlinedIcon
 } from './assets/Icons';
@@ -18,25 +17,10 @@ export interface EditorIconProps {
   className?: string;
   isSelected?: boolean;
   onClick?: () => void;
-  ariaLabel: string;
+  // ariaLabel: string;
   label: string;
   children: React.ReactNode;
 }
-
-export const WithHover = React.forwardRef(
-  (
-    { ariaLabel, label, ...props }: EditorIconProps,
-    ref: React.LegacyRef<HTMLButtonElement>
-  ) => {
-    return (
-      <Tooltip label={label} fontSize="sm" placement="top" hasArrow>
-        <span {...props} ref={ref} aria-label={ariaLabel}>
-          {props.children}
-        </span>
-      </Tooltip>
-    );
-  }
-);
 
 let INLINE_STYLE_FORMAT_CONTROLS = [
   {
@@ -67,34 +51,46 @@ let INLINE_STYLE_FORMAT_CONTROLS = [
 ];
 
 export function InlineStyleControls(props) {
+  const currentStyle = props.editorState.getCurrentInlineStyle();
   return (
     <React.Fragment>
       {INLINE_STYLE_FORMAT_CONTROLS.map((formatControl) => (
-        <WithHover
+        <FormatControl
           label={formatControl.label}
-          ariaLabel={formatControl.ariaLabel}
-          className="format-option"
           key={formatControl.label}
+          active={currentStyle.has(formatControl.style)}
+          onToggle={props.onToggle}
+          style={formatControl.style}
+          ariaLabel={formatControl.ariaLabel}
         >
-          <InlineFormatControl
-            label={formatControl.label}
-            key={formatControl.label}
-            onToggle={props.onToggle}
-          >
-            {formatControl.component()}
-          </InlineFormatControl>
-        </WithHover>
+          {formatControl.component()}
+        </FormatControl>
       ))}
     </React.Fragment>
   );
 }
 
-function InlineFormatControl(props) {
+function FormatControl(props) {
   const onToggle = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    props.onToggle();
+    props.onToggle(props.style);
   };
-  return <div onMouseDown={onToggle}>{props.children}</div>;
+
+  let className = 'format-option';
+  if (props.active) {
+    className += ' format-option-active';
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={props.ariaLabel}
+      className={className}
+      onMouseDown={onToggle}
+    >
+      {props.children}
+    </button>
+  );
 }
 
 let BLOCK_STYLE_FORMAT_CONTROLS = [
@@ -123,12 +119,6 @@ let BLOCK_STYLE_FORMAT_CONTROLS = [
     component: OrderedListOutlinedIcon
   },
   {
-    label: 'Code Block',
-    ariaLabel: 'Format text as a block of code',
-    style: 'code-block',
-    component: CodeOutlinedIcon
-  },
-  {
     label: 'Table',
     ariaLabel: 'Insert a table',
     style: null,
@@ -149,32 +139,23 @@ export function BlockStyleControls(props) {
     .getCurrentContent()
     .getBlockForKey(selection.getStartKey())
     .getType();
+  console.log(blockType);
   return (
     <React.Fragment>
       {BLOCK_STYLE_FORMAT_CONTROLS.map((formatControl) => (
-        <WithHover
+        <FormatControl
           label={formatControl.label}
-          ariaLabel={formatControl.ariaLabel}
-          className="format-option"
           key={formatControl.label}
+          onToggle={props.onToggle}
+          active={formatControl.style === blockType}
+          style={formatControl.style}
+          ariaLabel={formatControl.ariaLabel}
         >
-          <BlockFormatControl
-            label={formatControl.label}
-            key={formatControl.label}
-            onToggle={props.onToggle}
-            active={formatControl.style === blockType}
-            style={formatControl.style}
-          >
-            {formatControl.component()}
-          </BlockFormatControl>
-        </WithHover>
+          {formatControl.component()}
+        </FormatControl>
       ))}
     </React.Fragment>
   );
-}
-
-function BlockFormatControl(props) {
-  return <React.Fragment>{props.children}</React.Fragment>;
 }
 
 export const styleMap = {
