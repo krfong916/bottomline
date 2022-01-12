@@ -15,38 +15,36 @@
 
 .review-header {
   background: colors.$Gray-0;
-  padding: spacing.$Size-2;
+  padding: spacing.$Size-4;
   font-size: fonts.$Size-1;
   font-weight: fonts.$Regular;
   border-bottom: 1px solid colors.$Gray-3;
 }
 
 .review-header__info {
-  padding: spacing.$Size-2 spacing.$Size-2 0 spacing.$Size-2;
+  padding: spacing.$Size-4 spacing.$Size-4 0 spacing.$Size-4;
   font-size: fonts.$Size-0;
   font-weight: fonts.$Regular;
 }
 
 .review-section-container {
-  padding: spacing.$Size-2;
+  padding: spacing.$Size-4;
 }
 
 .review-section {
-  margin-top: spacing.$Size-0;
-}
-
-.review-section__toggle-button {
+  margin-top: spacing.$Size-2;
 }
 
 .review-section:first-child {
-  padding-bottom: spacing.$Size-0;
+  padding-bottom: spacing.$Size-1;
   border-bottom: 1px solid colors.$Gray-2;
 }
 
 .review-section__button {
-  display: inline-flex;
+  display: inline-grid !important;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 10fr 2fr;
   width: 100%;
-  justify-content: space-between;
   background: none;
   border: none;
   padding: 0;
@@ -54,4 +52,26 @@
 
 .review-section__title {
   font-weight: fonts.$Regular;
+  justify-self: start;
+}
+
+.review-section__title-number {
+  justify-self: start;
+  font-weight: fonts.$Semibold;
+  font-size: fonts.$Size-2;
+  color: colors.$Blue-6;
+  text-shadow: 1px 1px colors.$Gray-3;
+}
+
+.review-section__toggle-button {
+  grid-column-start: 3;
+  justify-self: end;
+  height: fonts.$Size-4;
+  width: fonts.$Size-4;
+}
+
+.review-section__info {
+  display: inline-block;
+  margin: spacing.$Size-2 spacing.$Size-2 spacing.$Size-2 spacing.$Size-6;
+  font-size: fonts.$Size-1;
 }

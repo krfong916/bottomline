@@ -208,9 +208,9 @@ export default function Q() {
   return (
     <Form onSubmit={onSubmit} validateOnBlur={true} validate={validate}>
       {({ submitting, handleSubmit }) => (
-        <>
-          <Review />
-          <form onSubmit={handleSubmit}>
+        <div className="question-container">
+          <Review className="question-review" />
+          <form onSubmit={handleSubmit} className="question-ask">
             <div className="ask-question">
               <section className="ask-question__section">
                 <div className="ask-question__section-header">
@@ -347,7 +347,7 @@ export default function Q() {
               </section>
             </div>
           </form>
-        </>
+        </div>
       )}
     </Form>
   );

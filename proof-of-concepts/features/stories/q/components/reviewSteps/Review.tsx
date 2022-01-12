@@ -27,9 +27,10 @@ const ReviewMessage = () => {
   return hasValidationErrors ? <span>{`${reviewMessage}`}</span> : null;
 };
 
-export function Review() {
+export function Review({ className }: { className: string }) {
+  const reviewContainerClassName = 'review-container ' + className;
   return (
-    <div className="review-container">
+    <div className={reviewContainerClassName}>
       <h2 className="review-header">Step 1: Draft Your Question</h2>
       <span className="review-header__info">
         The community is here to answer questions that you have about organizing,
@@ -38,12 +39,12 @@ export function Review() {
       <Accordion allowToggle className="review-section-container">
         <AccordionItem className="review-section">
           <AccordionButton className="review-section__button">
-            <RiNumber1 />
+            <span className="review-section__title-number">1.</span>
             <Box className="review-section__title">Summarize your problem</Box>
             <HiOutlineChevronDown className="review-section__toggle-button" />
           </AccordionButton>
           <AccordionPanel>
-            <span>
+            <span className="review-section__info">
               Provide any background detail and context necessary for understanding
               the question you’re asking.
             </span>
@@ -52,24 +53,26 @@ export function Review() {
 
         <AccordionItem className="review-section">
           <AccordionButton className="review-section__button">
-            <RiNumber2 />
+            <span className="review-section__title-number">2.</span>
             <Box className="review-section__title">Show some context or research</Box>
             <HiOutlineChevronDown className="review-section__toggle-button" />
           </AccordionButton>
           <AccordionPanel>
-            <span>
-              You can get better answers when you provide research and context
-            </span>
-            <ul>
-              <li>
-                When appropriate, share links or author, title, and page number to
-                content that you reference.
-              </li>
-              <li>
-                Clarify any terms, histories, or concepts that you use as you
-                understand it. This helps others be on the same page as you.
-              </li>
-            </ul>
+            <div className="review-section__info">
+              <span>
+                You can get better answers when you provide research and context
+              </span>
+              <ul>
+                <li>
+                  When appropriate, share links or author, title, and page number to
+                  content that you reference.
+                </li>
+                <li>
+                  Clarify any terms, histories, or concepts that you use as you
+                  understand them. This helps others be on the same page as you.
+                </li>
+              </ul>
+            </div>
           </AccordionPanel>
         </AccordionItem>
       </Accordion>

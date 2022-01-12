@@ -3,7 +3,8 @@
 @use '../styles/spacing';
 
 .ask-question {
-  width: 610px;
+  width: 100%;
+  max-width: 610px;
   border: 1px solid colors.$Gray-3;
   border-radius: 4px;
   box-shadow: 0px 4px 6px rgba(17, 24, 39, 0.2);
@@ -91,7 +92,7 @@
   border-top: 1px solid colors.$Gray-4;
   border-left: 1px solid colors.$Gray-4;
   border-right: 1px solid colors.$Gray-4;
-
+  overflow-x: scroll;
   padding: 8px;
 }
 
@@ -324,8 +325,51 @@
   background-color: rgba(172, 206, 247, 0.8);
 }
 
-@media only screen and (max-width: 420px) {
+/**
+ * **********************
+ * Top-Level Page Styling
+ * **********************
+ *
+ * The following styles are for the ask question page layout.
+ * The layout involves separate components. 
+ * If the component structure of these components should change,
+ * the layout may perhaps change.
+ */
+
+.question-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: spacing.$Size-8;
+}
+
+.question-ask {
+  grid-column-start: 1;
+  grid-row-start: 1;
+}
+
+.question-review {
+  grid-column-start: 2;
+  height: fit-content;
+}
+
+@media only screen and (max-width: 650px) {
+  .question-container {
+    max-width: 100%;
+  }
   .ask-question {
-    width: 400px;
+    width: 100vw;
+  }
+  .question-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: spacing.$Size-6;
+  }
+  .question-ask {
+    grid-row-start: 2;
+  }
+  .question-review {
+    grid-row-start: 1;
+    grid-column-start: 1;
+    width: 100vw !important;
   }
 }
