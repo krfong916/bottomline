@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { KeyboardEvent } from 'react';
+import { ContentBlock, getDefaultKeyBinding, KeyBindingUtil } from 'draft-js';
 import { Tooltip } from '@chakra-ui/react';
 import {
   BoldOutlinedIcon,
@@ -174,5 +175,46 @@ export const styleMap = {
   },
   STRIKETHROUGH: {
     textDecoration: 'line-through'
+  },
+  blockquote: {
+    background: 'colors.$Gray-2',
+    'background-color': 'colors.$Gray-2',
+    'border-left': '5px solid colors.$Gray-4',
+    color: '#666',
+    'font-family':
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+    'font-style': 'italic',
+    margin: '16px 0',
+    padding: '10px 20px'
   }
 };
+
+export function blockStyleFn(contentBlock: ContentBlock) {
+  const type = contentBlock.getType();
+  if (type === 'blockquote') {
+    return 'bottomline-editor__blockquote';
+  }
+}
+
+export function bottomlineEditorKeyBindingFn(e: KeyboardEvent): string | null {
+  const { hasCommandModifier } = KeyBindingUtil;
+  if (e.keyCode === 66 && hasCommandModifier(e)) {
+    return 'bold';
+  }
+  if (e.keyCode === 75 && hasCommandModifier(e)) {
+    return 'link';
+  }
+  if (e.keyCode === 73 && hasCommandModifier(e)) {
+    return 'italic';
+  }
+  if (e.keyCode === 222 && e.shiftKey && hasCommandModifier(e)) {
+    return 'blockquote';
+  }
+  if (e.keyCode === 56 && e.shiftKey && hasCommandModifier(e)) {
+    return 'bulleted-list';
+  }
+  if (e.keyCode === 55 && e.shiftKey && hasCommandModifier(e)) {
+    return 'numbered-list';
+  }
+  return getDefaultKeyBinding(e);
+}

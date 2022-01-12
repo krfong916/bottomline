@@ -30,15 +30,12 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     nextKey = NavigationKeys.ARROW_LEFT,
     prevKey = NavigationKeys.ARROW_RIGHT
   } = props;
-  const dropdownRef = React.useRef<HTMLElement & HTMLInputElement>();
   const currentSelectedItemsRef = React.useRef<HTMLElement[]>();
   // reinitializes array on every re-render to "gc" unmounted components
   currentSelectedItemsRef.current = [];
 
   React.useEffect(() => {
-    if (currentSelectedItemIndex === -1 && dropdownRef.current) {
-      dropdownRef.current.focus();
-    } else if (
+    if (
       currentSelectedItemIndex >= 0 &&
       currentSelectedItemsRef.current &&
       currentSelectedItemsRef.current[currentSelectedItemIndex]
@@ -104,7 +101,7 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
       }
     };
     return {
-      ref: mergeRefs(ref, dropdownRef),
+      ref,
       onKeyDown: handleKeydown,
       ...rest
     };
@@ -136,28 +133,37 @@ export function useMultipleSelection<Item>(props: MultipleSelectionProps<Item>) 
     };
   }
 
-  const removeSelectedItem = React.useCallback((item: Item, index: number) => {
-    dispatch({
-      type: MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM,
-      item,
-      itemToString: props.itemToString,
-      index
-    });
-  }, []);
+  const removeSelectedItem = React.useCallback(
+    (item: Item, index: number) => {
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.FUNCTION_REMOVE_SELECTED_ITEM,
+        item,
+        itemToString: props.itemToString,
+        index
+      });
+    },
+    [dispatch, props.itemToString]
+  );
 
-  const addSelectedItem = React.useCallback((item: Item) => {
-    dispatch({
-      type: MultipleSelectionStateChangeTypes.FUNCTION_ADD_SELECTED_ITEM,
-      item
-    });
-  }, []);
+  const addSelectedItem = React.useCallback(
+    (item: Item) => {
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.FUNCTION_ADD_SELECTED_ITEM,
+        item
+      });
+    },
+    [dispatch]
+  );
 
-  const setCurrentIndex = React.useCallback((index: number) => {
-    dispatch({
-      type: MultipleSelectionStateChangeTypes.FUNCTION_SET_CURRENT_INDEX,
-      index
-    });
-  }, []);
+  const setCurrentIndex = React.useCallback(
+    (index: number) => {
+      dispatch({
+        type: MultipleSelectionStateChangeTypes.FUNCTION_SET_CURRENT_INDEX,
+        index
+      });
+    },
+    [dispatch]
+  );
 
   return {
     // state

@@ -188,6 +188,10 @@ export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) =>
         recommendations.isOpen = false;
         return recommendations;
       }
+      case ComboboxActions.FUNCTION_CLOSE_POPUP: {
+        if (inputRef.current) inputRef.current.focus();
+        return recommendations;
+      }
       default: {
         return changes;
       }

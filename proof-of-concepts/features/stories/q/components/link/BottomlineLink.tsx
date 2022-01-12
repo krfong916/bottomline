@@ -1,7 +1,6 @@
 import React from 'react';
 import { LinkOutlinedIcon } from '../../assets/Icons';
 import { LinkCoordinates } from './types';
-import { WithHover } from '../../Editor';
 export interface LinkDetailsProps {
   shouldShow: boolean;
   onDetailsChange: (control: LinkControl) => void;
@@ -57,7 +56,7 @@ export interface LinkEditorProps {
 
 export function LinkEditor({
   onBlur,
-  ref,
+  // ref,
   shouldShow,
   updateLink,
   coords,
@@ -65,12 +64,21 @@ export function LinkEditor({
   text
 }: LinkEditorProps) {
   if (!shouldShow) return null;
-  console.log(window.scrollY);
+
   const position = {
     top: coords!.bottom + 16 + window.scrollY,
     left: coords!.left - 20,
     position: 'absolute'
   } as React.CSSProperties;
+
+  // Ref for trapping focus in the editor when the user opens the editor
+  const linkEditorRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (shouldShow && linkEditorRef.current) {
+      linkEditorRef.current.focus();
+    }
+  }, [shouldShow]);
 
   // add validation for a correct url and show an error message
   // use chakra design here
@@ -113,7 +121,7 @@ export function LinkEditor({
     // the behavior that we're trying to capture here is
     // the link editor should call the callback if the user leaves focus from the component
     if (!e.currentTarget.contains(e.relatedTarget as HTMLElement)) {
-      console.log('handle blur');
+      console.log('[BOTTOMLINE_LINK] handle blur');
       onBlur(e);
     }
   };
@@ -131,7 +139,7 @@ export function LinkEditor({
           </label>
           <input
             className="link-editor__input"
-            ref={ref}
+            ref={linkEditorRef}
             type="text"
             value={state.text}
             name="text"
@@ -186,23 +194,31 @@ export type LinkControl = 'EDITOR_CONTROL' | 'LINK_DETAILS';
 
 export interface LinkControlProps {
   editorState: EditorState;
-  onClick: (control: LinkControl) => void;
+  onToggle: (control: LinkControl) => void;
   control: LinkControl;
   active?: boolean;
   disabled?: boolean;
 }
 
 export function LinkInlineControl(props: LinkControlProps) {
+  const onToggle = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    props.onToggle(props.control);
+  };
+  const ariaLabel = 'Insert Link';
+  const key = 'link-inline-control' + ariaLabel;
+  let className = 'format-option';
+  if (props.active) {
+    className += ' format-option-active';
+  }
+
   return (
     <button
-      className="format-option"
-      onMouseDown={(e) => {
-        !props.disabled && e.preventDefault();
-      }}
-      onClick={(e) => {
-        !props.disabled && e.preventDefault();
-        props.onClick(props.control);
-      }}
+      type="button"
+      aria-label={ariaLabel}
+      key={key}
+      className={className}
+      onMouseDown={onToggle}
     >
       <LinkOutlinedIcon />
     </button>

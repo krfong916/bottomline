@@ -1,10 +1,22 @@
 import * as React from 'react';
-import { Editor, EditorState, CompositeDecorator, RichUtils } from 'draft-js';
+import {
+  Editor,
+  EditorState,
+  CompositeDecorator,
+  RichUtils,
+  DraftHandleValue
+} from 'draft-js';
 import { Input, Button, Tooltip, Box } from '@chakra-ui/react';
 import { TagEditor } from '../tags/TagEditor/TagEditor';
 import { AddIcon } from '@chakra-ui/icons';
 import { AiOutlineExclamationCircle } from 'react-icons/ai';
-import { BlockStyleControls, InlineStyleControls, styleMap } from './Editor';
+import {
+  BlockStyleControls,
+  InlineStyleControls,
+  styleMap,
+  blockStyleFn,
+  bottomlineEditorKeyBindingFn
+} from './Editor';
 import { useLinkEditor } from './components/link/Link';
 import { findLinkEntities, cursorIsOnSingleBlock } from './components/link/utils';
 import {
@@ -17,22 +29,8 @@ import { linkStateReducer } from './components/link/reducer';
 import './components/link/link.scss';
 import './Q.scss';
 import { Form, Field, useField, useFormState } from 'react-final-form';
+import { Review } from './components/reviewSteps/Review';
 import { Question, QuestionError } from './types';
-
-const ReviewMessage = () => {
-  const { submitFailed, hasValidationErrors, errors } = useFormState();
-  let numErrors = errors ? errors.length : 0;
-  let reviewMessage = '';
-
-  if (numErrors === 0) {
-    reviewMessage = 'Your question is ready for posting';
-  } else if (numErrors === 1) {
-    reviewMessage = 'You have 1 error';
-  } else {
-    reviewMessage = `You have ${numErrors} errors`;
-  }
-  return hasValidationErrors ? <span>{`${reviewMessage}`}</span> : null;
-};
 
 const Error = ({ name }: { name: string }) => {
   const { meta } = useField(name, {
@@ -71,30 +69,58 @@ export default function Q() {
     removeLink,
     closeLinkEditor,
     updateLink,
-    getLinkProps
+    // getLinkProps,
+    toggleLinkEditor
   } = useLinkEditor({ editorState: state, editorSetState: setState });
 
   const onChange = (editorState: EditorState) => setState(editorState);
+  const handleKeyCommand = (command: string): DraftHandleValue => {
+    let newState;
+    switch (command) {
+      case 'bold':
+        toggleInlineStyle('BOLD');
+        break;
+      case 'link':
+        toggleLinkEditor();
+        break;
+      case 'italic':
+        toggleInlineStyle('ITALIC');
+        break;
+      case 'blockquote':
+        toggleBlockType('blockquote');
+        break;
+      case 'bulleted-list':
+        toggleBlockType('unordered-list-item');
+        break;
+      case 'numbered-list':
+        toggleBlockType('ordered-list-item');
+        break;
+      default:
+        return 'not-handled';
+    }
+
+    return 'handled';
+  };
   const toggleBlockType = (blockType: string) => {
-    console.log('blockType');
+    console.log('blockType:', blockType);
     onChange(RichUtils.toggleBlockType(state, blockType));
   };
   const toggleInlineStyle = (inlineStyle: string) => {
-    console.log('inlineStyle');
+    console.log('inlineStyle:', inlineStyle);
     onChange(RichUtils.toggleInlineStyle(state, inlineStyle));
   };
   const toggleLink = () => {
+    console.log('toggle link');
     onChange(RichUtils.toggleLink(state, state.getSelection(), ''));
   };
   // State for enabling/disabling the formatting bar link button
   const [disableLinkControl, setDisableLinkControl] = React.useState(false);
-
   // State for signaling when the editor has/doesn't have focus
   const [editorFocus, setEditorFocus] = React.useState(false);
   // Ref for focusing the editor
   const editorRef = React.useRef<Editor>(null);
 
-  // We need this effect because when the editor is closed, we want to refocus the editor
+  // We need this effect because when the link-editor is closed, we want to refocus the editor
   React.useEffect(() => {
     if (linkShowEditor === false) {
       console.log('[REFOCUS_EDITOR]');
@@ -123,17 +149,11 @@ export default function Q() {
     console.log('[ON_EDITOR_FOCUS]: focus the editor');
     setEditorFocus(true);
   };
-  const onEditorBlur = () => {
-    if (linkShowDetails) return;
-    console.log('[ON_EDITOR_BLUR]');
-    setEditorFocus(false);
-  };
-  React.useEffect(() => {
-    if (editorRef.current && editorFocus === true) {
-      console.log('[EDITOR_FOCUS_EFFECT]');
-      editorRef.current.focus();
-    }
-  }, [setEditorFocus, editorFocus]);
+  // const onEditorBlur = () => {
+  //   if (linkShowDetails) return;
+  //   console.log('[ON_EDITOR_BLUR]');
+  //   setEditorFocus(false);
+  // };
 
   const handleOpen = (control: LinkControl) => {
     // if the editor isnt focused and has content
@@ -148,7 +168,7 @@ export default function Q() {
       console.log(
         '[OPEN_EDITOR: EDITOR_CONTROL]: editor has no text and is not currently focused'
       );
-      onEditorFocus(control);
+      onEditorFocus();
     }
   };
 
@@ -189,7 +209,7 @@ export default function Q() {
     <Form onSubmit={onSubmit} validateOnBlur={true} validate={validate}>
       {({ submitting, handleSubmit }) => (
         <>
-          <ReviewMessage />
+          <Review />
           <form onSubmit={handleSubmit}>
             <div className="ask-question">
               <section className="ask-question__section">
@@ -198,6 +218,7 @@ export default function Q() {
                     <h2 className="ask-question__section-title">Title</h2>
                     <p className="ask-question__section-info">
                       Be specific and try to imagine that you’re asking another person
+                      your question.
                     </p>
                   </div>
                 </div>
@@ -237,7 +258,7 @@ export default function Q() {
                         disabled={disableLinkControl}
                         active={linkShowDetails || linkShowEditor}
                         editorState={state}
-                        onClick={openLinkEditor}
+                        onToggle={toggleLinkEditor}
                         control="EDITOR_CONTROL"
                       />
                       <BlockStyleControls
@@ -248,9 +269,12 @@ export default function Q() {
                     <div className="RichEditor-editor">
                       <Editor
                         ref={editorRef}
-                        onBlur={onEditorBlur}
+                        // onBlur={onEditorBlur}
+                        handleKeyCommand={handleKeyCommand}
+                        keyBindingFn={bottomlineEditorKeyBindingFn}
                         onFocus={onEditorFocus}
                         customStyleMap={styleMap}
+                        blockStyleFn={blockStyleFn}
                         editorState={state}
                         onChange={onChange}
                       />
@@ -270,7 +294,7 @@ export default function Q() {
                       onBlur={closeLinkEditor}
                       shouldShow={linkShowEditor}
                       updateLink={updateLink}
-                      {...getLinkProps()}
+                      // ref={linkEditorRef}
                     />
                   </div>
                 </div>

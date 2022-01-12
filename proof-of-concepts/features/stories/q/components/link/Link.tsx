@@ -40,16 +40,6 @@ export function useLinkEditor(props: LinkProps) {
     coords
   } = state;
 
-  // Ref for trapping focus in the editor when the user opens the editor
-  const linkEditorRef = React.useRef<HTMLInputElement>(null);
-
-  React.useEffect(() => {
-    console.log('[LINK_EDITOR_FOCUS_EFFECT]');
-    if (showEditor && linkEditorRef.current) {
-      linkEditorRef.current.focus();
-    }
-  }, [showEditor]);
-
   /**
    * ********************************
    *
@@ -273,6 +263,14 @@ export function useLinkEditor(props: LinkProps) {
     controlledDispatch({ type: LinkEditorStateChangeTypes.UPDATE_LINK });
   }
 
+  const toggleLinkEditor = () => {
+    if (showEditor) {
+      closeLinkEditor();
+    } else {
+      openLinkEditor('EDITOR_CONTROL');
+    }
+  };
+
   /**
    * **********************
    *
@@ -329,13 +327,7 @@ export function useLinkEditor(props: LinkProps) {
           break;
         case 'EDITOR_CONTROL':
           console.log('[OPEN_EDITOR: EDITOR_CONTROL]');
-          // if the link-editor is currently open
-          // and the user is continually clicking the link control button
-          // leave the link-editor open and keep the link-editor focused
-          if (showEditor) {
-            linkEditorRef!.current!.focus();
-            return;
-          }
+
           const cursorIsOnLink = showDetails;
           if (cursorIsOnLink) {
             const { cursorStart, cursorEnd } = getSelectionIndices(editorState);
@@ -396,11 +388,11 @@ export function useLinkEditor(props: LinkProps) {
     [controlledDispatch, editorState, editorSetState, showDetails, showEditor]
   );
 
-  function getLinkProps() {
-    return {
-      ref: linkEditorRef
-    };
-  }
+  // function getLinkProps() {
+  //   return {
+  //     ref: linkEditorRef
+  //   };
+  // }
 
   return {
     // state
@@ -412,10 +404,11 @@ export function useLinkEditor(props: LinkProps) {
     text,
     coords,
     // functions
+    toggleLinkEditor,
     closeLinkEditor,
     removeLink,
     updateLink,
-    openLinkEditor,
-    getLinkProps
+    openLinkEditor
+    // getLinkProps
   };
 }

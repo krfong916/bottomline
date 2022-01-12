@@ -111,7 +111,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
 
   React.useEffect(() => {
     if (inputRef.current && isOpen) {
-      // console.log('[USE_EFFECT] input focus');
+      console.log('[USE_COMBOBOX_EFFECT] input focus');
       inputRef.current.focus();
     }
   }, [isOpen]);
