@@ -1,4 +1,5 @@
 import React from 'react';
+import { CSSTransition } from 'react-transition-group';
 import {
   Accordion,
   AccordionItem,
@@ -7,11 +8,15 @@ import {
   AccordionIcon,
   Box
 } from '@chakra-ui/react';
+import { FaRegThumbsUp } from 'react-icons/fa';
 import { HiOutlineChevronDown } from 'react-icons/hi';
 import { RiNumber1, RiNumber2 } from 'react-icons/ri';
+import { AiOutlineExclamationCircle } from 'react-icons/ai';
 import './Review.scss';
 import { useFormState } from 'react-final-form';
 
+// internally, useFormState uses React.Context maintained by react-final-form
+// we choose not to pass props from parent to grandchild for readability
 const ReviewMessage = () => {
   const { submitFailed, hasValidationErrors, errors } = useFormState();
   let numErrors = errors ? Object.keys(errors).length : 0;
@@ -24,41 +29,72 @@ const ReviewMessage = () => {
   } else {
     reviewMessage = `You have ${numErrors} errors`;
   }
-  return hasValidationErrors ? <span>{`${reviewMessage}`}</span> : null;
-};
 
-export function Review({ className }: { className: string }) {
-  const reviewContainerClassName = 'review-container ' + className;
+  const ErrorMessage = () => {
+    return (
+      <div className="review-error-container">
+        <AiOutlineExclamationCircle className="review-header__error-icon" />
+        <span className="review-header-result">
+          Your question couldn't be submitted
+        </span>
+        <span className="review-header__result-resolution">
+          Resolve {numErrors} issues before posting
+        </span>
+      </div>
+    );
+  };
+
+  const NoErrors = () => {
+    return (
+      <div className="review-section-container">
+        <FaRegThumbsUp className="review-header__no-errors-icon" />
+        <span className="review-header-result">
+          Your question is ready for posting
+        </span>
+      </div>
+    );
+  };
+
   return (
-    <div className={reviewContainerClassName}>
+    <React.Fragment>
+      <h2 className="review-header">Step 2: Review Your Question</h2>
+      {submitFailed && hasValidationErrors ? <ErrorMessage /> : <NoErrors />}
+    </React.Fragment>
+  );
+};
+const ContentGuidelines = () => {
+  return (
+    <>
       <h2 className="review-header">Step 1: Draft Your Question</h2>
-      <span className="review-header__info">
+      <span className="guideline-header__info">
         The community is here to answer questions that you have about organizing,
-        historical events, and radical left theory and politics.
+        historical events, radical left theory, and left politics.
       </span>
-      <Accordion allowToggle className="review-section-container">
-        <AccordionItem className="review-section">
-          <AccordionButton className="review-section__button">
-            <span className="review-section__title-number">1.</span>
-            <Box className="review-section__title">Summarize your problem</Box>
-            <HiOutlineChevronDown className="review-section__toggle-button" />
+      <Accordion allowToggle className="guideline-section-container">
+        <AccordionItem className="guideline-section">
+          <AccordionButton className="guideline-section__button">
+            <span className="guideline-section__title-number">1.</span>
+            <Box className="guideline-section__title">Summarize your problem</Box>
+            <HiOutlineChevronDown className="guideline-section__toggle-button" />
           </AccordionButton>
           <AccordionPanel>
-            <span className="review-section__info">
+            <span className="guideline-section__info">
               Provide any background detail and context necessary for understanding
               the question you’re asking.
             </span>
           </AccordionPanel>
         </AccordionItem>
 
-        <AccordionItem className="review-section">
-          <AccordionButton className="review-section__button">
-            <span className="review-section__title-number">2.</span>
-            <Box className="review-section__title">Show some context or research</Box>
-            <HiOutlineChevronDown className="review-section__toggle-button" />
+        <AccordionItem className="guideline-section">
+          <AccordionButton className="guideline-section__button">
+            <span className="guideline-section__title-number">2.</span>
+            <Box className="guideline-section__title">
+              Show some context or research
+            </Box>
+            <HiOutlineChevronDown className="guideline-section__toggle-button" />
           </AccordionButton>
           <AccordionPanel>
-            <div className="review-section__info">
+            <div className="guideline-section__info">
               <span>
                 You can get better answers when you provide research and context
               </span>
@@ -76,6 +112,25 @@ export function Review({ className }: { className: string }) {
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
+    </>
+  );
+};
+export function Review({
+  className,
+  displayErrors,
+  transitionIn
+}: {
+  className: string;
+  displayErrors: boolean;
+  transitionIn: boolean;
+}) {
+  const reviewContainerClassName = 'review-container ' + className;
+
+  return (
+    <div className={reviewContainerClassName}>
+      <CSSTransition in={transitionIn}>
+        {displayErrors ? <ReviewMessage /> : <ContentGuidelines />}
+      </CSSTransition>
     </div>
   );
 }

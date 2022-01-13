@@ -216,5 +216,11 @@ export function bottomlineEditorKeyBindingFn(e: KeyboardEvent): string | null {
   if (e.keyCode === 55 && e.shiftKey && hasCommandModifier(e)) {
     return 'numbered-list';
   }
+  if (e.keyCode === 13 && e.shiftKey) {
+    return 'newline';
+  }
+  if (e.keyCode === 8 || e.keyCode === 46) {
+    return 'backspace';
+  }
   return getDefaultKeyBinding(e);
 }

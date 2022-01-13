@@ -112,6 +112,7 @@ export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) =>
     prevKey: NavigationKeys.ARROW_LEFT,
     onItemsChange: (tags: BottomlineTag[]) => {
       if (props.onChange) {
+        console.log('[TagEditor ON_ITEMS_CHANGE]', tags);
         props.onChange(tags);
       }
       onTagsChanged(tags);
@@ -282,11 +283,7 @@ export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) =>
           ) : null}
         </div>
         <div
-          className={
-            inputFocused
-              ? 'tag-search-container tag-search-container--focused'
-              : 'tag-search-container'
-          }
+          className={props.className ? props.className : 'tag-search-container'}
           {...getComboboxProps()}
         >
           <input
