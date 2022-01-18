@@ -7,7 +7,7 @@ import {
   DraftHandleValue,
   convertToRaw
 } from 'draft-js';
-import { Input, Button, Tooltip, Box } from '@chakra-ui/react';
+import { Input, Tooltip, Box } from '@chakra-ui/react';
 import { TagEditor } from '../tags/TagEditor/TagEditor';
 import { AddIcon } from '@chakra-ui/icons';
 import { AiOutlineExclamationCircle } from 'react-icons/ai';
@@ -45,14 +45,36 @@ const Error = ({ name }: { name: string }) => {
     subscription: { error: true, submitFailed: true, valid: true }
   });
   const { error, submitFailed, valid } = meta;
-  console.log('[ERROR_COMPONENT]', error);
-  return submitFailed && !valid && error[name] ? (
-    <div className="field-error">
-      <AiOutlineExclamationCircle className="field-error__icon" />
-      <span className="field-error__message">{error}</span>
-    </div>
+  // console.log('[ERROR_COMPONENT]', meta);
+  // console.log('[ERROR_COMPONENT]', error);
+  return submitFailed && !valid && error ? (
+    Array.isArray(error) ? (
+      <GroupError errors={error} />
+    ) : (
+      <SingleError error={error} />
+    )
   ) : null;
 };
+
+const GroupError = ({ errors }: { errors: string[] }) => {
+  return (
+    <div className="field-error-group">
+      {errors.map((error) => (
+        <span className="field-error__group-message">
+          <AiOutlineExclamationCircle className="field-error__icon" />
+          {error}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const SingleError = ({ error }: { error: string }) => (
+  <div className="field-error">
+    <AiOutlineExclamationCircle className="field-error__icon" />
+    <span className="field-error__message">{error}</span>
+  </div>
+);
 
 export default function Q() {
   const decorator = new CompositeDecorator([
@@ -208,7 +230,9 @@ export default function Q() {
     }
   };
 
-  const onSubmit = () => {};
+  const onSubmit = (...args) => {
+    console.log('[ON_SUBMIT] ', args);
+  };
 
   const minLength = (field: string, requiredLen: number) =>
     field.length >= requiredLen;
@@ -230,15 +254,15 @@ export default function Q() {
       errors.body = `Body must be at least 30 characters long, you entered ${body.length} characters.`;
     }
     console.log('validate tags', tags);
-    if (!tags) {
-      errors.tags = 'Please enter at least one tag';
-    } else {
+    if (tags && tags.length > 0) {
       let tagsWithManyChars = tags.filter((tag) => exceeds(tag.name, 35));
       let tagErrs = tagsWithManyChars.map(
         (tag) =>
-          `The tag ${tag.name} is too long. The maximum length is 35 characters.`
+          `The tag '${tag.name}' is too long. The maximum length is 35 characters.`
       );
-      errors.tags = tagErrs.length ? tagErrs : null;
+      if (tagErrs.length > 0) errors.tags = tagErrs;
+    } else {
+      errors.tags = 'Please enter at least one tag';
     }
     console.log('errors', errors);
     return errors;
@@ -249,7 +273,8 @@ export default function Q() {
   return (
     <Form
       onSubmit={onSubmit}
-      validateOnBlur={true}
+      // validateOnBlur={true}
+      validateOnChange={true}
       validate={validate}
       decorators={[focusOnErrors]}
     >
@@ -259,7 +284,7 @@ export default function Q() {
             <Review
               transitionIn={inProp}
               className="question-review"
-              displayErrors={submitFailed && hasValidationErrors}
+              displayErrors={submitFailed}
             />
             <form onSubmit={handleSubmit} className="question-ask">
               <div className="ask-question">
@@ -395,14 +420,13 @@ export default function Q() {
                 </section>
                 <section className="ask-question__section">
                   <div className="post-question">
-                    <Button
-                      variant="outline"
+                    <button
                       className="post-question__button"
                       type="submit"
                       disabled={submitting}
                     >
                       Post your question
-                    </Button>
+                    </button>
                   </div>
                 </section>
               </div>

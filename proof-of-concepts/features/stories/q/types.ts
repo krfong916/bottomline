@@ -7,5 +7,5 @@ export type Question = {
 export type QuestionError = {
   title?: string;
   body?: string;
-  tags?: string;
+  tags?: string[] | string;
 };

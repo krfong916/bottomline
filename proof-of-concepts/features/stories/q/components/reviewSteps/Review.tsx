@@ -19,7 +19,9 @@ import { useFormState } from 'react-final-form';
 // we choose not to pass props from parent to grandchild for readability
 const ReviewMessage = () => {
   const { submitFailed, hasValidationErrors, errors } = useFormState();
-  let numErrors = errors ? Object.keys(errors).length : 0;
+  let numErrors = errors
+    ? Object.keys(errors).reduce((accum, key) => (errors[key] ? accum + 1 : accum), 0)
+    : 0;
   let reviewMessage = '';
 
   if (numErrors === 0) {
@@ -58,7 +60,11 @@ const ReviewMessage = () => {
   return (
     <React.Fragment>
       <h2 className="review-header">Step 2: Review Your Question</h2>
-      {submitFailed && hasValidationErrors ? <ErrorMessage /> : <NoErrors />}
+      {submitFailed && hasValidationErrors && numErrors !== 0 ? (
+        <ErrorMessage />
+      ) : (
+        <NoErrors />
+      )}
     </React.Fragment>
   );
 };

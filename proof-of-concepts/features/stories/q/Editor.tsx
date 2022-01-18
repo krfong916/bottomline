@@ -140,7 +140,7 @@ export function BlockStyleControls(props) {
     .getCurrentContent()
     .getBlockForKey(selection.getStartKey())
     .getType();
-  console.log(blockType);
+  // console.log(blockType);
   return (
     <React.Fragment>
       {BLOCK_STYLE_FORMAT_CONTROLS.map((formatControl) => (

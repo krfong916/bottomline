@@ -181,11 +181,11 @@
   border-radius: 4px;
 }
 
-.post-question__button:hover,
-.post-question__button:focus {
-  background-color: colors.$Blue-6;
-  border: 1px solid colors.$Blue-6;
-}
+// .post-question__button:hover,
+// .post-question__button:focus {
+//   background-color: colors.$Blue-6;
+//   border: 1px solid colors.$Blue-6;
+// }
 
 .unselectable {
   -moz-user-select: none;
@@ -211,12 +211,28 @@
 
 .field-error__icon {
   color: colors.$Red-7;
-  padding-right: spacing.$Size-0;
+  padding-right: spacing.$Size-1;
+  height: 18px;
+  width: 18px;
 }
 
-.field-error__message {
+.field-error__message,
+.field-error__group-message {
   color: colors.$Red-7;
   font-size: fonts.$Size-1;
+}
+
+.field-error-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: spacing.$Size-1;
+  row-gap: spacing.$Size-0;
+}
+
+.field-error__group-message {
+  display: inline-flex;
+  align-items: center;
 }
 
 /**
