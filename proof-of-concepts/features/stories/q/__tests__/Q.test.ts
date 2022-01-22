@@ -1,52 +1,166 @@
 import React from 'react';
-describe('bottomline ask a question', () => {
-  test('a submitted form must not be empty', () => {});
-  test('title must not be null', () => {});
-  test('title must be at least characters', () => {});
+import { Question } from '../types';
+import { BottomlineTag, BottomlineTags } from '../../tags/TagEditor/types';
+import { renderQuestionForm } from './utils';
+import userEvent from '@testing-library/user-event';
+import { createEvent } from '@testing-library/dom';
+import { screen, fireEvent } from '@testing-library/react';
+import { build, fake, oneOf, sequence } from '@jackfranklin/test-data-bot';
+import { server, rest } from '../../test/server';
 
-  test('body must not be null', () => {});
-  test('body must be at least 30 characters', () => {});
+// simulate network request/mock server and response
+const tagsMockEndpoint = 'http://localhost:3000/tags';
 
-  test('tags must not be null', () => {});
-  test('a single tag cannot be more than 35 characters', () => {});
+const buildTag = build<BottomlineTag>({
+  fields: {
+    name: oneOf(
+      'materialist-theory',
+      'prison-abolition',
+      'east-asian-american-history'
+    )
+  }
 });
 
-// only after the user's first attempt to submit the form -
-// show field level errors
-// when they attempt to fix the issue, onblur, validate the field
+const buildQuestionForm = build<Question>({
+  fields: {
+    title: 'some_random_title',
+    tags: []
+  },
+  postBuild: (question) => {
+    question.tags = Array(3)
+      .fill(undefined)
+      .map(() => buildTag());
+    return question;
+  }
+});
 
-// on first submit the form is checked
-// errors are shown
+describe('bottomline ask a question', () => {
+  test('submitting the form calls onSubmit with the title, body, and tags', () => {
+    const handleSubmit = jest.fn();
+    const body = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const { tagsElement, titleElement, bodyElement } = renderQuestionForm({
+      tagsEndpoint: tagsMockEndpoint,
+      onSubmit: handleSubmit
+    });
 
-// now when input is changed and corrected, we check
-// title is missing
-// title must be at least 15 characters.
-// body is missing
-// body must be at least 30 characters long, you entered 7.
-//
-// the tag '' is too long the maximum length is 35 characters.
-//
-//
-// please enter at least one tag
-// your question couldn't be submitted. please see errors above
-//
-// red is removed when the minimum has been reached
-//
-// store a draft on the users localStorage
-//
-// link-editor
-// - when the user clicks on the toolbar icon, a link editor pops up on the current caret position if
-// - when the editor is over a link, and the user clicks the toolbar icon, a link editor pops up on the caret position and has the information of the link pre-filled and the range of text is highlighted
-// - when the editor is opened, the editor receives focus, clicking or focusing outside of the editor closes the editor
-// - when the caret is over a link, the link information is present
-// - a valid url must be provided to create a link
-// - escape closes the link editor if it's open
-//
-// answer your own question feature: create
-// tags and tag information: create, read
-// questions: create
-// relevant questions: read; title of posts with some info of number of answers, when it was asked and by whom, with a small excerpt of the question body
-//
-// questions: read
-// upvote, downvote: create, read, update, destory
-//
+    const { title, tags } = buildQuestionForm();
+    userEvent.type(titleElement, title);
+    tags.forEach((tag) => {
+      userEvent.type(tagsElement, tag.name);
+      userEvent.type(tagsElement, '{enter}');
+    });
+
+    const event = createEvent.paste(bodyElement, {
+      clipboardData: {
+        types: ['text/plain'],
+        getData: () => {
+          return body;
+        }
+      }
+    });
+
+    fireEvent(bodyElement, event);
+    userEvent.click(screen.getByTestId('submit'));
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+    expect(handleSubmit).toHaveBeenCalledWith({ title, body, tags });
+  });
+
+  test('omitting the title results in an error', () => {
+    const handleSubmit = jest.fn();
+    const body = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const { tagsElement, titleElement, bodyElement } = renderQuestionForm({
+      tagsEndpoint: tagsMockEndpoint,
+      onSubmit: handleSubmit
+    });
+
+    const { title, tags } = buildQuestionForm();
+
+    // OMIT: the title
+    // userEvent.type(titleElement, title);
+
+    tags.forEach((tag) => {
+      userEvent.type(tagsElement, tag.name);
+      userEvent.type(tagsElement, '{enter}');
+    });
+
+    const event = createEvent.paste(bodyElement, {
+      clipboardData: {
+        types: ['text/plain'],
+        getData: () => {
+          return body;
+        }
+      }
+    });
+
+    fireEvent(bodyElement, event);
+    userEvent.click(screen.getByTestId('submit'));
+    const titleError = screen.getByText('Title is missing.');
+    expect(titleError).toBeDefined();
+  });
+  test('omitting the body results in an error', () => {
+    const handleSubmit = jest.fn();
+    const body = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const { tagsElement, titleElement, bodyElement } = renderQuestionForm({
+      tagsEndpoint: tagsMockEndpoint,
+      onSubmit: handleSubmit
+    });
+
+    const { title, tags } = buildQuestionForm();
+
+    userEvent.type(titleElement, title);
+
+    tags.forEach((tag) => {
+      userEvent.type(tagsElement, tag.name);
+      userEvent.type(tagsElement, '{enter}');
+    });
+
+    // OMIT: the body
+    // const event = createEvent.paste(bodyElement, {
+    //   clipboardData: {
+    //     types: ['text/plain'],
+    //     getData: () => {
+    //       return body;
+    //     }
+    //   }
+    // });
+
+    // fireEvent(bodyElement, event);
+
+    userEvent.click(screen.getByTestId('submit'));
+    const titleError = screen.getByText('Body is missing.');
+    expect(titleError).toBeDefined();
+  });
+  test('omitting tags results in an error', () => {
+    const handleSubmit = jest.fn();
+    const body = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const { tagsElement, titleElement, bodyElement } = renderQuestionForm({
+      tagsEndpoint: tagsMockEndpoint,
+      onSubmit: handleSubmit
+    });
+
+    const { title, tags } = buildQuestionForm();
+
+    userEvent.type(titleElement, title);
+
+    // OMIT: tags
+    // tags.forEach((tag) => {
+    //   userEvent.type(tagsElement, tag.name);
+    //   userEvent.type(tagsElement, '{enter}');
+    // });
+
+    const event = createEvent.paste(bodyElement, {
+      clipboardData: {
+        types: ['text/plain'],
+        getData: () => {
+          return body;
+        }
+      }
+    });
+
+    fireEvent(bodyElement, event);
+
+    userEvent.click(screen.getByTestId('submit'));
+    const titleError = screen.getByText('Please enter at least one tag.');
+    expect(titleError).toBeDefined();
+  });
+});

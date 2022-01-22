@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentProps } from '../../types';
+import { ComponentProps } from '../types';
 // Combobox
 export type ComboboxProps<Item> = {
   id?: string;
@@ -37,10 +37,13 @@ export interface ComboboxInputGetterProps<T> {
   onFocus?: (...args: any[]) => any;
   onBlur?: (...args: any[]) => any;
   onKeyDown?: (...args: any[]) => any;
+  ariaDescribedBy: string;
+  ariaLabelledBy: string;
 }
 
 export interface ComboboxGetterProps {
-  ariaLabelledBy?: string;
+  ariaLabelledBy: string;
+  ariaDescribedBy: string;
   ariaPopup?: ComboboxAriaPopup;
 }
 

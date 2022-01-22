@@ -4,6 +4,9 @@ export type TagEditorProps = {
   onBlur?: (args: any) => any;
   onFocus?: (args: any) => any;
   onChange?: (args: any) => any;
+  endpoint?: string;
+  ariaDescribedBy: string;
+  ariaLabelledBy: string;
 };
 export type BottomlineTag = {
   id?: string;

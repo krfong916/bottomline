@@ -10,9 +10,11 @@ const props = {
 
 export const noop = () => {};
 
-export function fetchTags(tag: string, getSignal: () => AbortSignal) {
-  // console.log('[FETCH TAGS]');
-  const url = `http://localhost:3000/tags?name_like=${tag}`;
+export function fetchTags(tag: string, url: string, getSignal: () => AbortSignal) {
+  // change using env variable for url endpoint
+  if (process.env.PRODUCTION) {
+    // url = 'production endpoint';
+  }
   return fetch(url, {
     signal: getSignal(),
     method: 'GET',

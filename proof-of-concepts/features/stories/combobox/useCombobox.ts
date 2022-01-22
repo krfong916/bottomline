@@ -230,7 +230,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
    *   if the user has defined a specific type of popup, then destructure
    *   otherwise, the user may have not passed any args, so default to an empty object
    */
-  function getComboboxProps(props?: ComboboxGetterProps) {
+  function getComboboxProps(props: ComboboxGetterProps) {
     const ariaHasPopup = props?.ariaPopup || ('grid' as ComboboxAriaPopup);
     const ariaLabelledBy = props?.ariaLabelledBy || elementIds.labelId;
 
@@ -239,10 +239,12 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
     // Otherwise, the combobox element has a label provided by aria-label.
     return {
       role: 'combobox',
+
       'aria-expanded': isOpen ? true : false,
       'aria-owns': elementIds.menuId,
       'aria-haspopup': ariaHasPopup,
       'aria-labelledby': ariaLabelledBy
+      // 'aria-describedby': props.ariaDescribedBy
       // onClick: setComboboxFocus
     };
   }
@@ -257,22 +259,13 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
     controlDispatch,
     onKeyDown = noop,
     ...rest
-  }: ComboboxInputGetterProps<T> = {}) {
+  }: ComboboxInputGetterProps<T>) {
     const inputKeyDownHandler = (e: React.KeyboardEvent) => {
       const keyEvt = normalizeKey(e);
       if (keyEvt.name in inputKeyDownHandlers) {
         inputKeyDownHandlers[keyEvt.name](e);
       }
     };
-
-    // const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
-    //   if (isOpen && !mouseTrackerRef.current.isMouseDown) {
-    //     dispatch({
-    //       type: ComboboxActions.INPUT_BLUR,
-    //       selectedItem: true
-    //     });
-    //   }
-    // };
 
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
@@ -301,7 +294,7 @@ export function useCombobox<Item>(props: ComboboxProps<Item> = {}) {
     return {
       ref: mergeRefs(rest.ref, inputRef),
       role: 'textbox',
-      'aria-labelledby': elementIds.labelId,
+      'aria-labelledby': `${elementIds.labelId}`,
       'aria-controls': elementIds.menuId,
       'aria-multiline': false,
       'aria-autocomplete': 'list' as ComboboxAriaAutoComplete,

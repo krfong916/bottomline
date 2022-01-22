@@ -18,6 +18,8 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/extend-expect';
 import { tags } from '../../../test/bottomline-data';
 
+const tagsMockEndpoint = 'http://localhost:3000/tags';
+
 describe('Tag Editor', () => {
   /**
    * Two tests that we cannot test for:
@@ -26,7 +28,7 @@ describe('Tag Editor', () => {
    */
 
   test('When the input is focused and the input has text, the enter keydown event creates the selected tag ', () => {
-    const { container, input } = renderTagEditor();
+    const { container, input } = renderTagEditor(tagsMockEndpoint);
     input.focus();
     userEvent.type(input, 'material');
     expect(input).toHaveValue('material');
@@ -36,7 +38,7 @@ describe('Tag Editor', () => {
     expect(input).toHaveValue('');
   });
   test('When a tag is created, the input is cleared', async () => {
-    const { container, input } = renderTagEditor();
+    const { container, input } = renderTagEditor(tagsMockEndpoint);
     input.focus();
     userEvent.type(input, 'material');
     expect(input).toHaveValue('material');
@@ -51,7 +53,7 @@ describe('Tag Editor', () => {
     await waitFor(() => expect(input).toHaveValue(''));
   });
   test('When a tag is created, any onTagsChanged callbacks are called', async () => {
-    const { onTagsChanged, input } = renderTagEditor();
+    const { onTagsChanged, input } = renderTagEditor(tagsMockEndpoint);
     input.focus();
     userEvent.type(input, 'w/e random text');
     userEvent.type(input, '{enter}');
@@ -60,7 +62,7 @@ describe('Tag Editor', () => {
   });
   test('When the user pastes text, we handle on paste', async () => {
     // see: https://github.com/testing-library/react-testing-library/issues/499
-    const { input, onPaste } = renderTagEditor();
+    const { input, onPaste } = renderTagEditor(tagsMockEndpoint);
     const text = 'this sentence will be created into 9 selected tags';
     input.focus();
     userEvent.paste(input, text);
@@ -68,7 +70,7 @@ describe('Tag Editor', () => {
   });
 
   test('Clicking a suggested tag creates the tag and closes the popup, clears the input, and the input continues to be focused', async () => {
-    const { input } = renderTagEditor();
+    const { input } = renderTagEditor(tagsMockEndpoint);
     input.focus();
     await userEvent.type(input, 'material', { delay: 300 });
     const item = getPopupItem(0);
@@ -77,7 +79,7 @@ describe('Tag Editor', () => {
     expect(suggestedItems).toHaveLength(0);
   });
   test('A user is able to delete a created tag', async () => {
-    const { input } = renderTagEditor();
+    const { input } = renderTagEditor(tagsMockEndpoint);
     input.focus();
     userEvent.type(input, 'material');
     userEvent.type(input, '{enter}');
@@ -88,7 +90,7 @@ describe('Tag Editor', () => {
     expect(removedSelectedItem).toBeUndefined();
   });
   test('Duplicate created tags are not allowed', async () => {
-    const { container, input } = renderTagEditor();
+    const { container, input } = renderTagEditor(tagsMockEndpoint);
     input.focus();
     userEvent.type(input, 'material');
     expect(input).toHaveValue('material');

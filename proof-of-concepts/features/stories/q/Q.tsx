@@ -7,6 +7,8 @@ import {
   DraftHandleValue,
   convertToRaw
 } from 'draft-js';
+import { stateFromMarkdown } from 'draft-js-import-markdown';
+import { stateToMarkdown } from 'draft-js-export-markdown';
 import { Input, Tooltip, Box } from '@chakra-ui/react';
 import { TagEditor } from '../tags/TagEditor/TagEditor';
 import { AddIcon } from '@chakra-ui/icons';
@@ -38,45 +40,49 @@ import {
 } from 'react-final-form';
 import createDecorator from 'final-form-focus';
 import { Review } from './components/reviewSteps/Review';
-import { Question, QuestionError } from './types';
+import { Question, QuestionError, QuestionProps } from './types';
 
 const Error = ({ name }: { name: string }) => {
   const { meta } = useField(name, {
     subscription: { error: true, submitFailed: true, valid: true }
   });
   const { error, submitFailed, valid } = meta;
-  // console.log('[ERROR_COMPONENT]', meta);
-  // console.log('[ERROR_COMPONENT]', error);
+
   return submitFailed && !valid && error ? (
     Array.isArray(error) ? (
-      <GroupError errors={error} />
+      <GroupError name={name} errors={error} />
     ) : (
-      <SingleError error={error} />
+      <SingleError name={name} error={error} />
     )
   ) : null;
 };
 
-const GroupError = ({ errors }: { errors: string[] }) => {
+const GroupError = ({ errors, name }: { errors: string[]; name: string }) => {
   return (
     <div className="field-error-group">
       {errors.map((error) => (
-        <span className="field-error__group-message">
+        <label className="field-error__group-message" id={`${name}-error-message`}>
           <AiOutlineExclamationCircle className="field-error__icon" />
           {error}
-        </span>
+        </label>
       ))}
     </div>
   );
 };
 
-const SingleError = ({ error }: { error: string }) => (
+const SingleError = ({ error, name }: { error: string; name: string }) => (
   <div className="field-error">
     <AiOutlineExclamationCircle className="field-error__icon" />
-    <span className="field-error__message">{error}</span>
+    <label className="field-error__message" id={`${name}-error-message`}>
+      {error}
+    </label>
   </div>
 );
 
-export default function Q() {
+export default function Q({
+  tagsEndpoint = 'http://localhost:3000/tags',
+  ...questionProps
+}: QuestionProps) {
   const decorator = new CompositeDecorator([
     {
       strategy: findLinkEntities,
@@ -110,7 +116,8 @@ export default function Q() {
     rffProps: FieldInputProps<any, HTMLElement>
   ) => {
     setState(editorState);
-    rffProps.onChange(editorState.getCurrentContent().getPlainText('\u0001'));
+    // rffProps.onChange(editorState.getCurrentContent().getPlainText('\u0001'));
+    rffProps.onChange(stateToMarkdown(editorState.getCurrentContent()).trim());
   };
 
   const handleKeyCommand = (command: string): DraftHandleValue => {
@@ -162,15 +169,12 @@ export default function Q() {
     return 'handled';
   };
   const toggleBlockType = (blockType: string) => {
-    console.log('blockType:', blockType);
     setState(RichUtils.toggleBlockType(state, blockType));
   };
   const toggleInlineStyle = (inlineStyle: string) => {
-    console.log('inlineStyle:', inlineStyle);
     setState(RichUtils.toggleInlineStyle(state, inlineStyle));
   };
   const toggleLink = () => {
-    console.log('toggle link');
     setState(RichUtils.toggleLink(state, state.getSelection(), ''));
   };
   // State for enabling/disabling the formatting bar link button
@@ -184,7 +188,6 @@ export default function Q() {
   // We need this effect because when the link-editor is closed, we want to refocus the editor
   React.useEffect(() => {
     if (linkShowEditor === false) {
-      console.log('[REFOCUS_EDITOR]');
       onEditorFocus();
     }
   }, [linkShowEditor]);
@@ -214,24 +217,19 @@ export default function Q() {
     // if the editor isnt focused and has content
     // the link control button does nothing - move to be an effect
     if (editorFocus === false && state.getCurrentContent().hasText()) {
-      console.log(
-        '[OPEN_EDITOR: EDITOR_CONTROL]: editor has text and is not currently focused:',
-        editorFocus
-      );
       return;
     } else if (
       editorFocus === false &&
       state.getCurrentContent().hasText() === false
     ) {
-      console.log(
-        '[OPEN_EDITOR: EDITOR_CONTROL]: editor has no text and is not currently focused'
-      );
       onEditorFocus();
     }
   };
 
-  const onSubmit = (...args) => {
-    console.log('[ON_SUBMIT] ', args);
+  const onSubmit = (formData: Question) => {
+    if (questionProps && questionProps.onSubmit) {
+      questionProps.onSubmit(formData);
+    }
   };
 
   const minLength = (field: string, requiredLen: number) =>
@@ -245,7 +243,7 @@ export default function Q() {
     if (!title) {
       errors.title = 'Title is missing.';
     } else if (!exceeds(title, 15)) {
-      errors.title = `Title must be at least 15 characters. You entered ${title.length} characters`;
+      errors.title = `Title must be at least 15 characters. You entered ${title.length} characters.`;
     }
 
     if (!body) {
@@ -253,7 +251,7 @@ export default function Q() {
     } else if (!exceeds(body, 30)) {
       errors.body = `Body must be at least 30 characters long, you entered ${body.length} characters.`;
     }
-    console.log('validate tags', tags);
+
     if (tags && tags.length > 0) {
       let tagsWithManyChars = tags.filter((tag) => exceeds(tag.name, 35));
       let tagErrs = tagsWithManyChars.map(
@@ -262,18 +260,16 @@ export default function Q() {
       );
       if (tagErrs.length > 0) errors.tags = tagErrs;
     } else {
-      errors.tags = 'Please enter at least one tag';
+      errors.tags = 'Please enter at least one tag.';
     }
-    console.log('errors', errors);
     return errors;
   };
 
-  const focusOnErrors = createDecorator();
+  const focusOnErrors = React.useMemo(() => createDecorator(), []);
 
   return (
     <Form
       onSubmit={onSubmit}
-      // validateOnBlur={true}
       validateOnChange={true}
       validate={validate}
       decorators={[focusOnErrors]}
@@ -291,8 +287,13 @@ export default function Q() {
                 <section className="ask-question__section">
                   <div className="ask-question__section-header">
                     <div className="ask-question__section-heading">
-                      <h2 className="ask-question__section-title">Title</h2>
-                      <p className="ask-question__section-info">
+                      <label className="ask-question__section-title" id="title-input">
+                        Title
+                      </label>
+                      <p
+                        className="ask-question__section-info"
+                        id="title-description"
+                      >
                         Be specific and try to imagine that you’re asking another
                         person your question.
                       </p>
@@ -309,7 +310,10 @@ export default function Q() {
                               : 'ask-question__title-input'
                           }
                           type="text"
+                          aria-labelledby="title-input"
+                          data-testid="title-input"
                           placeholder="For example: What is Mutual Aid?"
+                          aria-describedby="title-description title-error-message"
                         />
                       )}
                     </Field>
@@ -320,8 +324,10 @@ export default function Q() {
                 <section className="ask-question__section">
                   <div className="ask-question__section-header">
                     <div className="ask-question__section-heading">
-                      <h2 className="ask-question__section-title">Body</h2>
-                      <p className="ask-question__section-info">
+                      <label className="ask-question__section-title" id="body-input">
+                        Body
+                      </label>
+                      <p className="ask-question__section-info" id="body-description">
                         Include all context and information one would need to answer
                         your question.
                       </p>
@@ -359,6 +365,8 @@ export default function Q() {
                             tabIndex={-1}
                           >
                             <Editor
+                              ariaLabelledBy="body-input"
+                              ariaDescribedBy="body-description body-error-message"
                               handleKeyCommand={handleKeyCommand}
                               keyBindingFn={bottomlineEditorKeyBindingFn}
                               onFocus={onEditorFocus}
@@ -398,7 +406,12 @@ export default function Q() {
                   <div className="ask-question__section-header">
                     <div className="ask-question__section-heading">
                       <div className="tags-header">
-                        <h2 className="ask-question__section-title">Tags</h2>
+                        <label
+                          className="ask-question__section-title"
+                          id="tags-input"
+                        >
+                          Tags
+                        </label>
                       </div>
                     </div>
                   </div>
@@ -411,6 +424,9 @@ export default function Q() {
                               ? 'tag-error'
                               : ''
                           }
+                          ariaLabelledBy="tags-input"
+                          ariaDescribedBy="tags-error-message"
+                          endpoint={tagsEndpoint}
                           {...props.input}
                         />
                       )}
@@ -423,6 +439,7 @@ export default function Q() {
                     <button
                       className="post-question__button"
                       type="submit"
+                      data-testid="submit"
                       disabled={submitting}
                     >
                       Post your question

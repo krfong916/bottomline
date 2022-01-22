@@ -36,13 +36,13 @@ const dataTestId = {
   suggestedItem: 'suggested-item-testid'
 };
 
-export function renderTagEditor() {
+export function renderTagEditor(endpoint: string) {
   const onTagsChanged = jest.fn(() => true);
   // on paste shouldn't be passed as a prop, but for testing purposes we need it
   // additionally, jsdom doesn't implement the clipboardEvent API so we need to mock the onPaste event
   const onPaste = jest.fn(() => true);
   const container = render(
-    <TagEditor onTagsChanged={onTagsChanged} onPaste={onPaste} />
+    <TagEditor endpoint={endpoint} onTagsChanged={onTagsChanged} onPaste={onPaste} />
   );
   const input = screen.getByRole('textbox');
   return {
@@ -71,7 +71,7 @@ export function getPopupItems() {
   return screen.getAllByTestId(dataTestId.suggestedItem);
 }
 
-function TagEditor(props: TagEditorProps) {
+function TagEditor({ endpoint = '', ...props }: TagEditorProps) {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>();
@@ -111,7 +111,7 @@ function TagEditor(props: TagEditorProps) {
 
   React.useEffect(() => {
     if (!input || (prevInput.current === '' && input === '')) return;
-    run(fetchTags(input, getSignal));
+    run(fetchTags(input, endpoint, getSignal));
   }, [input, run]);
 
   if (status === UseAsyncStatus.PENDING) derivedLoaderState = true;

@@ -46,7 +46,11 @@ import './TagEditor.scss';
  * See: https://github.com/krfong916/bottomline/issues/6 for a formal spec on the use case
  */
 
-export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) => {
+export const TagEditor = ({
+  onTagsChanged = noop,
+  endpoint = '',
+  ...props
+}: TagEditorProps) => {
   const [input, setInput] = React.useState('');
   const prevInput = React.useRef('');
   const [selectedTags, setSelectedTags] = React.useState<BottomlineTags>();
@@ -89,7 +93,7 @@ export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) =>
 
   React.useEffect(() => {
     if (!input || (prevInput.current === '' && input === '')) return;
-    run(fetchTags(input, getSignal));
+    run(fetchTags(input, endpoint, getSignal));
   }, [input, run]);
 
   if (status === UseAsyncStatus.PENDING) derivedLoaderState = true;
@@ -245,7 +249,10 @@ export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) =>
     <section className="tag-editor-section">
       <div className="tag-editor">
         <div className="tag-header-container">
-          <label className="tag-header-title" {...getLabelProps()}>
+          <label
+            className="tag-header-title"
+            {...getLabelProps({ id: 'tags-description' })}
+          >
             Add up to 5 (five) tags to describe what your question is about
           </label>
           <AiFillQuestionCircle size="1.25em" className="tag-header-description" />
@@ -295,6 +302,9 @@ export const TagEditor = ({ onTagsChanged = noop, ...props }: TagEditorProps) =>
             })}
             onPaste={handleOnPaste}
             type="text"
+            aria-labelledby={props.ariaLabelledBy}
+            aria-describedby={`tags-description ${props.ariaDescribedBy}`}
+            data-testid="tags-input"
             autoComplete="off"
             className="tag-search-input"
           />

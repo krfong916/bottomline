@@ -134,9 +134,9 @@ export function Review({
 
   return (
     <div className={reviewContainerClassName}>
-      <CSSTransition in={transitionIn}>
-        {displayErrors ? <ReviewMessage /> : <ContentGuidelines />}
-      </CSSTransition>
+      {/*<CSSTransition in={transitionIn}>*/}
+      {displayErrors ? <ReviewMessage /> : <ContentGuidelines />}
+      {/*</CSSTransition>*/}
     </div>
   );
 }
