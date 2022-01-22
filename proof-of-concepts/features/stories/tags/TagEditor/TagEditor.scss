@@ -1,0 +1,223 @@
+@use '../../styles/colors.scss';
+@use '../../styles/fonts.scss';
+@use '../../styles/spacing.scss';
+
+.tag-editor-section {
+  padding: 0;
+}
+
+.tag-editor {
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * *******************
+ *
+ * Header
+ *
+ * *******************
+ */
+
+.tag-header-container {
+  display: inline-grid;
+  grid-template-columns: 10fr 1fr;
+}
+
+.tag-header-title {
+  font-size: fonts.$Size-0;
+  flex: 1;
+}
+
+.tag-header-description {
+  justify-self: right;
+  height: spacing.$Size-5;
+  width: spacing.$Size-5;
+  color: white;
+  cursor: pointer;
+}
+
+.tag-header-description path {
+  fill: colors.$Blue-6;
+}
+
+/**
+ * *******************
+ *
+ * Selected Tags 
+ *
+ * *******************
+ */
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  list-style-type: none;
+  padding: 0;
+  margin: spacing.$Size-2 0 spacing.$Size-2 0;
+}
+
+.selected-tag {
+  padding: spacing.$Size-0;
+}
+
+.selected-tag:first-child {
+  padding-left: 0;
+}
+/**
+ * *******************
+ *
+ * Search/input 
+ *
+ * *******************
+ */
+
+.tag-search-container {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid colors.$Gray-4;
+  border-radius: 6px;
+}
+
+.tag-search-container:focus-within {
+  border: 1px solid #0978d9;
+  box-shadow: 0px 0px 0px 2px rgba(9, 120, 217, 0.3);
+  outline: none;
+}
+
+.tag-search-input {
+  margin: spacing.$Size-1;
+  font-size: fonts.$Size-1;
+  border: none;
+  width: 70%;
+}
+
+.tag-search-input:focus-within {
+  outline: none;
+}
+
+.tag-search-loader {
+  display: inline-block;
+  margin-right: 4px;
+}
+
+/**
+ * *******************
+ *
+ * Results 
+ *
+ * *******************
+ */
+
+.tag-results-container {
+  display: flex;
+  box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
+  border-radius: 4px;
+}
+
+.tag-no-results {
+  display: flex;
+  color: colors.$Gray-7;
+  padding: spacing.$Size-0 spacing.$Size-2 spacing.$Size-0 spacing.$Size-2;
+}
+
+.tag-results {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 150px 150px;
+}
+
+.tag-result {
+  padding: spacing.$Size-1;
+  margin: spacing.$Size-0;
+  border-radius: 4px;
+  display: inline-flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.tag-result:hover {
+  background-color: rgba(236, 238, 241, 0.7);
+}
+.tag-result--focused {
+  outline: none;
+  box-shadow: 0px 0px 0px 2px rgba(9, 120, 217, 1);
+  background-color: colors.$Gray-1;
+}
+
+.tag-result-header {
+  display: inline-grid;
+  width: 100%;
+  grid-template-rows: 1fr;
+  // tag should be allowed to have 100% of its content visible, the rest of the space is distributed equally
+  grid-template-columns: max-content 1fr 1fr;
+  align-items: center;
+}
+
+.tag-result-count {
+  justify-self: start;
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: spacing.$Size-1;
+  font-size: fonts.$Size-1;
+}
+
+.tag-result-details {
+  justify-self: flex-end;
+}
+.tag-result-details path {
+  fill: colors.$Gray-5;
+}
+
+.tag-result-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+@media screen and (max-width: 500px) {
+  .tag-header-title {
+    font-size: fonts.$Size-1;
+  }
+  .tag-results {
+    display: inline;
+    padding: 0;
+  }
+  .tag-result {
+    display: inline-block;
+    padding: spacing.$Size-1;
+    margin: spacing.$Size-0;
+  }
+  .tag-result-header {
+    // just want to show the tags, no other info so we only need 1 column
+    grid-template-columns: 1fr;
+  }
+  .tag-result-details {
+    display: none;
+  }
+  .tag-result-excerpt {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .tag-result-header {
+    grid-template-columns: 8fr 1fr;
+  }
+  .tag-result-details {
+    justify-self: end;
+  }
+  .tag-result-count {
+    display: none;
+  }
+}

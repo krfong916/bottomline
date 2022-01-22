@@ -18,5 +18,6 @@ module.exports = {
     '<rootDir>/stories/link/',
     'utils.ts',
     'testingUtils.ts'
-  ]
+  ],
+  setupFilesAfterEnv: ['<rootDir>/jest-setup.ts']
 };
