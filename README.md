@@ -1,5 +1,8 @@
 # Bottomline
-This repository is the entry-point for learning about and contributing to Bottomline 
+This repository is the entry-point for learning about and contributing to Bottomline.
+
+### Preface
+The state of this repository is under active development 🏗️ 🧰
 
 ## Navigation
 - 📝 `/docs`
